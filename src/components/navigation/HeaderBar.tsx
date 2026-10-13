@@ -45,11 +45,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       {/* Top Navbar with App Name & Profile */}
       <View style={styles.topNavBar}>
         <View style={styles.brandRow}>
-          <Image
-            source={require('../../../assets/app-images/logo.png')}
-            style={styles.logoImage as any}
-            resizeMode="contain"
-          />
+          <View style={styles.logoBadge}>
+            <Image
+              source={require('../../../assets/app-images/logo.png')}
+              style={styles.logoImage as any}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={styles.brandTitle}>Vidya Learning</Text>
         </View>
 
@@ -125,9 +127,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  logoBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.palePeach,
+    borderWidth: 1,
+    borderColor: '#f2ded3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   logoImage: {
-    width: 36,
-    height: 36,
+    width: 28,
+    height: 28,
   },
   brandTitle: {
     fontFamily: 'Manrope_800ExtraBold',
