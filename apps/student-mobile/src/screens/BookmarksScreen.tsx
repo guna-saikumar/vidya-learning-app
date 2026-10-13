@@ -2,10 +2,8 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
-  TouchableOpacity, Platform,
-  SafeAreaView,
+  TouchableOpacity,
   StatusBar,
 } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -13,7 +11,6 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
@@ -51,7 +48,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <HeaderBar
         title="Bookmarks"
@@ -60,8 +57,8 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 18 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Page Heading & Subheading */}
@@ -72,15 +69,15 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         {bookmarks.length > 0 ? (
-          <View style={styles.bookmarkList}>
+          <View className="gap-3">
             {bookmarks.map((bm) => (
-              <HoverCard key={bm.id} style={styles.bookmarkCard} lift={-4}>
+              <HoverCard key={bm.id} className="bg-white rounded-[20px] p-5 border border-border gap-3 shadow-sm" lift={-4}>
                 <TouchableOpacity
-                  style={styles.cardMain}
+                  className="flex-row items-start gap-3"
                   onPress={() => handleOpenBookmark(bm)}
                   activeOpacity={0.8}
                 >
-                  <View style={styles.iconCircle}>
+                  <View className="w-10 h-10 rounded-xl bg-palePeach items-center justify-center mt-0.5">
                     <MaterialIcons
                       name={
                         bm.type === 'formula'
@@ -94,28 +91,28 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
                     />
                   </View>
 
-                  <View style={styles.contentBox}>
-                    <Text style={styles.subtitleText}>{bm.subtitle}</Text>
-                    <Text style={styles.titleText}>{bm.title}</Text>
+                  <View className="flex-1 min-w-0 gap-0.5" style={{ flex: 1, minWidth: 0 }}>
+                    <Text className="font-manrope-semibold text-[11px] text-textMuted">{bm.subtitle}</Text>
+                    <Text className="font-manrope-extrabold text-[15px] text-textPrimary">{bm.title}</Text>
                     {bm.previewText && (
-                      <Text style={styles.previewText} numberOfLines={2}>
+                      <Text className="font-manrope-medium text-xs text-textSecondary mt-1 leading-4" numberOfLines={2}>
                         {bm.previewText}
                       </Text>
                     )}
                   </View>
                 </TouchableOpacity>
 
-                <View style={styles.cardActions}>
+                <View className="flex-row items-center justify-between pt-2.5 border-t border-border">
                   <TouchableOpacity
-                    style={styles.openButton}
+                    className="flex-row items-center gap-1"
                     onPress={() => handleOpenBookmark(bm)}
                   >
-                    <Text style={styles.openButtonText}>Open</Text>
+                    <Text className="font-manrope-bold text-xs text-primary">Open</Text>
                     <MaterialIcons name="arrow-forward" size={14} color={Colors.primary} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.removeButton}
+                    className="p-1"
                     onPress={() => handleRemove(bm.id)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -126,12 +123,12 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
             ))}
           </View>
         ) : (
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconBox}>
+          <View className="items-center justify-center py-20 gap-2.5">
+            <View className="w-[54px] h-[54px] rounded-[17px] bg-palePeach items-center justify-center mb-1.5">
               <MaterialIcons name="bookmark-border" size={28} color={Colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>No bookmarks yet</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text className="font-manrope-extrabold text-[17px] text-textPrimary">No bookmarks yet</Text>
+            <Text className="font-manrope-medium text-[13px] text-textMuted text-center px-8 leading-[18px]">
               Save important chapters while reading to find them quickly here.
             </Text>
           </View>
@@ -141,137 +138,3 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 48,
-    gap: 18,
-  },
-  introCopy: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-    marginTop: -4,
-  },
-  bookmarkList: {
-    gap: 12,
-  },
-  bookmarkCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 12,
-    ...Shadows.subtle,
-    ...(Platform.OS === 'web' && {
-      transitionDuration: '220ms',
-      transitionProperty: 'transform, box-shadow, border-color',
-      transitionTimingFunction: 'cubic-bezier(0.2, 0, 0, 1)',
-      cursor: 'pointer',
-    } as any),
-  },
-  bookmarkCardHovered: {
-    transform: [{ translateY: -4 }],
-    shadowColor: 'rgba(58, 45, 41, 0.14)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
-    elevation: 6,
-    borderColor: Colors.borderHover,
-  },
-  cardMain: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Colors.palePeach,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  contentBox: {
-    flex: 1,
-    gap: 2,
-  },
-  subtitleText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-  titleText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  previewText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 4,
-    lineHeight: 16,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  openButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  openButtonText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  removeButton: {
-    padding: 4,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-    gap: 10,
-  },
-  emptyIconBox: {
-    width: 54,
-    height: 54,
-    borderRadius: 17,
-    backgroundColor: Colors.palePeach,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  emptyTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 17,
-    color: Colors.textPrimary,
-  },
-  emptySubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: Colors.textMuted,
-    textAlign: 'center',
-    paddingHorizontal: 30,
-    lineHeight: 18,
-  },
-});

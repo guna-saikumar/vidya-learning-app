@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Image,
   Switch,
@@ -16,11 +14,10 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
-import { getClasses, BOARD_INFO } from '../services/curriculumService';
+import { getClasses } from '../services/curriculumService';
 import { MainTabParamList, RootStackParamList } from '../types/navigation';
 
 type Props = CompositeScreenProps<
@@ -43,7 +40,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <HeaderBar
         title="Profile"
@@ -51,8 +48,8 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 24 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Page Heading & Subheading */}
@@ -63,42 +60,43 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         {/* Profile Card matching Figma Make .profile-card */}
-        <HoverCard style={styles.profileCard} lift={-3}>
+        <HoverCard className="flex-row items-center bg-palePeach rounded-[22px] p-[22px] gap-4" lift={-3}>
           <Image
             source={require('../../assets/app-images/avatar.png')}
-            style={styles.avatarLarge as any}
+            className="w-[58px] h-[58px] rounded-full"
+            style={{ width: 58, height: 58, borderRadius: 29 }}
           />
-          <View style={styles.profileTextInfo}>
-            <Text style={styles.nameText}>
+          <View className="flex-1 gap-1">
+            <Text className="font-manrope-extrabold text-lg text-textPrimary">
               {profile?.displayName || 'Aarav Sharma'}
             </Text>
-            <Text style={styles.enrolledText}>
+            <Text className="font-manrope-medium text-xs text-textSecondary">
               Enrolled in {activeClass.title} · AP State Board (2026–27)
             </Text>
           </View>
         </HoverCard>
 
         {/* Active Class Switcher */}
-        <View style={styles.sectionBlock}>
-          <Text style={styles.headingTitle}>Enrolled Class</Text>
-          <View style={styles.classSelectorGrid}>
+        <View className="gap-2">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Enrolled Class</Text>
+          <View className="flex-row gap-1.5 mt-1">
             {classes.map((c) => {
               const isSelected = c.id === profile?.activeClassId;
               return (
                 <TouchableOpacity
                   key={c.id}
-                  style={[
-                    styles.classSelectorButton,
-                    isSelected && styles.classSelectorButtonSelected,
-                  ]}
+                  className={`flex-1 min-h-[48px] border rounded-xl items-center justify-center ${
+                    isSelected
+                      ? 'bg-primary border-primary'
+                      : 'bg-white border-border'
+                  }`}
                   onPress={() => handleGradeChange(c.id)}
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.classSelectorText,
-                      isSelected && styles.classSelectorTextSelected,
-                    ]}
+                    className={`font-manrope-bold text-[11px] ${
+                      isSelected ? 'text-white' : 'text-textSecondary'
+                    }`}
                   >
                     Class {c.grade}
                   </Text>
@@ -109,46 +107,46 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* Profile Statistics */}
-        <View style={styles.sectionBlock}>
-          <Text style={styles.headingTitle}>Achievements</Text>
-          <View style={styles.profileStatsRow}>
-            <View style={styles.statArticle}>
-              <View style={styles.statIconBox}>
+        <View className="gap-2">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Achievements</Text>
+          <View className="flex-row gap-2.5 mt-1">
+            <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
+              <View className="w-[34px] h-[34px] rounded-[10px] bg-palePeach items-center justify-center mb-2">
                 <MaterialIcons name="local-fire-department" size={20} color={Colors.primary} />
               </View>
-              <Text style={styles.statNumberText}>{profile?.streakDays || 5}</Text>
-              <Text style={styles.statLabelText}>Day streak</Text>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{profile?.streakDays || 5}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Day streak</Text>
             </View>
 
-            <View style={styles.statArticle}>
-              <View style={styles.statIconBox}>
+            <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
+              <View className="w-[34px] h-[34px] rounded-[10px] bg-palePeach items-center justify-center mb-2">
                 <MaterialIcons name="bookmark" size={20} color={Colors.primary} />
               </View>
-              <Text style={styles.statNumberText}>{bookmarks.length}</Text>
-              <Text style={styles.statLabelText}>Bookmarks</Text>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{bookmarks.length}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Bookmarks</Text>
             </View>
 
-            <View style={styles.statArticle}>
-              <View style={styles.statIconBox}>
+            <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
+              <View className="w-[34px] h-[34px] rounded-[10px] bg-palePeach items-center justify-center mb-2">
                 <MaterialIcons name="check" size={20} color={Colors.primary} />
               </View>
-              <Text style={styles.statNumberText}>{completedCount}</Text>
-              <Text style={styles.statLabelText}>Completed</Text>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{completedCount}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Completed</Text>
             </View>
           </View>
         </View>
 
         {/* Settings Group */}
-        <View style={styles.sectionBlock}>
-          <Text style={styles.headingTitle}>Study Settings</Text>
+        <View className="gap-2">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Study Settings</Text>
 
-          <View style={styles.settingsGroup}>
-            <View style={styles.settingItem}>
-              <View style={styles.settingLeft}>
+          <View className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+            <View className="flex-row items-center justify-between p-4 border-b border-border">
+              <View className="flex-row items-center gap-3 flex-1">
                 <MaterialIcons name="notifications-active" size={20} color={Colors.primary} />
                 <View>
-                  <Text style={styles.settingTitle}>Daily Study Reminders</Text>
-                  <Text style={styles.settingSubtitle}>Notification at 6:00 PM</Text>
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Daily Study Reminders</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">Notification at 6:00 PM</Text>
                 </View>
               </View>
               <Switch
@@ -159,12 +157,12 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
 
-            <View style={styles.settingItem}>
-              <View style={styles.settingLeft}>
+            <View className="flex-row items-center justify-between p-4">
+              <View className="flex-row items-center gap-3 flex-1">
                 <MaterialIcons name="offline-pin" size={20} color={Colors.primary} />
                 <View>
-                  <Text style={styles.settingTitle}>Offline Content Cache</Text>
-                  <Text style={styles.settingSubtitle}>Cached curriculum for offline reading</Text>
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Offline Content Cache</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">Cached curriculum for offline reading</Text>
                 </View>
               </View>
               <Switch
@@ -181,172 +179,3 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 48,
-    gap: 24,
-  },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.palePeach,
-    borderRadius: 22,
-    padding: 22,
-    gap: 16,
-  },
-  avatarLarge: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-  },
-  profileTextInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  nameText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 18,
-    color: Colors.textPrimary,
-  },
-  enrolledText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  sectionBlock: {
-    gap: 8,
-  },
-  eyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.primary,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
-  headingTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 18,
-    color: Colors.textPrimary,
-    letterSpacing: -0.4,
-  },
-  classSelectorGrid: {
-    flexDirection: 'row',
-    gap: 7,
-    marginTop: 4,
-  },
-  classSelectorButton: {
-    flex: 1,
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  classSelectorButtonSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  classSelectorText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.textSecondary,
-  },
-  classSelectorTextSelected: {
-    color: Colors.white,
-  },
-  profileStatsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  statArticle: {
-    flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 16,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    ...Shadows.subtle,
-  },
-  statIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: Colors.palePeach,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  statNumberText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 18,
-    color: Colors.textPrimary,
-  },
-  statLabelText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  settingsGroup: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-    ...Shadows.subtle,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  settingTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.textPrimary,
-  },
-  settingSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  demoNote: {
-    flexDirection: 'row',
-    gap: 10,
-    padding: 16,
-    borderRadius: 15,
-    backgroundColor: Colors.softWarm,
-  },
-  demoNoteText: {
-    flex: 1,
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.primary,
-    lineHeight: 16,
-  },
-});

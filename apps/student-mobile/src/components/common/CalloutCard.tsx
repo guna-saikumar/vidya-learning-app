@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../../constants/colors';
 import { HoverCard } from './HoverCard';
@@ -17,7 +17,6 @@ interface CalloutCardProps {
 export const CalloutCard: React.FC<CalloutCardProps> = ({
   title,
   description,
-  iconName = 'auto-awesome',
   variant = 'example',
   formulaText,
   exampleBadges,
@@ -26,21 +25,21 @@ export const CalloutCard: React.FC<CalloutCardProps> = ({
   // Figma Make .learning-box
   if (variant === 'learning' || variant === 'tip') {
     return (
-      <HoverCard style={styles.learningBox} lift={-3}>
-        <View style={styles.learningIconBox}>
+      <HoverCard className="flex-row gap-3.5 p-5 rounded-[18px] border border-[#ead7cd] bg-palePeach my-2 overflow-hidden" lift={-3}>
+        <View className="mt-0.5">
           <MaterialIcons name="auto-awesome" size={20} color={Colors.primary} />
         </View>
-        <View style={styles.learningContent}>
-          <Text style={styles.learningTitle}>{title || 'Learning objectives'}</Text>
+        <View className="flex-1 min-w-0 gap-1.5" style={{ flex: 1, minWidth: 0 }}>
+          <Text className="font-manrope-extrabold text-base text-textPrimary">{title || 'Learning objectives'}</Text>
           {description ? (
-            <Text style={styles.learningDescription}>{description}</Text>
+            <Text className="font-manrope-medium text-[13px] text-[#66544d] leading-[19px]">{description}</Text>
           ) : null}
           {objectivesList && objectivesList.length > 0 && (
-            <View style={styles.objectivesList}>
+            <View className="gap-1.5 mt-1">
               {objectivesList.map((item, idx) => (
-                <View key={idx} style={styles.objectiveItem}>
-                  <Text style={styles.bulletDot}>•</Text>
-                  <Text style={styles.objectiveText}>{item}</Text>
+                <View key={idx} className="flex-row items-start gap-1.5">
+                  <Text className="font-manrope-bold text-sm text-primary leading-[18px]">•</Text>
+                  <Text className="font-manrope-medium text-[13px] text-[#66544d] leading-[19px] flex-1">{item}</Text>
                 </View>
               ))}
             </View>
@@ -53,19 +52,19 @@ export const CalloutCard: React.FC<CalloutCardProps> = ({
   // Figma Make .example-box (gold border-left with TRY IT YOURSELF)
   if (variant === 'example' || variant === 'formula') {
     return (
-      <HoverCard style={styles.exampleBox} lift={-3}>
-        <Text style={styles.exampleEyebrow}>
-          {(title || 'TRY IT YOURSELF').toUpperCase()}
+      <HoverCard className="p-[18px] border-l-[3px] border-l-accentGold rounded-r-xl bg-accentGoldBg my-2.5 gap-1.5 overflow-hidden" lift={-3}>
+        <Text className="font-manrope-extrabold text-[11px] text-accentGoldDark tracking-wider uppercase">
+          {title || 'TRY IT YOURSELF'}
         </Text>
         {formulaText && (
-          <Text style={styles.formulaText}>{formulaText}</Text>
+          <Text className="font-manrope-extrabold text-base text-textPrimary italic my-0.5">{formulaText}</Text>
         )}
-        <Text style={styles.exampleText}>{description}</Text>
+        <Text className="font-manrope-medium text-[13px] text-[#5b4a3e] leading-5">{description}</Text>
         {exampleBadges && exampleBadges.length > 0 && (
-          <View style={styles.badgesRow}>
+          <View className="flex-row flex-wrap gap-1.5 mt-1.5">
             {exampleBadges.map((badge, idx) => (
-              <View key={idx} style={styles.badgeChip}>
-                <Text style={styles.badgeChipText}>{badge}</Text>
+              <View key={idx} className="bg-white px-2 py-0.5 rounded border border-[#eedcba]">
+                <Text className="font-manrope-bold text-[11px] text-textPrimary">{badge}</Text>
               </View>
             ))}
           </View>
@@ -76,126 +75,9 @@ export const CalloutCard: React.FC<CalloutCardProps> = ({
 
   // Notice box
   return (
-    <View style={styles.noticeBox}>
+    <View className="flex-row items-center gap-2 p-3 rounded-xl bg-softWarm">
       <MaterialIcons name="info-outline" size={18} color={Colors.primary} />
-      <Text style={styles.noticeText}>{description}</Text>
+      <Text className="font-manrope-medium text-xs text-textSecondary flex-1 leading-4">{description}</Text>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  learningBox: {
-    flexDirection: 'row',
-    gap: 13,
-    padding: 19,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#ead7cd',
-    backgroundColor: Colors.palePeach,
-    marginVertical: 8,
-  },
-  learningIconBox: {
-    marginTop: 2,
-  },
-  learningContent: {
-    flex: 1,
-    gap: 6,
-  },
-  learningTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: Colors.textPrimary,
-  },
-  learningDescription: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: '#66544d',
-    lineHeight: 19,
-  },
-  objectivesList: {
-    gap: 6,
-    marginTop: 4,
-  },
-  objectiveItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-  },
-  bulletDot: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: Colors.primary,
-    lineHeight: 18,
-  },
-  objectiveText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: '#66544d',
-    lineHeight: 19,
-    flex: 1,
-  },
-  exampleBox: {
-    padding: 18,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.accentGold,
-    borderRadius: 14,
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    backgroundColor: Colors.accentGoldBg,
-    marginVertical: 10,
-    gap: 6,
-  },
-  exampleEyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.accentGoldDark,
-    letterSpacing: 1,
-  },
-  formulaText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: Colors.textPrimary,
-    fontStyle: 'italic',
-    marginVertical: 2,
-  },
-  exampleText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: '#5b4a3e',
-    lineHeight: 20,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 6,
-  },
-  badgeChip: {
-    backgroundColor: Colors.white,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#eedcba',
-  },
-  badgeChipText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.textPrimary,
-  },
-  noticeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.softWarm,
-  },
-  noticeText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-    flex: 1,
-    lineHeight: 16,
-  },
-});

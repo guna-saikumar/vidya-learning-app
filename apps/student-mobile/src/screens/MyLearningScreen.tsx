@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -13,7 +11,6 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
@@ -51,7 +48,7 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <HeaderBar
         title="My learning"
@@ -60,8 +57,8 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Page Heading & Subheading */}
@@ -72,19 +69,21 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         {/* Progress Hero matching Figma Make .progress-hero */}
-        <HoverCard style={styles.progressHero} lift={-4}>
-          <View style={styles.progressHeroCopy}>
-            <Text style={styles.heroEyebrow}>YOUR JOURNEY SO FAR</Text>
-            <Text style={styles.heroTitle}>Learning progress</Text>
-            <Text style={styles.heroSubtitle}>
+        <HoverCard className="flex-row items-center justify-between p-6 rounded-[22px] bg-primaryDark gap-4" lift={-4}>
+          <View className="flex-1 gap-1">
+            <Text className="font-manrope-extrabold text-[11px] text-primaryLight tracking-widest uppercase">
+              YOUR JOURNEY SO FAR
+            </Text>
+            <Text className="font-manrope-extrabold text-[22px] text-white tracking-tight">Learning progress</Text>
+            <Text className="font-manrope-medium text-[13px] text-primaryLight mt-0.5">
               {completedList.length} of {stats.totalChapters} chapters completed
             </Text>
           </View>
 
           {/* Progress Ring matching Figma Make .progress-ring */}
-          <View style={styles.progressRing}>
-            <View style={styles.progressRingInner}>
-              <Text style={styles.progressRingPercent}>
+          <View className="w-[78px] h-[78px] rounded-full bg-accentGoldLight items-center justify-center">
+            <View className="w-[62px] h-[62px] rounded-full bg-primaryDark items-center justify-center">
+              <Text className="font-manrope-extrabold text-sm text-white">
                 {overallPercent > 0 ? `${overallPercent}%` : '68%'}
               </Text>
             </View>
@@ -92,58 +91,61 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
         </HoverCard>
 
         {/* Filter Pills */}
-        <View style={styles.filtersRow}>
+        <View className="flex-row gap-2">
           <TouchableOpacity
-            style={[styles.filterPill, selectedTab === 'all' && styles.filterPillActive]}
+            className={`px-4 py-2 rounded-full border ${
+              selectedTab === 'all'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setSelectedTab('all')}
           >
             <Text
-              style={[
-                styles.filterPillText,
-                selectedTab === 'all' && styles.filterPillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                selectedTab === 'all' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               All ({progressList.length})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterPill,
-              selectedTab === 'in-progress' && styles.filterPillActive,
-            ]}
+            className={`px-4 py-2 rounded-full border ${
+              selectedTab === 'in-progress'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setSelectedTab('in-progress')}
           >
             <Text
-              style={[
-                styles.filterPillText,
-                selectedTab === 'in-progress' && styles.filterPillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                selectedTab === 'in-progress' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               In Progress ({inProgressList.length})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterPill,
-              selectedTab === 'completed' && styles.filterPillActive,
-            ]}
+            className={`px-4 py-2 rounded-full border ${
+              selectedTab === 'completed'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setSelectedTab('completed')}
           >
             <Text
-              style={[
-                styles.filterPillText,
-                selectedTab === 'completed' && styles.filterPillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                selectedTab === 'completed' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               Completed ({completedList.length})
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Learning List matching Figma Make .learning-list */}
-        <View style={styles.learningList}>
+        {/* Learning List */}
+        <View className="gap-3">
           {displayedList.length > 0 ? (
             displayedList.map((item) => {
               const res = getChapterById(item.chapterId);
@@ -153,7 +155,7 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
               return (
                 <TouchableOpacity
                   key={item.chapterId}
-                  style={styles.learningItemCard}
+                  className="flex-row items-center gap-3.5 p-[18px] border border-border rounded-[20px] bg-white shadow-sm"
                   onPress={() =>
                     navigation.navigate('ChapterDetails', {
                       classId: schoolClass.id,
@@ -163,7 +165,7 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
                   }
                   activeOpacity={0.85}
                 >
-                  <View style={styles.itemIconCircle}>
+                  <View className="w-[38px] h-[38px] rounded-xl bg-palePeach items-center justify-center">
                     <MaterialIcons
                       name={item.completed ? 'check' : 'menu-book'}
                       size={20}
@@ -171,22 +173,20 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
                     />
                   </View>
 
-                  <View style={styles.itemCopy}>
-                    <Text style={styles.itemMeta} numberOfLines={1}>
+                  <View className="flex-1 gap-[3px]">
+                    <Text className="font-manrope-semibold text-[11px] text-textMuted" numberOfLines={1}>
                       {schoolClass.title} · {subject.name}
                     </Text>
-                    <Text style={styles.itemTitle}>{chapter.title}</Text>
-                    <View style={styles.itemTrack}>
+                    <Text className="font-manrope-extrabold text-sm text-textPrimary">{chapter.title}</Text>
+                    <View className="h-1 rounded-full bg-[#f0e7e2] overflow-hidden mt-1">
                       <View
-                        style={[
-                          styles.itemFill,
-                          {
-                            width: `${item.completed ? 100 : item.progressPercent}%`,
-                            backgroundColor: item.completed
-                              ? Colors.success
-                              : Colors.primary,
-                          },
-                        ]}
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${item.completed ? 100 : item.progressPercent}%`,
+                          backgroundColor: item.completed
+                            ? Colors.success
+                            : Colors.primary,
+                        }}
                       />
                     </View>
                   </View>
@@ -196,10 +196,10 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
               );
             })
           ) : (
-            <View style={styles.emptyContainer}>
+            <View className="items-center justify-center py-12 gap-2">
               <MaterialIcons name="school" size={44} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>No Activity Yet</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text className="font-manrope-extrabold text-base text-textPrimary">No Activity Yet</Text>
+              <Text className="font-manrope-medium text-xs text-textMuted text-center">
                 Select a class on the dashboard to start learning chapters!
               </Text>
             </View>
@@ -210,159 +210,3 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 48,
-    gap: 20,
-  },
-  progressHero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 24,
-    borderRadius: 22,
-    backgroundColor: Colors.primaryDark,
-    gap: 16,
-  },
-  progressHeroCopy: {
-    flex: 1,
-    gap: 4,
-  },
-  heroEyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.primaryLight,
-    letterSpacing: 1.2,
-  },
-  heroTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 22,
-    color: Colors.white,
-    letterSpacing: -0.4,
-  },
-  heroSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: Colors.primaryLight,
-    marginTop: 2,
-  },
-  progressRing: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    backgroundColor: Colors.accentGoldLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressRingInner: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: Colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressRingPercent: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: Colors.white,
-  },
-  filtersRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filterPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: BorderRadius.pill,
-    backgroundColor: Colors.softWarm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  filterPillActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  filterPillText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  filterPillTextActive: {
-    color: Colors.white,
-  },
-  learningList: {
-    gap: 12,
-  },
-  learningItemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 20,
-    backgroundColor: Colors.white,
-    ...Shadows.subtle,
-  },
-  itemIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: Colors.palePeach,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemCopy: {
-    flex: 1,
-    gap: 3,
-  },
-  itemMeta: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-  itemTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  itemTrack: {
-    height: 4,
-    borderRadius: 20,
-    backgroundColor: '#f0e7e2',
-    overflow: 'hidden',
-    marginTop: 4,
-  },
-  itemFill: {
-    height: '100%',
-    borderRadius: 20,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 50,
-    gap: 8,
-  },
-  emptyTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: Colors.textPrimary,
-  },
-  emptySubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textMuted,
-    textAlign: 'center',
-  },
-});

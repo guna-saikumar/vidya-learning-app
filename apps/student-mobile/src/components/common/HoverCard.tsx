@@ -3,6 +3,7 @@ import { Pressable, StyleProp, ViewStyle, Platform } from 'react-native';
 import Colors from '../../constants/colors';
 
 interface HoverCardProps {
+  className?: string;
   style?: StyleProp<ViewStyle>;
   hoverStyle?: StyleProp<ViewStyle>;
   onPress?: () => void;
@@ -12,6 +13,7 @@ interface HoverCardProps {
 }
 
 export const HoverCard: React.FC<HoverCardProps> = ({
+  className,
   style,
   hoverStyle,
   onPress,
@@ -23,6 +25,7 @@ export const HoverCard: React.FC<HoverCardProps> = ({
 
   return (
     <Pressable
+      className={className}
       onPress={onPress}
       disabled={disabled || !onPress}
       onHoverIn={() => setIsHovered(true)}

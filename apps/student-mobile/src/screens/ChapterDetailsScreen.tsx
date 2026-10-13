@@ -2,17 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Image,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
 import { getChapterById } from '../services/curriculumService';
@@ -53,12 +50,12 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
   if (!chapter || !subject || !schoolClass) {
     return (
-      <View style={styles.safeArea}>
-        <View style={styles.subNavBar}>
+      <View className="flex-1 bg-white">
+        <View className="h-14 flex-row items-center justify-between px-5 bg-white border-b border-border">
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <MaterialIcons name="arrow-back" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.subNavBarTitle}>Chapter not found</Text>
+          <Text className="font-manrope-bold text-sm text-textPrimary ml-2">Chapter not found</Text>
         </View>
       </View>
     );
@@ -93,7 +90,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   };
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
 
       <HeaderBar
@@ -107,10 +104,11 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         onBookmarkPress={onBookmark}
         rightAction={
           <TouchableOpacity
-            style={[
-              styles.donePillButton,
-              isCompleted && styles.donePillButtonCompleted,
-            ]}
+            className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border ${
+              isCompleted
+                ? 'bg-success border-success'
+                : 'bg-white border-success'
+            }`}
             onPress={onToggleDone}
             activeOpacity={0.8}
           >
@@ -120,10 +118,9 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               color={isCompleted ? Colors.white : Colors.success}
             />
             <Text
-              style={[
-                styles.donePillText,
-                isCompleted && styles.donePillTextCompleted,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                isCompleted ? 'text-white' : 'text-success'
+              }`}
             >
               {isCompleted ? 'Done' : 'Mark Done'}
             </Text>
@@ -132,24 +129,23 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
       />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 50, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Chapter Header Block */}
-        <View style={styles.headerBlock}>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaText}>{schoolClass.title}</Text>
-            <Text style={styles.metaBullet}>•</Text>
-            <Text style={styles.metaText}>
+        <View className="gap-2">
+          <View className="flex-row items-center gap-2">
+            <Text className="font-manrope-semibold text-xs text-textSecondary">{schoolClass.title}</Text>
+            <Text className="text-textMuted text-xs">•</Text>
+            <Text className="font-manrope-semibold text-xs text-textSecondary">
               {chapter.sections.length} Sections
             </Text>
-            <Text style={styles.metaBullet}>•</Text>
+            <Text className="text-textMuted text-xs">•</Text>
             <Text
-              style={[
-                styles.metaStatusText,
-                isCompleted && styles.metaStatusCompleted,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                isCompleted ? 'text-success' : 'text-primary'
+              }`}
             >
               {isCompleted ? 'Completed' : 'In Progress'}
             </Text>
@@ -158,21 +154,21 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
         {/* Learning Objectives Box */}
         {chapter.learningGoals && chapter.learningGoals.length > 0 && (
-          <View style={styles.goalsContainer}>
-            <View style={styles.goalsTitleRow}>
+          <View className="bg-palePeach rounded-[18px] p-5 border border-[#ead7cd] gap-2.5 my-1">
+            <View className="flex-row items-center gap-2">
               <MaterialIcons name="auto-awesome" size={18} color={Colors.primary} />
-              <Text style={styles.goalsTitle}>Learning objectives</Text>
+              <Text className="font-manrope-extrabold text-base text-textPrimary">Learning objectives</Text>
             </View>
-            <Text style={styles.goalsIntro}>
+            <Text className="font-manrope-medium text-[13px] text-textSecondary leading-[18px]">
               By the end of this chapter, you will understand:
             </Text>
-            <View style={styles.goalsList}>
+            <View className="gap-2 mt-1">
               {chapter.learningGoals.map((goal, idx) => (
-                <View key={idx} style={styles.goalItem}>
-                  <View style={styles.goalNumber}>
-                    <Text style={styles.goalNumberText}>{idx + 1}</Text>
+                <View key={idx} className="flex-row items-start gap-2.5">
+                  <View className="w-5 h-5 rounded-full bg-white items-center justify-center mt-0.5">
+                    <Text className="font-manrope-bold text-[10px] text-primary">{idx + 1}</Text>
                   </View>
-                  <Text style={styles.goalItemText}>{goal}</Text>
+                  <Text className="font-manrope-medium text-[13px] text-textPrimary leading-[18px] flex-1">{goal}</Text>
                 </View>
               ))}
             </View>
@@ -180,13 +176,15 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         )}
 
         {/* Atmospheric Study Banner */}
-        <View style={styles.bannerContainer}>
+        <View className="h-40 rounded-[20px] overflow-hidden my-1 relative" style={{ height: 160, width: '100%' }}>
           <Image
             source={require('../../assets/app-images/study_banner.png')}
-            style={styles.bannerImage}
+            className="w-full h-full"
+            style={{ width: '100%', height: 160 }}
+            resizeMode="cover"
           />
-          <View style={styles.bannerOverlay}>
-            <Text style={styles.bannerCaption}>
+          <View className="absolute inset-0 bg-black/30 justify-end p-4">
+            <Text className="font-manrope-bold text-sm text-white">
               {chapter.unitName || 'Foundations of Modern Arithmetic'}
             </Text>
           </View>
@@ -194,9 +192,9 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
         {/* Detailed Sections */}
         {chapter.sections.map((section, idx) => (
-          <View key={section.id} style={styles.sectionBlock}>
+          <View key={section.id} className="bg-white rounded-[20px] p-5 border border-border gap-3.5 my-1 shadow-sm">
             <TouchableOpacity
-              style={styles.sectionHeaderClickable}
+              className="flex-row items-center gap-3"
               onPress={() =>
                 navigation.navigate('SectionDetails', {
                   classId,
@@ -207,16 +205,16 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               }
               activeOpacity={0.8}
             >
-              <View style={styles.sectionOrderBadge}>
-                <Text style={styles.sectionOrderText}>
+              <View className="w-9 h-9 rounded-xl bg-palePeach items-center justify-center">
+                <Text className="font-manrope-extrabold text-xs text-primary">
                   {chapter.order}.{idx + 1}
                 </Text>
               </View>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Text className="font-manrope-extrabold text-base text-textPrimary flex-1 tracking-tight">{section.title}</Text>
               <MaterialIcons name="chevron-right" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
 
-            <Text style={styles.sectionBodyText}>{section.content}</Text>
+            <Text className="font-manrope-medium text-sm text-textSecondary leading-[22px]">{section.content}</Text>
 
             {/* Special Formula / Axiom Callout if provided */}
             {section.keyAxiom && (
@@ -235,18 +233,18 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         ))}
 
         {/* Core Algebraic Properties Bento Card */}
-        <View style={styles.bentoSection}>
-          <Text style={styles.bentoHeader}>Core Algebraic Properties</Text>
-          <View style={styles.bentoGrid}>
-            <View style={styles.bentoBox}>
-              <Text style={styles.bentoPropertyTitle}>Addition</Text>
-              <Text style={styles.bentoFormula}>a/b + c/d ∈ ℚ</Text>
-              <Text style={styles.bentoExample}>3/8 + (-5/7) = -19/56</Text>
+        <View className="my-2 gap-3">
+          <Text className="font-manrope-extrabold text-base text-textPrimary tracking-tight">Core Algebraic Properties</Text>
+          <View className="flex-row gap-3">
+            <View className="flex-1 bg-surfaceSoft p-4 rounded-2xl border border-border gap-1.5">
+              <Text className="font-manrope-bold text-xs text-primary uppercase tracking-wider">Addition</Text>
+              <Text className="font-manrope-extrabold text-base text-textPrimary my-0.5">a/b + c/d ∈ ℚ</Text>
+              <Text className="font-manrope-medium text-xs text-textSecondary">3/8 + (-5/7) = -19/56</Text>
             </View>
-            <View style={styles.bentoBox}>
-              <Text style={styles.bentoPropertyTitle}>Multiplication</Text>
-              <Text style={styles.bentoFormula}>a/b × c/d ∈ ℚ</Text>
-              <Text style={styles.bentoExample}>-2/3 × 4/5 = -8/15</Text>
+            <View className="flex-1 bg-surfaceSoft p-4 rounded-2xl border border-border gap-1.5">
+              <Text className="font-manrope-bold text-xs text-primary uppercase tracking-wider">Multiplication</Text>
+              <Text className="font-manrope-extrabold text-base text-textPrimary my-0.5">a/b × c/d ∈ ℚ</Text>
+              <Text className="font-manrope-medium text-xs text-textSecondary">-2/3 × 4/5 = -8/15</Text>
             </View>
           </View>
         </View>
@@ -260,36 +258,41 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
         {/* Interactive Quick Quiz / Concept Check */}
         {chapter.quiz && (
-          <View style={styles.quizCard}>
-            <View style={styles.quizHeader}>
+          <View className="bg-white rounded-[20px] p-5 border border-border gap-3.5 my-2 shadow-sm">
+            <View className="flex-row items-center gap-2">
               <MaterialIcons name="help-outline" size={18} color={Colors.primary} />
-              <Text style={styles.quizHeaderTitle}>QUICK CONCEPT CHECK</Text>
+              <Text className="font-manrope-extrabold text-xs text-primary tracking-wider uppercase">QUICK CONCEPT CHECK</Text>
             </View>
-            <Text style={styles.quizQuestion}>{chapter.quiz.question}</Text>
+            <Text className="font-manrope-extrabold text-base text-textPrimary leading-[22px]">{chapter.quiz.question}</Text>
 
-            <View style={styles.quizOptions}>
+            <View className="gap-2.5">
               {chapter.quiz.options.map((opt, optIdx) => {
                 const isSelected = selectedQuizOption === optIdx;
                 const isCorrect = optIdx === chapter.quiz?.correctIndex;
                 return (
                   <TouchableOpacity
                     key={optIdx}
-                    style={[
-                      styles.quizOption,
-                      isSelected && styles.quizOptionSelected,
-                      showQuizResult && isCorrect && styles.quizOptionCorrect,
-                      showQuizResult && isSelected && !isCorrect && styles.quizOptionIncorrect,
-                    ]}
+                    className={`flex-row items-center justify-between p-3.5 rounded-xl border ${
+                      showQuizResult && isCorrect
+                        ? 'border-success bg-successBg'
+                        : showQuizResult && isSelected && !isCorrect
+                        ? 'border-error bg-errorBg'
+                        : isSelected
+                        ? 'border-primary bg-palePeach/40'
+                        : 'border-border bg-white'
+                    }`}
                     onPress={() => handleQuizSelect(optIdx)}
                     disabled={showQuizResult}
                     activeOpacity={0.8}
                   >
                     <Text
-                      style={[
-                        styles.quizOptionText,
-                        showQuizResult && isCorrect && styles.quizOptionTextCorrect,
-                        showQuizResult && isSelected && !isCorrect && styles.quizOptionTextIncorrect,
-                      ]}
+                      className={`font-manrope-medium text-sm flex-1 ${
+                        showQuizResult && isCorrect
+                          ? 'font-manrope-bold text-success'
+                          : showQuizResult && isSelected && !isCorrect
+                          ? 'font-manrope-bold text-error'
+                          : 'text-textPrimary'
+                      }`}
                     >
                       {opt}
                     </Text>
@@ -302,8 +305,8 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
             </View>
 
             {showQuizResult && (
-              <View style={styles.quizExplanationBox}>
-                <Text style={styles.quizExplanationText}>
+              <View className="bg-softWarm p-3 rounded-xl mt-1">
+                <Text className="font-manrope-medium text-xs text-textSecondary leading-[18px]">
                   {chapter.quiz.explanation}
                 </Text>
               </View>
@@ -313,10 +316,9 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
         {/* Big Mark Complete Button */}
         <TouchableOpacity
-          style={[
-            styles.bigCompleteButton,
-            isCompleted && styles.bigCompleteButtonDone,
-          ]}
+          className={`flex-row items-center justify-center gap-2 py-4 px-6 rounded-2xl shadow-sm ${
+            isCompleted ? 'bg-success' : 'bg-primary'
+          }`}
           onPress={onToggleDone}
           activeOpacity={0.88}
         >
@@ -325,16 +327,16 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
             size={20}
             color={Colors.white}
           />
-          <Text style={styles.bigCompleteButtonText}>
+          <Text className="font-manrope-extrabold text-sm text-white">
             {isCompleted ? 'Chapter Completed' : 'Mark Chapter as Completed'}
           </Text>
         </TouchableOpacity>
 
         {/* Previous & Next Chapter Navigation */}
-        <View style={styles.chapterNavContainer}>
+        <View className="gap-2.5 mt-2">
           {nextChapter ? (
             <TouchableOpacity
-              style={styles.nextChapterCard}
+              className="bg-primaryDark p-5 rounded-2xl flex-row items-center justify-between shadow-sm"
               onPress={() =>
                 navigation.navigate('ChapterDetails', {
                   classId,
@@ -344,18 +346,18 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               }
               activeOpacity={0.88}
             >
-              <View style={styles.nextChapterTextContainer}>
-                <Text style={styles.nextChapterPrefix}>
+              <View className="flex-1">
+                <Text className="font-manrope-bold text-xs text-primaryLight uppercase tracking-wider">
                   Next Chapter • Ch 0{nextChapter.order}
                 </Text>
-                <Text style={styles.nextChapterTitle}>{nextChapter.title}</Text>
+                <Text className="font-manrope-extrabold text-base text-white tracking-tight mt-0.5">{nextChapter.title}</Text>
               </View>
               <MaterialIcons name="arrow-forward" size={22} color={Colors.white} />
             </TouchableOpacity>
           ) : (
-            <View style={styles.endOfSyllabusBox}>
+            <View className="flex-row items-center justify-center gap-2 p-4 rounded-xl bg-successBg">
               <MaterialIcons name="celebration" size={20} color={Colors.success} />
-              <Text style={styles.endOfSyllabusText}>
+              <Text className="font-manrope-bold text-xs text-success">
                 You have reached the end of this syllabus!
               </Text>
             </View>
@@ -363,7 +365,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
           {prevChapter ? (
             <TouchableOpacity
-              style={styles.prevChapterButton}
+              className="flex-row items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border bg-white mt-1"
               onPress={() =>
                 navigation.navigate('ChapterDetails', {
                   classId,
@@ -374,14 +376,14 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               activeOpacity={0.8}
             >
               <MaterialIcons name="arrow-back" size={16} color={Colors.textSecondary} />
-              <Text style={styles.prevChapterText}>
+              <Text className="font-manrope-medium text-xs text-textSecondary">
                 Previous: {prevChapter.title}
               </Text>
             </TouchableOpacity>
           ) : (
-            <View style={styles.startOfSyllabusBox}>
+            <View className="flex-row items-center justify-center gap-2 py-2 mt-1">
               <MaterialIcons name="first-page" size={16} color={Colors.textMuted} />
-              <Text style={styles.startOfSyllabusText}>
+              <Text className="font-manrope-medium text-xs text-textMuted">
                 Start of Syllabus • First Chapter
               </Text>
             </View>
@@ -392,456 +394,3 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  subNavBar: {
-    height: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flex: 1,
-  },
-  backButtonText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.textPrimary,
-  },
-  backButtonBullet: {
-    color: Colors.textMuted,
-    fontSize: 12,
-  },
-  backButtonClass: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  subNavBarTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: Colors.textPrimary,
-    marginLeft: 8,
-  },
-  navRightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  navIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.palePeach,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navIconButtonActive: {
-    backgroundColor: Colors.palePeachHover,
-  },
-  donePillButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.successBg,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.pill,
-  },
-  donePillButtonCompleted: {
-    backgroundColor: Colors.success,
-  },
-  donePillText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.success,
-  },
-  donePillTextCompleted: {
-    color: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 48,
-    gap: 20,
-  },
-  headerBlock: {
-    gap: 4,
-  },
-  chapterBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.palePeach,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.pill,
-  },
-  chapterBadgeText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.primary,
-  },
-  chapterTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 24,
-    color: Colors.textPrimary,
-    letterSpacing: -0.5,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 2,
-  },
-  metaText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  metaBullet: {
-    color: Colors.textMuted,
-    fontSize: 10,
-  },
-  metaStatusText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  metaStatusCompleted: {
-    color: Colors.success,
-  },
-  goalsContainer: {
-    backgroundColor: Colors.palePeach,
-    borderRadius: 20,
-    padding: 20,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#ead7cd',
-  },
-  goalsTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  goalsTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: Colors.primary,
-  },
-  goalsIntro: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  goalsList: {
-    gap: 6,
-    marginTop: 2,
-  },
-  goalItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  goalNumber: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-  },
-  goalNumberText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    color: Colors.white,
-  },
-  goalItemText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: Colors.textPrimary,
-    flex: 1,
-    lineHeight: 18,
-  },
-  bannerContainer: {
-    height: 140,
-    borderRadius: 18,
-    overflow: 'hidden',
-    position: 'relative',
-    ...Shadows.subtle,
-  },
-  bannerImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  bannerOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: 14,
-    backgroundColor: 'rgba(58, 45, 41, 0.45)',
-  },
-  bannerCaption: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.white,
-    letterSpacing: 0.3,
-  },
-  sectionBlock: {
-    gap: 8,
-    paddingTop: 4,
-  },
-  sectionHeaderClickable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sectionOrderBadge: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  sectionOrderText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.white,
-  },
-  sectionTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 17,
-    color: Colors.textPrimary,
-    flex: 1,
-  },
-  sectionBodyText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    color: Colors.textLead,
-    lineHeight: 23,
-  },
-  bentoSection: {
-    backgroundColor: Colors.softWarm,
-    borderRadius: 18,
-    padding: 16,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  bentoHeader: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  bentoGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  bentoBox: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 11,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.subtle,
-  },
-  bentoPropertyTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.primary,
-  },
-  bentoFormula: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: Colors.textPrimary,
-  },
-  bentoExample: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: Colors.textSecondary,
-  },
-  quizCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 10,
-    ...Shadows.subtle,
-  },
-  quizHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  quizHeaderTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.primary,
-    letterSpacing: 1,
-  },
-  quizQuestion: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: Colors.textPrimary,
-    lineHeight: 20,
-  },
-  quizOptions: {
-    gap: 8,
-  },
-  quizOption: {
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: Colors.white,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  quizOptionSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.palePeach,
-  },
-  quizOptionCorrect: {
-    backgroundColor: Colors.successBg,
-    borderColor: Colors.success,
-  },
-  quizOptionIncorrect: {
-    backgroundColor: Colors.errorBg,
-    borderColor: Colors.error,
-  },
-  quizOptionText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 13,
-    color: Colors.textPrimary,
-  },
-  quizOptionTextCorrect: {
-    color: Colors.success,
-    fontFamily: 'Manrope_700Bold',
-  },
-  quizOptionTextIncorrect: {
-    color: Colors.error,
-  },
-  quizExplanationBox: {
-    backgroundColor: Colors.softWarm,
-    padding: 10,
-    borderRadius: 8,
-  },
-  quizExplanationText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-    lineHeight: 16,
-  },
-  bigCompleteButton: {
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: Colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 6,
-    shadowColor: Colors.primaryDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  bigCompleteButtonDone: {
-    backgroundColor: Colors.success,
-  },
-  bigCompleteButtonText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: Colors.white,
-  },
-  chapterNavContainer: {
-    gap: 10,
-    paddingTop: 8,
-  },
-  nextChapterCard: {
-    backgroundColor: Colors.primary,
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    ...Shadows.subtle,
-  },
-  nextChapterTextContainer: {
-    flex: 1,
-  },
-  nextChapterPrefix: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    color: Colors.primaryLight,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  nextChapterTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: Colors.white,
-    marginTop: 2,
-  },
-  endOfSyllabusBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.successBg,
-    padding: 16,
-    borderRadius: 18,
-  },
-  endOfSyllabusText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.success,
-  },
-  prevChapterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    alignSelf: 'flex-start',
-  },
-  prevChapterText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  startOfSyllabusBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-  },
-  startOfSyllabusText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-});

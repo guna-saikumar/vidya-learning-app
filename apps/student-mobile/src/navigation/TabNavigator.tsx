@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Platform, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
@@ -18,9 +18,23 @@ export const TabNavigator: React.FC = () => {
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#99877f',
-        tabBarStyle: styles.tabBar,
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarItemStyle: styles.tabBarItem,
+        tabBarStyle: {
+          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+          borderTopColor: Colors.border,
+          borderTopWidth: 1,
+          height: Platform.OS === 'ios' ? 86 : 68,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingTop: 6,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'Manrope_700Bold',
+          fontSize: 10,
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
+        },
       }}
     >
       <Tab.Screen
@@ -29,7 +43,7 @@ export const TabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+            <View className={`w-11 h-[30px] rounded-xl items-center justify-center ${focused ? 'bg-palePeach' : ''}`}>
               <MaterialIcons name="home" size={22} color={color} />
             </View>
           ),
@@ -41,7 +55,7 @@ export const TabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'My Learning',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+            <View className={`w-11 h-[30px] rounded-xl items-center justify-center ${focused ? 'bg-palePeach' : ''}`}>
               <MaterialIcons name="school" size={22} color={color} />
             </View>
           ),
@@ -53,7 +67,7 @@ export const TabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Bookmarks',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+            <View className={`w-11 h-[30px] rounded-xl items-center justify-center ${focused ? 'bg-palePeach' : ''}`}>
               <MaterialIcons name="bookmark" size={22} color={color} />
             </View>
           ),
@@ -65,7 +79,7 @@ export const TabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+            <View className={`w-11 h-[30px] rounded-xl items-center justify-center ${focused ? 'bg-palePeach' : ''}`}>
               <MaterialIcons name="person" size={22} color={color} />
             </View>
           ),
@@ -74,37 +88,3 @@ export const TabNavigator: React.FC = () => {
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    borderTopColor: Colors.border,
-    borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 86 : 68,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-    paddingTop: 6,
-    elevation: 8,
-    shadowColor: Colors.shadowCard,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-  },
-  tabBarItem: {
-    paddingVertical: 2,
-  },
-  iconPill: {
-    width: 44,
-    height: 30,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPillActive: {
-    backgroundColor: Colors.palePeach,
-  },
-  tabBarLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    marginTop: 2,
-  },
-});

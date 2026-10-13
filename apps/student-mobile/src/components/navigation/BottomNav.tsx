@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../../constants/colors';
@@ -23,15 +23,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
   ];
 
   const handleTabPress = (key: BottomNavTab) => {
-    if (activeTab === key && (key === 'Home' || key === 'MyLearning' || key === 'Bookmarks' || key === 'Profile')) {
-      navigation.navigate(key);
-      return;
-    }
     navigation.navigate(key);
   };
 
   return (
-    <View style={[styles.tabBar, { paddingBottom: bottomInset, height: 62 + bottomInset }]}>
+    <View
+      className="bg-white/95 border-t border-border pt-2 flex-row items-center justify-around shadow-lg"
+      style={{ paddingBottom: bottomInset, height: 62 + bottomInset }}
+    >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
         const color = isActive ? Colors.primary : '#99877f';
@@ -39,16 +38,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
         return (
           <TouchableOpacity
             key={tab.key}
-            style={styles.tabItem}
+            className="flex-1 items-center justify-center py-0.5"
             onPress={() => handleTabPress(tab.key)}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={tab.label}
           >
-            <View style={[styles.iconPill, isActive && styles.iconPillActive]}>
+            <View className={`w-12 h-8 rounded-full items-center justify-center ${isActive ? 'bg-palePeach' : ''}`}>
               <MaterialIcons name={tab.icon} size={22} color={color} />
             </View>
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+            <Text
+              className={`font-manrope-bold text-[11px] mt-0.5 ${isActive ? 'text-primary' : 'text-[#99877f]'}`}
+            >
               {tab.label}
             </Text>
           </TouchableOpacity>
@@ -57,45 +58,3 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    borderTopColor: Colors.border,
-    borderTopWidth: 1,
-    paddingTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    elevation: 8,
-    shadowColor: Colors.shadowCard,
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 2,
-  },
-  iconPill: {
-    width: 48,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPillActive: {
-    backgroundColor: Colors.palePeach,
-  },
-  tabLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    marginTop: 3,
-    color: '#99877f',
-  },
-  tabLabelActive: {
-    color: Colors.primary,
-  },
-});
