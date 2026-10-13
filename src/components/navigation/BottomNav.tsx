@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '../constants/colors';
+import Colors from '../../constants/colors';
 
 export type BottomNavTab = 'Home' | 'MyLearning' | 'Bookmarks' | 'Profile';
 

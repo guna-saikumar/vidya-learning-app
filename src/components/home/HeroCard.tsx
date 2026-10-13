@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../constants/colors';
-import { Spacing, BorderRadius } from '../constants/spacing';
+import Colors from '../../constants/colors';
+import { Spacing, BorderRadius } from '../../constants/spacing';
 
 interface HeroCardProps {
   pillText?: string;

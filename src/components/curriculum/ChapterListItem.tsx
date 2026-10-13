@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../constants/colors';
-import { Shadows } from '../constants/spacing';
-import { Chapter } from '../types/curriculum';
-import { HoverCard } from './HoverCard';
+import Colors from '../../constants/colors';
+import { Shadows } from '../../constants/spacing';
+import { Chapter } from '../../types/curriculum';
+import { HoverCard } from '../common/HoverCard';
 
 interface ChapterListItemProps {
   chapter: Chapter;

@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '../constants/colors';
-import { Spacing, BorderRadius } from '../constants/spacing';
+import Colors from '../../constants/colors';
+import { Spacing, BorderRadius } from '../../constants/spacing';
 
 interface HeaderBarProps {
   title?: string;
@@ -66,7 +66,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             <Text style={styles.profileClass}>{studentClass}</Text>
           </View>
           <Image
-            source={require('../../assets/app-images/avatar.png')}
+            source={require('../../../assets/app-images/avatar.png')}
             style={styles.avatarImage as any}
           />
         </TouchableOpacity>

@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../constants/colors';
-import { BorderRadius, Shadows } from '../constants/spacing';
-import { SchoolClass } from '../types/curriculum';
-import { HoverCard } from './HoverCard';
+import Colors from '../../constants/colors';
+import { BorderRadius, Shadows } from '../../constants/spacing';
+import { SchoolClass } from '../../types/curriculum';
+import { HoverCard } from '../common/HoverCard';
 
 interface ClassCardProps {
   schoolClass: SchoolClass;

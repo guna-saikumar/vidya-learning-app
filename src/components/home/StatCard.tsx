@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../constants/colors';
-import { Shadows } from '../constants/spacing';
-import { HoverCard } from './HoverCard';
+import Colors from '../../constants/colors';
+import { Shadows } from '../../constants/spacing';
+import { HoverCard } from '../common/HoverCard';
 
 interface StatCardProps {
   label: string;

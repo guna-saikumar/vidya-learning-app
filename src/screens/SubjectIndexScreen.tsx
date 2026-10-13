@@ -13,11 +13,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
-import { HeaderBar } from '../components/HeaderBar';
-import { SearchBar } from '../components/SearchBar';
-import { ChapterListItem } from '../components/ChapterListItem';
-import { HoverCard } from '../components/HoverCard';
-import { BottomNav } from '../components/BottomNav';
+import { HeaderBar, BottomNav } from '../components/navigation';
+import { SearchBar, HoverCard } from '../components/common';
+import { ChapterListItem } from '../components/curriculum';
 import { getSubjectById } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
@@ -243,7 +241,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
                       chapterId: chapter.id,
                     })
                   }
-                  onSectionPress={(sectionId) =>
+                  onSectionPress={(sectionId: string) =>
                     navigation.navigate('SectionDetails', {
                       classId,
                       subjectId,
