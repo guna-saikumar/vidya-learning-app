@@ -4,7 +4,7 @@
 - `apps/admin-mobile`: Minimal Expo admin shell.
 - `apps/student-web`: Next.js student web portal.
 - `apps/admin-web`: Next.js admin dashboard.
-- `apps/api`: Fastify API with basic health, curriculum, and admin ping routes.
+- `apps/api`: NestJS v11 API using the Fastify adapter, Swagger, JWT auth, Zod validation, Prisma, and PostgreSQL.
 - `packages/design-tokens`: Shared colors/spacing/shadows.
 - `packages/curriculum`: Shared curriculum types, data, and service helpers.
 - `packages/auth`: Role types (`STUDENT`, `ADMIN`) and helpers.
