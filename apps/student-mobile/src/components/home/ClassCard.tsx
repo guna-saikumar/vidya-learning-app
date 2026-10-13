@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { BorderRadius, Shadows } from '../../../../packages/design-tokens/src/spacing';
-import { SchoolClass } from '../../../../packages/curriculum/src/curriculum.types';
-import { HoverCard } from './HoverCard';
+import Colors from '../../../../../packages/design-tokens/src/colors';
+import { BorderRadius, Shadows } from '../../../../../packages/design-tokens/src/spacing';
+import { SchoolClass, Subject } from '../../../../../packages/curriculum/src/curriculum.types';
+import { HoverCard } from '../common';
 
 interface ClassCardProps {
   schoolClass: SchoolClass;
@@ -20,7 +20,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({
   horizontal = true,
 }) => {
   const totalChapters = schoolClass.subjects.reduce(
-    (acc, subj) => acc + subj.chapters.length,
+    (acc: number, subj: Subject) => acc + subj.chapters.length,
     0
   );
 

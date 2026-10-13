@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Shadows } from '../../../../packages/design-tokens/src/spacing';
+import Colors from '../../../../../packages/design-tokens/src/colors';
+import { Shadows } from '../../../../../packages/design-tokens/src/spacing';
 
 interface SearchBarProps {
   value: string;

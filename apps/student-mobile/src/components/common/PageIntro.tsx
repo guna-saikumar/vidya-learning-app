@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Colors from '../../../../packages/design-tokens/src/colors';
+import Colors from '../../../../../packages/design-tokens/src/colors';
 
 interface PageIntroProps {
   eyebrow?: string;

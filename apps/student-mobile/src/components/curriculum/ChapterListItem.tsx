@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Shadows } from '../../../../packages/design-tokens/src/spacing';
-import { Chapter } from '../../../../packages/curriculum/src/curriculum.types';
-import { HoverCard } from './HoverCard';
+import Colors from '../../../../../packages/design-tokens/src/colors';
+import { Shadows } from '../../../../../packages/design-tokens/src/spacing';
+import { Chapter, Section } from '../../../../../packages/curriculum/src/curriculum.types';
+import { HoverCard } from '../common';
 
 interface ChapterListItemProps {
   chapter: Chapter;
@@ -76,7 +76,7 @@ export const ChapterListItem: React.FC<ChapterListItemProps> = ({
       {isExpanded && (
         <View style={styles.sectionsContainer}>
           <Text style={styles.sectionsHeaderLabel}>SECTIONS IN THIS CHAPTER</Text>
-          {chapter.sections.map((section, idx) => (
+          {chapter.sections.map((section: Section, idx: number) => (
             <TouchableOpacity
               key={section.id}
               style={styles.sectionRow}

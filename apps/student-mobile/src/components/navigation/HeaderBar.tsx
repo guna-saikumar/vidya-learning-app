@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Spacing, BorderRadius } from '../../../../packages/design-tokens/src/spacing';
+import Colors from '../../../../../packages/design-tokens/src/colors';
+import { Spacing, BorderRadius } from '../../../../../packages/design-tokens/src/spacing';
 
 interface HeaderBarProps {
   title?: string;
