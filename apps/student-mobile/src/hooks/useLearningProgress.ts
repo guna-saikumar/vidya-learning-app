@@ -8,7 +8,7 @@ import {
   toggleChapterCompletion,
   toggleBookmark,
 } from '../services/progressService';
-import { BookmarkItem, ChapterProgress, UserProfile } from '../../../../packages/curriculum/src/curriculum.types';
+import { BookmarkItem, ChapterProgress, UserProfile } from '../types/curriculum';
 
 export const useLearningProgress = () => {
   const [loading, setLoading] = useState(true);

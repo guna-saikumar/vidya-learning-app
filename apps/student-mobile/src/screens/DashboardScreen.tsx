@@ -12,12 +12,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Spacing, BorderRadius, Shadows } from '../../../../packages/design-tokens/src/spacing';
+import Colors from '../constants/colors';
+import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { StatCard, ClassCard } from '../components/home';
 import { SearchBar, HoverCard, CalloutCard } from '../components/common';
-import { getClasses, getCurriculumStats, searchCurriculum } from '../../../../packages/curriculum/src/curriculum.service';
+import { getClasses, getCurriculumStats, searchCurriculum } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList, MainTabParamList } from '../types/navigation';
 
@@ -130,50 +130,40 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Curriculum Overview / Stats Grid */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Curriculum Overview</Text>
-          <View style={styles.pillBadge}>
-            <Text style={styles.pillBadgeText}>AP SCERT 2026–27</Text>
-          </View>
+          <Text style={styles.sectionTitle}>Overview</Text>
         </View>
 
         <View style={styles.statsGrid}>
           <View style={styles.statsRow}>
             <StatCard
-              label="Total Classes"
+              label="Classes"
               value={stats.totalClasses}
-              badge="Grades 6–10"
               iconName="school"
             />
             <StatCard
-              label="Total Subjects"
+              label="Subjects"
               value={stats.totalSubjects}
-              subtitle="across syllabi"
               iconName="auto-stories"
             />
           </View>
           <View style={styles.statsRow}>
             <StatCard
-              label="Total Chapters"
+              label="Chapters"
               value={stats.totalChapters}
-              subtitle="topics"
               iconName="menu-book"
             />
             <StatCard
-              label="Progress"
+              label="Completed"
               value="68%"
-              badge="Completed"
               iconName="insights"
               isProgress={true}
             />
           </View>
         </View>
 
-        {/* 1st: Continue Learning Section (Immediate Action / Daily Habit) */}
+        {/* Continue Learning Section */}
         <View style={styles.sectionHeader}>
-          <View style={styles.titleWithDot}>
-            <Text style={styles.sectionTitle}>Continue Learning</Text>
-            <View style={styles.orangeDot} />
-          </View>
+          <Text style={styles.sectionTitle}>Continue Learning</Text>
           <TouchableOpacity onPress={() => navigation.navigate('MyLearning')}>
             <Text style={styles.linkText}>View All</Text>
           </TouchableOpacity>
@@ -186,14 +176,9 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialIcons name="calculate" size={24} color={Colors.primary} />
             </View>
             <View style={styles.continueCardTitleBox}>
-              <View style={styles.continueBreadcrumb}>
-                <Text style={styles.continueClassText}>Class 8 • Mathematics</Text>
-                <View style={styles.unitChip}>
-                  <Text style={styles.unitChipText}>Unit 1</Text>
-                </View>
-              </View>
+              <Text style={styles.continueClassText}>Mathematics • Class 8</Text>
               <Text style={styles.continueChapterTitle} numberOfLines={1}>
-                Chapter 1: Rational Numbers
+                Rational Numbers
               </Text>
             </View>
             <TouchableOpacity
@@ -213,7 +198,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           {/* Progress Tracker */}
           <View style={styles.progressTracker}>
             <View style={styles.progressRowLabels}>
-              <Text style={styles.subtopicsCount}>6 of 8 subtopics complete</Text>
+              <Text style={styles.subtopicsCount}>6 of 8 topics completed</Text>
               <Text style={styles.progressNumber}>75%</Text>
             </View>
             <View style={styles.progressBarBg}>
@@ -224,7 +209,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.continueFooter}>
             <View style={styles.timeRemainingRow}>
               <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
-              <Text style={styles.timeRemainingText}>15m remaining</Text>
+              <Text style={styles.timeRemainingText}>15 mins left</Text>
             </View>
             <TouchableOpacity
               style={styles.continueButton}
@@ -233,7 +218,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               }
               activeOpacity={0.85}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={styles.continueButtonText}>Resume</Text>
               <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
             </TouchableOpacity>
           </View>
@@ -246,14 +231,9 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialIcons name="science" size={24} color={Colors.primary} />
             </View>
             <View style={styles.continueCardTitleBox}>
-              <View style={styles.continueBreadcrumb}>
-                <Text style={styles.continueClassText}>Class 8 • Physical Science</Text>
-                <View style={styles.unitChip}>
-                  <Text style={styles.unitChipText}>Physics</Text>
-                </View>
-              </View>
+              <Text style={styles.continueClassText}>Physical Science • Class 8</Text>
               <Text style={styles.continueChapterTitle} numberOfLines={1}>
-                Chapter 1: Force and Pressure
+                Force and Pressure
               </Text>
             </View>
             <TouchableOpacity
@@ -273,7 +253,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           {/* Progress Tracker */}
           <View style={styles.progressTracker}>
             <View style={styles.progressRowLabels}>
-              <Text style={styles.subtopicsCount}>2 of 5 modules completed</Text>
+              <Text style={styles.subtopicsCount}>2 of 5 topics completed</Text>
               <Text style={styles.progressNumber}>40%</Text>
             </View>
             <View style={styles.progressBarBg}>
@@ -284,7 +264,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.continueFooter}>
             <View style={styles.timeRemainingRow}>
               <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
-              <Text style={styles.timeRemainingText}>28m remaining</Text>
+              <Text style={styles.timeRemainingText}>28 mins left</Text>
             </View>
             <TouchableOpacity
               style={styles.continueButton}
@@ -293,19 +273,15 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               }
               activeOpacity={0.85}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={styles.continueButtonText}>Resume</Text>
               <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
             </TouchableOpacity>
           </View>
         </HoverCard>
 
-        {/* 2nd: Select Your Class Section (Curriculum Exploration & Scope) */}
-        <View style={styles.sectionHeaderWithSubtitle}>
-          <View>
-            <Text style={styles.sectionTitle}>Select Your Class</Text>
-            <Text style={styles.sectionSubtitle}>Secondary Grades 6 to 10</Text>
-          </View>
-          <Text style={styles.headerMetaText}>SCERT AP Board</Text>
+        {/* Select Class Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Classes</Text>
         </View>
 
         <ScrollView
@@ -324,10 +300,12 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           ))}
         </ScrollView>
 
-        {/* Recent Activity & Bookmarks Highlights */}
+        {/* Saved Bookmarks */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Activity & Milestones</Text>
-          <MaterialIcons name="history" size={20} color={Colors.textMuted} />
+          <Text style={styles.sectionTitle}>Saved Bookmarks</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Bookmarks')}>
+            <Text style={styles.linkText}>View All</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.milestonesCard}>
@@ -368,11 +346,11 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Daily Study Ritual Tip */}
+        {/* Study Habit Tip */}
         <CalloutCard
           variant="learning"
-          title="Daily Study Ritual"
-          description="Reviewing one bookmarked formula every morning increases retention by 40%."
+          title="Daily Study Habit"
+          description="Consistent 20-minute daily sessions lead to significantly stronger conceptual retention."
         />
       </ScrollView>
       <BottomNav activeTab="Home" navigation={navigation} />
@@ -389,10 +367,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 50,
+    gap: 24,
   },
   greetingSection: {
     flexDirection: 'row',
@@ -418,16 +396,16 @@ const styles = StyleSheet.create({
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     backgroundColor: Colors.palePeach,
-    paddingHorizontal: 11,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: BorderRadius.pill,
     ...Shadows.subtle,
   },
   streakText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.primaryDark,
   },
   searchSection: {
@@ -436,7 +414,7 @@ const styles = StyleSheet.create({
   },
   searchResultsBox: {
     backgroundColor: Colors.white,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.border,
     padding: Spacing.sm,
@@ -445,17 +423,16 @@ const styles = StyleSheet.create({
   },
   searchResultsHeader: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.textMuted,
-    letterSpacing: 1,
     paddingHorizontal: 8,
     paddingBottom: 4,
   },
   searchResultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 9,
+    gap: 10,
+    paddingVertical: 10,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -477,76 +454,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  sectionHeaderWithSubtitle: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginTop: 4,
   },
   sectionTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 17,
+    fontSize: 18,
     color: Colors.textPrimary,
-    letterSpacing: -0.3,
-  },
-  sectionSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  pillBadge: {
-    backgroundColor: Colors.palePeach,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  pillBadgeText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.primary,
-  },
-  headerMetaText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.primary,
-    marginTop: 2,
+    letterSpacing: -0.4,
   },
   statsGrid: {
-    gap: 10,
+    gap: 12,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
   classCardsScroll: {
     paddingVertical: 4,
   },
-  titleWithDot: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  orangeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.primary,
-  },
   linkText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.primary,
   },
   continueCard: {
     backgroundColor: Colors.white,
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 10,
+    gap: 14,
     ...Shadows.subtle,
     ...(Platform.OS === 'web' && {
       transitionDuration: '220ms',
@@ -567,7 +503,7 @@ const styles = StyleSheet.create({
   continueCardHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: 14,
   },
   subjectIconBox: {
     width: 44,
@@ -580,32 +516,17 @@ const styles = StyleSheet.create({
   continueCardTitleBox: {
     flex: 1,
   },
-  continueBreadcrumb: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
   continueClassText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.primary,
-  },
-  unitChip: {
-    backgroundColor: Colors.softWarm,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  unitChipText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 10,
-    color: Colors.textSecondary,
   },
   continueChapterTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.textPrimary,
-    marginTop: 2,
+    marginTop: 3,
+    letterSpacing: -0.3,
   },
   progressTracker: {
     gap: 6,
@@ -617,7 +538,7 @@ const styles = StyleSheet.create({
   },
   subtopicsCount: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
   progressNumber: {
@@ -626,9 +547,9 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   progressBarBg: {
-    height: 5,
+    height: 6,
     borderRadius: 20,
-    backgroundColor: '#f0e7e2',
+    backgroundColor: '#F3EDE9',
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -645,11 +566,11 @@ const styles = StyleSheet.create({
   timeRemainingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
   timeRemainingText: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textMuted,
   },
   continueButton: {
@@ -657,8 +578,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     backgroundColor: Colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
     borderRadius: BorderRadius.pill,
     ...Shadows.subtle,
   },
@@ -669,8 +590,8 @@ const styles = StyleSheet.create({
   },
   milestonesCard: {
     backgroundColor: Colors.white,
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
     borderColor: Colors.border,
     ...Shadows.subtle,
@@ -678,17 +599,17 @@ const styles = StyleSheet.create({
   bookmarkHighlightItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    paddingVertical: 8,
+    gap: 14,
+    paddingVertical: 10,
   },
   bookmarkItemBorder: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    paddingTop: 10,
+    paddingTop: 12,
   },
   bookmarkIconCircle: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: 12,
     backgroundColor: Colors.palePeach,
     alignItems: 'center',
@@ -705,26 +626,27 @@ const styles = StyleSheet.create({
   },
   bookmarkSubtitle: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.primary,
   },
   bookmarkTime: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.textMuted,
   },
   bookmarkTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textPrimary,
-    marginTop: 1,
+    marginTop: 2,
+    letterSpacing: -0.2,
   },
   previewTagBox: {
     backgroundColor: Colors.softWarm,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
-    marginTop: 4,
+    marginTop: 6,
   },
   previewTagText: {
     fontFamily: 'Manrope_500Medium',

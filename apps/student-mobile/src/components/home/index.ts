@@ -1,3 +1,3 @@
-export { ClassCard } from "./ClassCard";
-export { HeroCard } from "./HeroCard";
-export { StatCard } from "./StatCard";
+export * from './HeroCard';
+export * from './StatCard';
+export * from './ClassCard';

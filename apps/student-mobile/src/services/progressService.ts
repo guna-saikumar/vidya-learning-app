@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BookmarkItem, ChapterProgress, UserProfile } from '../../../../packages/curriculum/src/curriculum.types';
+import { BookmarkItem, ChapterProgress, UserProfile } from '../types/curriculum';
 
 const STORAGE_KEYS = {
   BOOKMARKS: '@vidya_bookmarks',

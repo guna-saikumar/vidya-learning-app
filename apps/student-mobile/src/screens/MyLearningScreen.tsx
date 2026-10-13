@@ -12,12 +12,12 @@ import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Spacing, BorderRadius, Shadows } from '../../../../packages/design-tokens/src/spacing';
+import Colors from '../constants/colors';
+import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
-import { getChapterById, getCurriculumStats } from '../../../../packages/curriculum/src/curriculum.service';
+import { getChapterById, getCurriculumStats } from '../services/curriculumService';
 import { MainTabParamList, RootStackParamList } from '../types/navigation';
 
 type Props = CompositeScreenProps<
@@ -220,17 +220,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 20,
   },
   progressHero: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 21,
-    borderRadius: 21,
+    padding: 24,
+    borderRadius: 22,
     backgroundColor: Colors.primaryDark,
     gap: 16,
   },
@@ -240,19 +240,19 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.primaryLight,
     letterSpacing: 1.2,
   },
   heroTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
+    fontSize: 22,
     color: Colors.white,
     letterSpacing: -0.4,
   },
   heroSubtitle: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.primaryLight,
     marginTop: 2,
   },
@@ -282,8 +282,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: BorderRadius.pill,
     backgroundColor: Colors.softWarm,
     borderWidth: 1,
@@ -295,23 +295,23 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
   filterPillTextActive: {
     color: Colors.white,
   },
   learningList: {
-    gap: 10,
+    gap: 12,
   },
   learningItemCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
-    padding: 14,
+    gap: 14,
+    padding: 18,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 16,
+    borderRadius: 20,
     backgroundColor: Colors.white,
     ...Shadows.subtle,
   },

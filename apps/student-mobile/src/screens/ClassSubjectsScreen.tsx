@@ -10,15 +10,15 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Spacing, BorderRadius, Shadows } from '../../../../packages/design-tokens/src/spacing';
+import Colors from '../constants/colors';
+import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { SearchBar } from '../components/common';
 import { SubjectCard } from '../components/curriculum';
-import { getClassById } from '../../../../packages/curriculum/src/curriculum.service';
+import { getClassById } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
-import { SubjectCategory, Subject } from '../../../../packages/curriculum/src/curriculum.types';
+import { SubjectCategory } from '../types/curriculum';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ClassSubjects'>;
 
@@ -30,9 +30,9 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const schoolClass = getClassById(classId);
 
-  const filteredSubjects = useMemo<Subject[]>(() => {
+  const filteredSubjects = useMemo(() => {
     if (!schoolClass) return [];
-    return schoolClass.subjects.filter((s: Subject) => {
+    return schoolClass.subjects.filter((s) => {
       const matchesCategory =
         selectedCategory === 'all' || s.category === selectedCategory;
       const matchesSearch =
@@ -79,8 +79,8 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
       <HeaderBar
         showBack
         onBackPress={() => navigation.goBack()}
-        title={`${schoolClass.title} Subjects`}
-        subtitle={`${schoolClass.subjects.length} Enrolled`}
+        title={schoolClass.title}
+        subtitle={`${schoolClass.subjects.length} Subjects`}
         onProfilePress={() => navigation.navigate("Profile")}
       />
 
@@ -175,7 +175,7 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
         {/* Subjects List */}
         <View style={styles.subjectsList}>
           {filteredSubjects.length > 0 ? (
-            filteredSubjects.map((subject: Subject) => {
+            filteredSubjects.map((subject) => {
               const { percent, completed } = getSubjectProgress(
                 subject.id,
                 subject.chapters
@@ -219,15 +219,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 18,
   },
   bannerContainer: {
     backgroundColor: Colors.palePeach,
     borderRadius: 20,
-    padding: 16,
+    padding: 20,
     gap: 6,
     borderWidth: 1,
     borderColor: '#ead7cd',
@@ -299,8 +299,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   pill: {
-    height: 34,
-    paddingHorizontal: 14,
+    height: 36,
+    paddingHorizontal: 16,
     borderRadius: BorderRadius.pill,
     backgroundColor: Colors.softWarm,
     borderWidth: 1,

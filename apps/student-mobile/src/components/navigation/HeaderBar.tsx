@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '../../../../../packages/design-tokens/src/colors';
-import { Spacing, BorderRadius } from '../../../../../packages/design-tokens/src/spacing';
+import Colors from '../../constants/colors';
+import { Spacing, BorderRadius } from '../../constants/spacing';
 
 interface HeaderBarProps {
   title?: string;
@@ -45,13 +45,14 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       {/* Top Navbar with App Name & Profile */}
       <View style={styles.topNavBar}>
         <View style={styles.brandRow}>
-          <View style={styles.brandMark}>
-            <MaterialIcons name="menu-book" size={20} color={Colors.white} />
+          <View style={styles.logoBadge}>
+            <Image
+              source={require('../../../assets/app-images/logo.png')}
+              style={styles.logoImage as any}
+              resizeMode="contain"
+            />
           </View>
-          <View style={styles.brandCopy}>
-            <Text style={styles.brandTitle}>Vidya Learn</Text>
-            <Text style={styles.brandSubtitle}>AP SCERT Learning Space</Text>
-          </View>
+          <Text style={styles.brandTitle}>Vidya Learning</Text>
         </View>
 
         <TouchableOpacity
@@ -61,12 +62,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           accessibilityRole="button"
           accessibilityLabel="Student profile"
         >
-          <View style={styles.profileControlCopy}>
-            <Text style={styles.profileName}>{studentName}</Text>
-            <Text style={styles.profileClass}>{studentClass}</Text>
-          </View>
+          <Text style={styles.profileName}>{studentName}</Text>
           <Image
-            source={require('../../assets/app-images/avatar.png')}
+            source={require('../../../assets/app-images/avatar.png')}
             style={styles.avatarImage as any}
           />
         </TouchableOpacity>
@@ -115,8 +113,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   topNavBar: {
-    height: 60,
-    paddingHorizontal: Spacing.gutter,
+    height: 64,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -129,68 +127,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  brandMark: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    backgroundColor: Colors.primary,
+  logoBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.palePeach,
+    borderWidth: 1,
+    borderColor: '#f2ded3',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: Colors.primaryDark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.16,
-    shadowRadius: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
     elevation: 2,
   },
-  brandCopy: {
-    justifyContent: 'center',
+  logoImage: {
+    width: 28,
+    height: 28,
   },
   brandTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
+    fontSize: 18,
     color: Colors.textPrimary,
-    letterSpacing: -0.3,
-  },
-  brandSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: Colors.textMuted,
-    marginTop: 1,
+    letterSpacing: -0.5,
   },
   profileControl: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 4,
-    paddingLeft: 10,
-    paddingRight: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: BorderRadius.pill,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.white,
   },
-  profileControlCopy: {
-    alignItems: 'flex-end',
-  },
   profileName: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textPrimary,
-    lineHeight: 14,
-  },
-  profileClass: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: Colors.textMuted,
-    lineHeight: 12,
   },
   avatarImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
   },
   backSection: {
-    paddingHorizontal: Spacing.gutter,
+    paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 4,
     flexDirection: 'row',

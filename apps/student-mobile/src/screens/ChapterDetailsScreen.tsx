@@ -11,12 +11,11 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Spacing, BorderRadius, Shadows } from '../../../../packages/design-tokens/src/spacing';
-import { CalloutCard } from '../components/common';
+import Colors from '../constants/colors';
+import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
-import { getChapterById } from '../../../../packages/curriculum/src/curriculum.service';
-import { Chapter, Section } from '../../../../packages/curriculum/src/curriculum.types';
+import { CalloutCard } from '../components/common';
+import { getChapterById } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { recordChapterVisit } from '../services/progressService';
 import { RootStackParamList } from '../types/navigation';
@@ -65,7 +64,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
     );
   }
 
-  const currentIndex = subject.chapters.findIndex((c: Chapter) => c.id === chapterId);
+  const currentIndex = subject.chapters.findIndex((c) => c.id === chapterId);
   const prevChapter = currentIndex > 0 ? subject.chapters[currentIndex - 1] : null;
   const nextChapter =
     currentIndex < subject.chapters.length - 1
@@ -101,7 +100,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         showBack
         onBackPress={() => navigation.goBack()}
         title={chapter.title}
-        subtitle={`${schoolClass.title} • ${subject.name} • Ch ${chapter.order}`}
+        subtitle={`${subject.name} • Chapter ${chapter.order}`}
         onProfilePress={() => navigation.navigate("Profile")}
         showBookmark
         isBookmarked={isBookmarked}
@@ -168,7 +167,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               By the end of this chapter, you will understand:
             </Text>
             <View style={styles.goalsList}>
-              {chapter.learningGoals.map((goal: string, idx: number) => (
+              {chapter.learningGoals.map((goal, idx) => (
                 <View key={idx} style={styles.goalItem}>
                   <View style={styles.goalNumber}>
                     <Text style={styles.goalNumberText}>{idx + 1}</Text>
@@ -194,7 +193,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         </View>
 
         {/* Detailed Sections */}
-        {chapter.sections.map((section: Section, idx: number) => (
+        {chapter.sections.map((section, idx) => (
           <View key={section.id} style={styles.sectionBlock}>
             <TouchableOpacity
               style={styles.sectionHeaderClickable}
@@ -269,7 +268,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
             <Text style={styles.quizQuestion}>{chapter.quiz.question}</Text>
 
             <View style={styles.quizOptions}>
-              {chapter.quiz.options.map((opt: string, optIdx: number) => {
+              {chapter.quiz.options.map((opt, optIdx) => {
                 const isSelected = selectedQuizOption === optIdx;
                 const isCorrect = optIdx === chapter.quiz?.correctIndex;
                 return (
@@ -475,10 +474,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 20,
   },
   headerBlock: {
     gap: 4,
@@ -529,9 +528,9 @@ const styles = StyleSheet.create({
   },
   goalsContainer: {
     backgroundColor: Colors.palePeach,
-    borderRadius: 18,
-    padding: 18,
-    gap: 8,
+    borderRadius: 20,
+    padding: 20,
+    gap: 10,
     borderWidth: 1,
     borderColor: '#ead7cd',
   },

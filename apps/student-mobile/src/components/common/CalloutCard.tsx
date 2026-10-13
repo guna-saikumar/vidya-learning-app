@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../../packages/design-tokens/src/colors';
+import Colors from '../../constants/colors';
 import { HoverCard } from './HoverCard';
 
 interface CalloutCardProps {

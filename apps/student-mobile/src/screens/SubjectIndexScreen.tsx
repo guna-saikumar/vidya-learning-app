@@ -11,13 +11,12 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Spacing, BorderRadius, Shadows } from '../../../../packages/design-tokens/src/spacing';
+import Colors from '../constants/colors';
+import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { SearchBar, HoverCard } from '../components/common';
 import { ChapterListItem } from '../components/curriculum';
-import { getSubjectById } from '../../../../packages/curriculum/src/curriculum.service';
-import { Chapter, Section } from '../../../../packages/curriculum/src/curriculum.types';
+import { getSubjectById } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
 
@@ -34,10 +33,10 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
   const subject = result?.subject;
   const schoolClass = result?.schoolClass;
 
-  const filteredChapters = useMemo<Chapter[]>(() => {
+  const filteredChapters = useMemo(() => {
     if (!subject) return [];
 
-    return subject.chapters.filter((ch: Chapter) => {
+    return subject.chapters.filter((ch) => {
       const p = progressMap[ch.id];
       const isCompleted = p?.completed || false;
       const isInProgress = !isCompleted && (p?.progressPercent || 0) > 0;
@@ -51,7 +50,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
       const matchesSearch =
         ch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ch.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ch.sections.some((s: Section) => s.title.toLowerCase().includes(searchQuery.toLowerCase()));
+        ch.sections.some((s) => s.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
       return matchesFilter && matchesSearch;
     });
@@ -72,7 +71,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
   let completedCount = 0;
   let inProgressCount = 0;
 
-  subject.chapters.forEach((ch: Chapter) => {
+  subject.chapters.forEach((ch) => {
     const p = progressMap[ch.id];
     if (p?.completed) completedCount++;
     else if ((p?.progressPercent || 0) > 0) inProgressCount++;
@@ -87,8 +86,8 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
       <HeaderBar
         showBack
         onBackPress={() => navigation.goBack()}
-        title={`${subject.name} Index`}
-        subtitle={`${schoolClass.title} • Table of Contents`}
+        title={subject.name}
+        subtitle={schoolClass.title}
         onProfilePress={() => navigation.navigate("Profile")}
       />
 
@@ -103,9 +102,9 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.bannerTitleGroup}>
               <View style={styles.curriculumTag}>
                 <MaterialIcons name="menu-book" size={16} color={Colors.primary} />
-                <Text style={styles.curriculumTagText}>SCERT AP Syllabus · 2026–2027</Text>
+                <Text style={styles.curriculumTagText}>{schoolClass.title} Curriculum</Text>
               </View>
-              <Text style={styles.bannerTitle}>Chapter Roadmap</Text>
+              <Text style={styles.bannerTitle}>{subject.name}</Text>
             </View>
 
             <View style={styles.bannerThumbnailBox}>
@@ -131,7 +130,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
             </View>
 
             <View style={styles.segmentedTrack}>
-              {subject.chapters.map((ch: Chapter) => {
+              {subject.chapters.map((ch) => {
                 const p = progressMap[ch.id];
                 const isDone = p?.completed;
                 const isInProg = !isDone && (p?.progressPercent || 0) > 0;
@@ -242,7 +241,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
                       chapterId: chapter.id,
                     })
                   }
-                  onSectionPress={(sectionId) =>
+                  onSectionPress={(sectionId: string) =>
                     navigation.navigate('SectionDetails', {
                       classId,
                       subjectId,
@@ -277,10 +276,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 18,
   },
   breadcrumbRow: {
     flexDirection: 'row',
@@ -320,8 +319,8 @@ const styles = StyleSheet.create({
   overviewBanner: {
     backgroundColor: Colors.palePeach,
     borderRadius: 20,
-    padding: 16,
-    gap: 10,
+    padding: 20,
+    gap: 12,
     borderWidth: 1,
     borderColor: '#ead7cd',
     ...Shadows.subtle,
@@ -337,20 +336,20 @@ const styles = StyleSheet.create({
   curriculumTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     marginBottom: 4,
   },
   curriculumTagText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.primary,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   bannerTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
+    fontSize: 22,
     color: Colors.textPrimary,
+    letterSpacing: -0.4,
   },
   bannerThumbnailBox: {
     width: 48,
@@ -372,9 +371,9 @@ const styles = StyleSheet.create({
   },
   progressCard: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
     borderWidth: 1,
     borderColor: Colors.border,
   },

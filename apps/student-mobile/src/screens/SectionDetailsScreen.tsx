@@ -10,12 +10,11 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
-import { Spacing } from '../../../../packages/design-tokens/src/spacing';
+import Colors from '../constants/colors';
+import { Spacing } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
-import { getSectionById } from '../../../../packages/curriculum/src/curriculum.service';
-import { Section } from '../../../../packages/curriculum/src/curriculum.types';
+import { getSectionById } from '../services/curriculumService';
 import { markSectionCompleted } from '../services/progressService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
@@ -47,7 +46,7 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const isSectionDone =
     currentChapterProgress?.completedSections?.includes(sectionId) || false;
 
-  const currentIndex = chapter.sections.findIndex((s: Section) => s.id === sectionId);
+  const currentIndex = chapter.sections.findIndex((s) => s.id === sectionId);
   const prevSection = currentIndex > 0 ? chapter.sections[currentIndex - 1] : null;
   const nextSection =
     currentIndex < chapter.sections.length - 1
