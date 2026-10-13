@@ -13,7 +13,14 @@
       "adaptiveIcon": {
         "foregroundImage": "../../apps/student-mobile/assets/android-icon-foreground.png",
         "backgroundImage": "../../apps/student-mobile/assets/android-icon-background.png"
-      }
-    }
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "../../apps/student-mobile/assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

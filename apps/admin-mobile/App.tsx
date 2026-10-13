@@ -1,41 +1,51 @@
-import React from "react";
-import { SafeAreaView, View, Text, StyleSheet } from "react-native";
-import Colors from "../../packages/design-tokens/src/colors";
-import { PlaceholderBox } from "../../packages/ui/src";
+import './global.css';
+import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import {
+  useFonts,
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+} from '@expo-google-fonts/inter';
+import { AdminAuthProvider } from './src/hooks/useAdminAuth';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import Colors from './src/constants/colors';
 
-export default function AdminApp() {
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Vidya Admin Mobile</Text>
-        <Text style={styles.subtitle}>
-          Minimal admin dashboard placeholder. Use the web admin app for heavy content
-          editing; this app can be extended for on-the-go approvals and quick stats.
-        </Text>
-        <PlaceholderBox />
+export default function App() {
+  const [fontsLoaded] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
-    </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="dark" />
+      <AdminAuthProvider>
+        <RootNavigator />
+      </AdminAuthProvider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background
-  },
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: "center"
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    marginBottom: 12
-  },
-  subtitle: {
-    fontSize: 14,
-    color: Colors.textSecondary
-  }
-});
