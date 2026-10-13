@@ -48,7 +48,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           <View style={styles.brandMark}>
             <MaterialIcons name="auto-stories" size={20} color={Colors.white} />
           </View>
-          <Text style={styles.brandTitle}>Vidya</Text>
+          <Text style={styles.brandTitle}>Vidya Learning</Text>
         </View>
 
         <TouchableOpacity

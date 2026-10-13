@@ -24,25 +24,30 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <HoverCard style={styles.card} lift={-3}>
-      <View style={styles.topRow}>
-        <View style={[styles.iconContainer, isProgress && styles.progressIconContainer]}>
-          <MaterialIcons
-            name={iconName}
-            size={20}
-            color={isProgress ? Colors.success : Colors.primary}
-          />
-        </View>
-        {badge ? (
-          <View style={[styles.badgeContainer, isProgress && styles.progressBadgeContainer]}>
-            <Text style={[styles.badgeText, isProgress && styles.progressBadgeText]}>
-              {badge}
-            </Text>
-          </View>
-        ) : null}
+      {/* Left side icon */}
+      <View style={[styles.iconContainer, isProgress && styles.progressIconContainer]}>
+        <MaterialIcons
+          name={iconName}
+          size={22}
+          color={isProgress ? Colors.success : Colors.primary}
+        />
       </View>
 
-      <View style={styles.bottomContent}>
-        <Text style={styles.valueText}>{value}</Text>
+      {/* Right side numbers and headings */}
+      <View style={styles.rightContent}>
+        <View style={styles.valueRow}>
+          <Text style={styles.valueText} numberOfLines={1}>
+            {value}
+          </Text>
+          {badge ? (
+            <View style={[styles.badgeContainer, isProgress && styles.progressBadgeContainer]}>
+              <Text style={[styles.badgeText, isProgress && styles.progressBadgeText]}>
+                {badge}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
         <Text style={styles.label} numberOfLines={1}>
           {label}
         </Text>
@@ -54,25 +59,22 @@ export const StatCard: React.FC<StatCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minHeight: 104,
+    minHeight: 84,
     backgroundColor: Colors.white,
     borderRadius: 20,
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: Colors.border,
-    justifyContent: 'space-between',
-    ...Shadows.subtle,
-  },
-  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    gap: 14,
+    ...Shadows.subtle,
   },
   iconContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: Colors.palePeach,
     alignItems: 'center',
     justifyContent: 'center',
@@ -80,10 +82,33 @@ const styles = StyleSheet.create({
   progressIconContainer: {
     backgroundColor: Colors.successBg,
   },
+  rightContent: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 2,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  valueText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 22,
+    color: Colors.textPrimary,
+    letterSpacing: -0.5,
+    lineHeight: 26,
+  },
+  label: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.textSecondary,
+    letterSpacing: -0.1,
+  },
   badgeContainer: {
     backgroundColor: Colors.palePeach,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 6,
   },
   badgeText: {
@@ -96,21 +121,5 @@ const styles = StyleSheet.create({
   },
   progressBadgeText: {
     color: Colors.success,
-  },
-  bottomContent: {
-    gap: 3,
-  },
-  valueText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 24,
-    color: Colors.textPrimary,
-    letterSpacing: -0.5,
-    lineHeight: 28,
-  },
-  label: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 12,
-    color: Colors.textSecondary,
-    letterSpacing: -0.1,
   },
 });
