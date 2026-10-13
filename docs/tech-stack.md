@@ -32,7 +32,7 @@ This document is the source of truth for implementation tasks across the Vidya m
 - **CORS** for controlled cross-origin access.
 - **Swagger / OpenAPI** for API documentation.
 - **bcrypt** for password hashing.
-- **Docker** for local backend and database development.
+- **Docker Compose** for local development across PostgreSQL, API, web apps, and Expo web services.
 
 ## Official Docs
 
@@ -41,3 +41,13 @@ This document is the source of truth for implementation tasks across the Vidya m
 - PostgreSQL: https://www.postgresql.org/
 - Prisma: https://www.prisma.io/
 - Swagger: https://swagger.io/specification/
+
+## Local Runtime
+
+Use Docker Compose for local development:
+
+```bash
+pnpm docker:up
+```
+
+Deployment scripts and deployment platform config are intentionally out of scope for now.

@@ -11,11 +11,26 @@ This repository contains the complete Vidya learning platform:
 
 ### Local development
 
-- **Student mobile (Expo):** `pnpm dev:student-mobile`
-- **Admin mobile (Expo):** `pnpm dev:admin-mobile`
-- **API (Fastify):** `pnpm dev:api`
-- **Student web (Next.js):** `pnpm dev:student-web`
-- **Admin web (Next.js):** `pnpm dev:admin-web`
+Docker is the default local development path.
+
+```bash
+pnpm docker:up
+```
+
+Services:
+
+- **API:** http://localhost:4000
+- **PostgreSQL:** localhost:5432 (`vidya` / `vidya`, database `vidya`)
+- **Student web:** http://localhost:3000
+- **Admin web:** http://localhost:3001
+- **Student mobile web:** http://localhost:8081
+- **Admin mobile web:** http://localhost:8082
+
+Useful commands:
+
+- **Start all services:** `pnpm docker:up`
+- **Stop services:** `pnpm docker:down`
+- **Follow logs:** `pnpm docker:logs`
 
 ### Quality checks
 
