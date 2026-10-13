@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../../packages/design-tokens/src/colors';
-import { BorderRadius, Shadows } from '../../../../../packages/design-tokens/src/spacing';
-import { SchoolClass, Subject } from '../../../../../packages/curriculum/src/curriculum.types';
-import { HoverCard } from '../common';
+import Colors from '../../constants/colors';
+import { Shadows } from '../../constants/spacing';
+import { SchoolClass } from '../../types/curriculum';
+import { HoverCard } from '../common/HoverCard';
 
 interface ClassCardProps {
   schoolClass: SchoolClass;
@@ -19,11 +19,6 @@ export const ClassCard: React.FC<ClassCardProps> = ({
   onPress,
   horizontal = true,
 }) => {
-  const totalChapters = schoolClass.subjects.reduce(
-    (acc: number, subj: Subject) => acc + subj.chapters.length,
-    0
-  );
-
   return (
     <HoverCard
       style={[
@@ -32,57 +27,42 @@ export const ClassCard: React.FC<ClassCardProps> = ({
         isSelected && styles.selectedCard,
       ]}
       onPress={onPress}
-      lift={-5}
+      lift={-4}
     >
-      <View style={styles.contentPadding}>
-        <View style={styles.topRow}>
-          <View
+      <View style={styles.topRow}>
+        <View
+          style={[
+            styles.iconContainer,
+            isSelected && styles.selectedIconContainer,
+          ]}
+        >
+          <Text
             style={[
-              styles.iconContainer,
-              isSelected && styles.selectedIconContainer,
+              styles.gradeNumberText,
+              isSelected && styles.selectedGradeNumberText,
             ]}
           >
-            <Text
-              style={[
-                styles.gradeNumberText,
-                isSelected && styles.selectedGradeNumberText,
-              ]}
-            >
-              {schoolClass.grade}
-            </Text>
-          </View>
-
-          {isSelected ? (
-            <View style={styles.selectedBadge}>
-              <View style={styles.pulseDot} />
-              <Text style={styles.selectedBadgeText}>Selected</Text>
-            </View>
-          ) : (
-            <View style={styles.roundArrow}>
-              <MaterialIcons name="chevron-right" size={18} color={Colors.textMuted} />
-            </View>
-          )}
+            {schoolClass.grade}
+          </Text>
         </View>
 
+        {isSelected ? (
+          <View style={styles.selectedBadge}>
+            <MaterialIcons name="check" size={14} color={Colors.white} />
+          </View>
+        ) : (
+          <MaterialIcons name="chevron-right" size={20} color={Colors.textMuted} />
+        )}
+      </View>
+
+      <View style={styles.body}>
         <Text style={[styles.title, isSelected && styles.selectedTitle]}>
           {schoolClass.title}
         </Text>
         <Text style={[styles.subtitle, isSelected && styles.selectedSubtitle]}>
-          {schoolClass.subjects.length} subjects · {totalChapters} chapters
+          {schoolClass.subjects.length} Subjects
         </Text>
       </View>
-
-      {isSelected ? (
-        <View style={styles.selectedFooter}>
-          <Text style={styles.selectedFooterText}>Current Academic Year</Text>
-          <MaterialIcons name="arrow-forward" size={16} color={Colors.primary} />
-        </View>
-      ) : (
-        <View style={styles.footer}>
-          <Text style={styles.badgeText}>{schoolClass.badge}</Text>
-          <Text style={styles.viewText}>View →</Text>
-        </View>
-      )}
     </HoverCard>
   );
 };
@@ -90,40 +70,37 @@ export const ClassCard: React.FC<ClassCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
+    padding: 18,
     justifyContent: 'space-between',
-    overflow: 'hidden',
     ...Shadows.subtle,
   },
   cardHorizontal: {
-    width: 200,
-    minHeight: 140,
-    marginRight: 10,
+    width: 170,
+    minHeight: 124,
+    marginRight: 12,
   },
   cardFullWidth: {
     width: '100%',
-    minHeight: 90,
-    marginBottom: 10,
+    minHeight: 88,
+    marginBottom: 12,
   },
   selectedCard: {
-    borderColor: Colors.borderAccent,
+    borderColor: Colors.primary,
     borderWidth: 1.5,
     backgroundColor: Colors.surfaceSoft,
-  },
-  contentPadding: {
-    padding: 14,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 14,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 12,
     backgroundColor: Colors.palePeach,
     alignItems: 'center',
@@ -141,78 +118,31 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   selectedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: Colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.pill,
-    gap: 4,
-  },
-  pulseDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Colors.white,
-  },
-  selectedBadgeText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    color: Colors.white,
-  },
-  roundArrow: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.softWarm,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  body: {
+    gap: 3,
   },
   title: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 16,
     color: Colors.textPrimary,
+    letterSpacing: -0.3,
   },
   selectedTitle: {
-    color: Colors.textPrimary,
+    color: Colors.primaryDark,
   },
   subtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
     color: Colors.textSecondary,
-    marginTop: 2,
   },
   selectedSubtitle: {
     color: Colors.primary,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-  },
-  badgeText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-  viewText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.primary,
-  },
-  selectedFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.palePeach,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  selectedFooterText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.primaryDark,
   },
 });

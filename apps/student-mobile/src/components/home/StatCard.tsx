@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../../packages/design-tokens/src/colors';
-import { Shadows } from '../../../../../packages/design-tokens/src/spacing';
-import { HoverCard } from '../common';
+import Colors from '../../constants/colors';
+import { Shadows } from '../../constants/spacing';
+import { HoverCard } from '../common/HoverCard';
 
 interface StatCardProps {
   label: string;
@@ -23,38 +23,34 @@ export const StatCard: React.FC<StatCardProps> = ({
   isProgress = false,
 }) => {
   return (
-    <HoverCard
-      style={styles.card}
-      lift={-3}
-    >
+    <HoverCard style={styles.card} lift={-3}>
       {/* Left side icon */}
       <View style={[styles.iconContainer, isProgress && styles.progressIconContainer]}>
         <MaterialIcons
           name={iconName}
-          size={20}
+          size={22}
           color={isProgress ? Colors.success : Colors.primary}
         />
       </View>
 
-      {/* Right side title and numbers */}
+      {/* Right side numbers and headings */}
       <View style={styles.rightContent}>
-        <Text style={styles.label} numberOfLines={1}>
-          {label}
-        </Text>
-        <View style={styles.numberRow}>
-          <Text style={styles.valueText}>{value}</Text>
+        <View style={styles.valueRow}>
+          <Text style={styles.valueText} numberOfLines={1}>
+            {value}
+          </Text>
           {badge ? (
             <View style={[styles.badgeContainer, isProgress && styles.progressBadgeContainer]}>
               <Text style={[styles.badgeText, isProgress && styles.progressBadgeText]}>
                 {badge}
               </Text>
             </View>
-          ) : subtitle ? (
-            <Text style={styles.subtitleText} numberOfLines={1}>
-              {subtitle}
-            </Text>
           ) : null}
         </View>
+
+        <Text style={styles.label} numberOfLines={1}>
+          {label}
+        </Text>
       </View>
     </HoverCard>
   );
@@ -63,22 +59,22 @@ export const StatCard: React.FC<StatCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minHeight: 76,
+    minHeight: 84,
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: Colors.border,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 14,
     ...Shadows.subtle,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: Colors.palePeach,
     alignItems: 'center',
     justifyContent: 'center',
@@ -89,36 +85,35 @@ const styles = StyleSheet.create({
   rightContent: {
     flex: 1,
     justifyContent: 'center',
-    gap: 1,
+    gap: 2,
   },
-  label: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textSecondary,
-    letterSpacing: -0.1,
-  },
-  numberRow: {
+  valueRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 5,
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
   },
   valueText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
+    fontSize: 22,
     color: Colors.textPrimary,
-    lineHeight: 24,
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
+    lineHeight: 26,
+  },
+  label: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.textSecondary,
+    letterSpacing: -0.1,
   },
   badgeContainer: {
     backgroundColor: Colors.palePeach,
     paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 5,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   badgeText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 9,
+    fontSize: 10,
     color: Colors.primaryDark,
   },
   progressBadgeContainer: {
@@ -126,10 +121,5 @@ const styles = StyleSheet.create({
   },
   progressBadgeText: {
     color: Colors.success,
-  },
-  subtitleText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: Colors.textMuted,
   },
 });

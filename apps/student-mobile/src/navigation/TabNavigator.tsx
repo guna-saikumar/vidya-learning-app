@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Platform, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
-import Colors from '../../../../packages/design-tokens/src/colors';
+import Colors from '../constants/colors';
 import { MainTabParamList } from '../types/navigation';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';

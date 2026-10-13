@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, StyleProp, ViewStyle, Platform } from 'react-native';
-import Colors from '../../../../../packages/design-tokens/src/colors';
+import Colors from '../../constants/colors';
 
 interface HoverCardProps {
   style?: StyleProp<ViewStyle>;

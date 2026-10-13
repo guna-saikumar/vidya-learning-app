@@ -1,2 +1,2 @@
-export { ChapterListItem } from "./ChapterListItem";
-export { SubjectCard } from "./SubjectCard";
+export * from './SubjectCard';
+export * from './ChapterListItem';

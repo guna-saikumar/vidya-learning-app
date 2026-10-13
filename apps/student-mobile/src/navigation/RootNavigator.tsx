@@ -10,7 +10,7 @@ import { ClassSubjectsScreen } from '../screens/ClassSubjectsScreen';
 import { SubjectIndexScreen } from '../screens/SubjectIndexScreen';
 import { ChapterDetailsScreen } from '../screens/ChapterDetailsScreen';
 import { SectionDetailsScreen } from '../screens/SectionDetailsScreen';
-import Colors from '../../../../packages/design-tokens/src/colors';
+import Colors from '../constants/colors';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

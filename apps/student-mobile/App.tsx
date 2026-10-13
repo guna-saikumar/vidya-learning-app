@@ -17,7 +17,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { seedInitialDataIfNeeded } from './src/services/progressService';
-import Colors from '../../packages/design-tokens/src/colors';
+import Colors from './src/constants/colors';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
