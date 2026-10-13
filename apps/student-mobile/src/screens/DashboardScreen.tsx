@@ -305,7 +305,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <View className="bg-white rounded-[20px] p-5 border border-border shadow-sm">
+        <View className="bg-white rounded-[20px] p-5 border border-border shadow-sm overflow-hidden">
           {bookmarks.slice(0, 2).map((bm, index) => (
             <TouchableOpacity
               key={bm.id}
@@ -324,15 +324,24 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
                   color={Colors.primary}
                 />
               </View>
-              <View className="flex-1">
+              <View className="flex-1 min-w-0" style={{ flex: 1, minWidth: 0 }}>
                 <View className="flex-row items-center justify-between">
                   <Text className="font-manrope-bold text-xs text-primary">{bm.subtitle}</Text>
                   <Text className="font-manrope-medium text-[11px] text-textMuted">Saved</Text>
                 </View>
-                <Text className="font-manrope-extrabold text-[15px] text-textPrimary mt-0.5 tracking-tight">{bm.title}</Text>
+                <Text className="font-manrope-extrabold text-[15px] text-textPrimary mt-0.5 tracking-tight" numberOfLines={1}>
+                  {bm.title}
+                </Text>
                 {bm.previewText && (
-                  <View className="bg-softWarm px-2.5 py-1 rounded-md mt-1.5 self-start">
-                    <Text className="font-manrope-medium text-[11px] text-textSecondary" numberOfLines={1}>
+                  <View
+                    className="bg-softWarm px-2.5 py-1 rounded-md mt-1.5 self-start max-w-full overflow-hidden"
+                    style={{ maxWidth: '100%' }}
+                  >
+                    <Text
+                      className="font-manrope-medium text-[11px] text-textSecondary"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {bm.previewText}
                     </Text>
                   </View>

@@ -25,11 +25,11 @@ export const CalloutCard: React.FC<CalloutCardProps> = ({
   // Figma Make .learning-box
   if (variant === 'learning' || variant === 'tip') {
     return (
-      <HoverCard className="flex-row gap-3.5 p-5 rounded-[18px] border border-[#ead7cd] bg-palePeach my-2" lift={-3}>
+      <HoverCard className="flex-row gap-3.5 p-5 rounded-[18px] border border-[#ead7cd] bg-palePeach my-2 overflow-hidden" lift={-3}>
         <View className="mt-0.5">
           <MaterialIcons name="auto-awesome" size={20} color={Colors.primary} />
         </View>
-        <View className="flex-1 gap-1.5">
+        <View className="flex-1 min-w-0 gap-1.5" style={{ flex: 1, minWidth: 0 }}>
           <Text className="font-manrope-extrabold text-base text-textPrimary">{title || 'Learning objectives'}</Text>
           {description ? (
             <Text className="font-manrope-medium text-[13px] text-[#66544d] leading-[19px]">{description}</Text>
@@ -52,7 +52,7 @@ export const CalloutCard: React.FC<CalloutCardProps> = ({
   // Figma Make .example-box (gold border-left with TRY IT YOURSELF)
   if (variant === 'example' || variant === 'formula') {
     return (
-      <HoverCard className="p-[18px] border-l-[3px] border-l-accentGold rounded-r-xl bg-accentGoldBg my-2.5 gap-1.5" lift={-3}>
+      <HoverCard className="p-[18px] border-l-[3px] border-l-accentGold rounded-r-xl bg-accentGoldBg my-2.5 gap-1.5 overflow-hidden" lift={-3}>
         <Text className="font-manrope-extrabold text-[11px] text-accentGoldDark tracking-wider uppercase">
           {title || 'TRY IT YOURSELF'}
         </Text>

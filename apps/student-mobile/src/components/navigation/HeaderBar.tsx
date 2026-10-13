@@ -42,10 +42,14 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       {/* Top Navbar with App Name & Profile */}
       <View className="h-16 px-5 flex-row items-center justify-between bg-white border-b border-border">
         <View className="flex-row items-center gap-2.5">
-          <View className="w-10 h-10 rounded-xl bg-palePeach border border-[#f2ded3] items-center justify-center shadow-sm">
+          <View
+            className="w-10 h-10 rounded-lg bg-palePeach border border-[#f2ded3] items-center justify-center shadow-sm overflow-hidden"
+            style={{ width: 40, height: 40 }}
+          >
             <Image
               source={require('../../../assets/app-images/logo.png')}
               className="w-7 h-7"
+              style={{ width: 28, height: 28 }}
               resizeMode="contain"
             />
           </View>
@@ -63,6 +67,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           <Image
             source={require('../../../assets/app-images/avatar.png')}
             className="w-[30px] h-[30px] rounded-full"
+            style={{ width: 30, height: 30, borderRadius: 15 }}
           />
         </TouchableOpacity>
       </View>

@@ -108,10 +108,11 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
               </Text>
             </View>
 
-            <View className="w-12 h-12 rounded-[14px] bg-white overflow-hidden">
+            <View className="w-12 h-12 rounded-[14px] bg-white overflow-hidden" style={{ width: 48, height: 48 }}>
               <Image
                 source={require('../../assets/app-images/math_banner.png')}
                 className="w-full h-full"
+                style={{ width: 48, height: 48 }}
                 resizeMode="cover"
               />
             </View>

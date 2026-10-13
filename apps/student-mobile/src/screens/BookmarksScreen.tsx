@@ -91,7 +91,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
                     />
                   </View>
 
-                  <View className="flex-1 gap-0.5">
+                  <View className="flex-1 min-w-0 gap-0.5" style={{ flex: 1, minWidth: 0 }}>
                     <Text className="font-manrope-semibold text-[11px] text-textMuted">{bm.subtitle}</Text>
                     <Text className="font-manrope-extrabold text-[15px] text-textPrimary">{bm.title}</Text>
                     {bm.previewText && (

@@ -176,10 +176,11 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         )}
 
         {/* Atmospheric Study Banner */}
-        <View className="h-40 rounded-[20px] overflow-hidden my-1 relative">
+        <View className="h-40 rounded-[20px] overflow-hidden my-1 relative" style={{ height: 160, width: '100%' }}>
           <Image
             source={require('../../assets/app-images/study_banner.png')}
             className="w-full h-full"
+            style={{ width: '100%', height: 160 }}
             resizeMode="cover"
           />
           <View className="absolute inset-0 bg-black/30 justify-end p-4">

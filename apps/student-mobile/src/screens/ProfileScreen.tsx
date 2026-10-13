@@ -64,6 +64,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Image
             source={require('../../assets/app-images/avatar.png')}
             className="w-[58px] h-[58px] rounded-full"
+            style={{ width: 58, height: 58, borderRadius: 29 }}
           />
           <View className="flex-1 gap-1">
             <Text className="font-manrope-extrabold text-lg text-textPrimary">
