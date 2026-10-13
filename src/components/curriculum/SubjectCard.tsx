@@ -74,13 +74,13 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 14,
-    padding: 17,
+    gap: 16,
+    padding: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 19,
+    borderRadius: 20,
     backgroundColor: Colors.white,
-    marginBottom: 12,
+    marginBottom: 14,
     ...Shadows.subtle,
   },
   iconContainer: {
@@ -102,8 +102,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
+    fontSize: 17,
     color: Colors.textPrimary,
+    letterSpacing: -0.3,
     flex: 1,
   },
   description: {
@@ -116,19 +117,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 2,
+    marginTop: 4,
   },
   metaText: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textMuted,
   },
   progressTrack: {
-    height: 5,
+    height: 6,
     borderRadius: 20,
-    backgroundColor: '#f0e7e2',
+    backgroundColor: '#F3EDE9',
     overflow: 'hidden',
-    marginTop: 2,
+    marginTop: 4,
   },
   progressFill: {
     height: '100%',

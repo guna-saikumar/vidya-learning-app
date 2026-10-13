@@ -11,28 +11,25 @@ interface HeroCardProps {
 }
 
 export const HeroCard: React.FC<HeroCardProps> = ({
-  pillText = 'Daily learning',
-  title = 'Small steps lead to big progress.',
-  subtitle = 'Keep your momentum going with one focused lesson today.',
+  pillText = "Today's Focus",
+  title = 'Consistent practice creates mastery',
+  subtitle = 'Pick up right where you left off or explore a new topic.',
 }) => {
   return (
     <View style={styles.card}>
       <View style={styles.copy}>
-        <View style={styles.pill}>
-          <MaterialIcons name="auto-awesome" size={13} color={Colors.white} />
-          <Text style={styles.pillText}>{pillText}</Text>
-        </View>
+        {pillText ? (
+          <View style={styles.pill}>
+            <MaterialIcons name="auto-awesome" size={13} color={Colors.white} />
+            <Text style={styles.pillText}>{pillText}</Text>
+          </View>
+        ) : null}
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
 
-      {/* Decorative Orbits & Icon matching Figma Make .hero-visual */}
-      <View style={styles.visualContainer} pointerEvents="none">
-        <View style={[styles.orbit, styles.orbitOne]} />
-        <View style={[styles.orbit, styles.orbitTwo]} />
-        <View style={styles.capIconWrapper}>
-          <MaterialIcons name="school" size={44} color={Colors.primaryLight} />
-        </View>
+      <View style={styles.iconCircle}>
+        <MaterialIcons name="school" size={36} color="rgba(255, 255, 255, 0.25)" />
       </View>
     </View>
   );
@@ -40,74 +37,56 @@ export const HeroCard: React.FC<HeroCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 175,
     backgroundColor: Colors.primaryDark,
     borderRadius: 24,
-    padding: Spacing.md,
+    padding: 24,
     position: 'relative',
     overflow: 'hidden',
     justifyContent: 'center',
+    minHeight: 160,
   },
   copy: {
-    width: '74%',
+    width: '80%',
+    gap: 10,
     zIndex: 2,
-    gap: 8,
   },
   pill: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 9,
+    gap: 6,
+    paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: BorderRadius.pill,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   pillText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     color: Colors.white,
+    letterSpacing: 0.2,
   },
   title: {
-    fontSize: 19,
-    fontWeight: '800',
+    fontSize: 20,
+    fontFamily: 'Manrope_800ExtraBold',
     color: Colors.white,
-    lineHeight: 24,
+    lineHeight: 26,
     letterSpacing: -0.4,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 13,
+    fontFamily: 'Manrope_500Medium',
     color: Colors.primaryLight,
-    lineHeight: 18,
+    lineHeight: 19,
   },
-  visualContainer: {
+  iconCircle: {
     position: 'absolute',
     right: -10,
-    bottom: -5,
-    width: 125,
-    height: 125,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  orbit: {
-    position: 'absolute',
-    borderRadius: BorderRadius.pill,
-    borderColor: 'rgba(243, 217, 204, 0.24)',
-    borderWidth: 1,
-  },
-  orbitOne: {
-    width: 105,
-    height: 105,
-  },
-  orbitTwo: {
-    width: 78,
-    height: 78,
-    borderStyle: 'dashed',
-    transform: [{ rotate: '20deg' }],
-  },
-  capIconWrapper: {
+    bottom: -10,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },

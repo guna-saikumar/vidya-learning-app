@@ -151,10 +151,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 18,
   },
   introCopy: {
     fontFamily: 'Manrope_500Medium',
@@ -164,15 +164,15 @@ const styles = StyleSheet.create({
     marginTop: -4,
   },
   bookmarkList: {
-    gap: 10,
+    gap: 12,
   },
   bookmarkCard: {
     backgroundColor: Colors.white,
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 10,
+    gap: 12,
     ...Shadows.subtle,
     ...(Platform.OS === 'web' && {
       transitionDuration: '220ms',

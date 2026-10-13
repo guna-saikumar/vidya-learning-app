@@ -78,10 +78,9 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </HoverCard>
 
-        {/* Active Class Switcher matching Figma Make .class-selector */}
+        {/* Active Class Switcher */}
         <View style={styles.sectionBlock}>
-          <Text style={styles.eyebrow}>ACTIVE CLASS</Text>
-          <Text style={styles.headingTitle}>Switch enrolled class</Text>
+          <Text style={styles.headingTitle}>Enrolled Class</Text>
           <View style={styles.classSelectorGrid}>
             {classes.map((c) => {
               const isSelected = c.id === profile?.activeClassId;
@@ -109,10 +108,9 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Profile Statistics matching Figma Make .profile-stats */}
+        {/* Profile Statistics */}
         <View style={styles.sectionBlock}>
-          <Text style={styles.eyebrow}>MILESTONES</Text>
-          <Text style={styles.headingTitle}>Learning achievements</Text>
+          <Text style={styles.headingTitle}>Achievements</Text>
           <View style={styles.profileStatsRow}>
             <View style={styles.statArticle}>
               <View style={styles.statIconBox}>
@@ -142,8 +140,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Settings Group */}
         <View style={styles.sectionBlock}>
-          <Text style={styles.eyebrow}>PREFERENCES</Text>
-          <Text style={styles.headingTitle}>Study settings</Text>
+          <Text style={styles.headingTitle}>Study Settings</Text>
 
           <View style={styles.settingsGroup}>
             <View style={styles.settingItem}>
@@ -179,14 +176,6 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
         </View>
-
-        {/* Demo Note matching Figma Make .demo-note */}
-        <View style={styles.demoNote}>
-          <MaterialIcons name="info-outline" size={18} color={Colors.primary} style={{ marginTop: 2 }} />
-          <Text style={styles.demoNoteText}>
-            Vidya Learn prototype uses local curriculum data for demonstration. All class options, chapters, and topics are ready for backend synchronization.
-          </Text>
-        </View>
       </ScrollView>
       <BottomNav activeTab="Profile" navigation={navigation} />
     </View>
@@ -202,17 +191,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 40,
-    gap: 20,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 24,
   },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.palePeach,
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 22,
+    padding: 22,
     gap: 16,
   },
   avatarLarge: {

@@ -46,12 +46,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       <View style={styles.topNavBar}>
         <View style={styles.brandRow}>
           <View style={styles.brandMark}>
-            <MaterialIcons name="menu-book" size={20} color={Colors.white} />
+            <MaterialIcons name="auto-stories" size={20} color={Colors.white} />
           </View>
-          <View style={styles.brandCopy}>
-            <Text style={styles.brandTitle}>Vidya Learn</Text>
-            <Text style={styles.brandSubtitle}>AP SCERT Learning Space</Text>
-          </View>
+          <Text style={styles.brandTitle}>Vidya</Text>
         </View>
 
         <TouchableOpacity
@@ -61,10 +58,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           accessibilityRole="button"
           accessibilityLabel="Student profile"
         >
-          <View style={styles.profileControlCopy}>
-            <Text style={styles.profileName}>{studentName}</Text>
-            <Text style={styles.profileClass}>{studentClass}</Text>
-          </View>
+          <Text style={styles.profileName}>{studentName}</Text>
           <Image
             source={require('../../../assets/app-images/avatar.png')}
             style={styles.avatarImage as any}
@@ -115,8 +109,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   topNavBar: {
-    height: 60,
-    paddingHorizontal: Spacing.gutter,
+    height: 64,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -136,61 +130,36 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.primaryDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.16,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  brandCopy: {
-    justifyContent: 'center',
   },
   brandTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
+    fontSize: 18,
     color: Colors.textPrimary,
-    letterSpacing: -0.3,
-  },
-  brandSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: Colors.textMuted,
-    marginTop: 1,
+    letterSpacing: -0.5,
   },
   profileControl: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 4,
-    paddingLeft: 10,
-    paddingRight: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: BorderRadius.pill,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.white,
   },
-  profileControlCopy: {
-    alignItems: 'flex-end',
-  },
   profileName: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textPrimary,
-    lineHeight: 14,
-  },
-  profileClass: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: Colors.textMuted,
-    lineHeight: 12,
   },
   avatarImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
   },
   backSection: {
-    paddingHorizontal: Spacing.gutter,
+    paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 4,
     flexDirection: 'row',

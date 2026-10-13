@@ -86,8 +86,8 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
       <HeaderBar
         showBack
         onBackPress={() => navigation.goBack()}
-        title={`${subject.name} Index`}
-        subtitle={`${schoolClass.title} • Table of Contents`}
+        title={subject.name}
+        subtitle={schoolClass.title}
         onProfilePress={() => navigation.navigate("Profile")}
       />
 
@@ -102,9 +102,9 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.bannerTitleGroup}>
               <View style={styles.curriculumTag}>
                 <MaterialIcons name="menu-book" size={16} color={Colors.primary} />
-                <Text style={styles.curriculumTagText}>SCERT AP Syllabus · 2026–2027</Text>
+                <Text style={styles.curriculumTagText}>{schoolClass.title} Curriculum</Text>
               </View>
-              <Text style={styles.bannerTitle}>Chapter Roadmap</Text>
+              <Text style={styles.bannerTitle}>{subject.name}</Text>
             </View>
 
             <View style={styles.bannerThumbnailBox}>
@@ -276,10 +276,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 18,
   },
   breadcrumbRow: {
     flexDirection: 'row',
@@ -319,8 +319,8 @@ const styles = StyleSheet.create({
   overviewBanner: {
     backgroundColor: Colors.palePeach,
     borderRadius: 20,
-    padding: 16,
-    gap: 10,
+    padding: 20,
+    gap: 12,
     borderWidth: 1,
     borderColor: '#ead7cd',
     ...Shadows.subtle,
@@ -336,20 +336,20 @@ const styles = StyleSheet.create({
   curriculumTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     marginBottom: 4,
   },
   curriculumTagText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.primary,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   bannerTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
+    fontSize: 22,
     color: Colors.textPrimary,
+    letterSpacing: -0.4,
   },
   bannerThumbnailBox: {
     width: 48,
@@ -371,9 +371,9 @@ const styles = StyleSheet.create({
   },
   progressCard: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
     borderWidth: 1,
     borderColor: Colors.border,
   },

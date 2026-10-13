@@ -43,11 +43,8 @@ export const ChapterListItem: React.FC<ChapterListItemProps> = ({
           )}
         </View>
 
-        {/* Chapter Copy matching Figma Make .chapter-copy */}
+        {/* Chapter Copy */}
         <View style={styles.chapterCopy}>
-          <Text style={styles.chapterOrderLabel}>
-            CHAPTER {chapter.order}
-          </Text>
           <Text style={styles.chapterTitle}>{chapter.title}</Text>
           {chapter.description && (
             <Text style={styles.chapterDescription} numberOfLines={2}>
@@ -55,7 +52,7 @@ export const ChapterListItem: React.FC<ChapterListItemProps> = ({
             </Text>
           )}
           <Text style={styles.sectionsCountText}>
-            {chapter.sections.length} sections · {chapter.durationMinutes || 18} mins
+            {chapter.sections.length} Sections • {chapter.durationMinutes || 18} mins
           </Text>
         </View>
 
@@ -72,10 +69,10 @@ export const ChapterListItem: React.FC<ChapterListItemProps> = ({
         </TouchableOpacity>
       </TouchableOpacity>
 
-      {/* Expandable Section Links matching Figma Make .section-links */}
+      {/* Expandable Section Links */}
       {isExpanded && (
         <View style={styles.sectionsContainer}>
-          <Text style={styles.sectionsHeaderLabel}>SECTIONS IN THIS CHAPTER</Text>
+          <Text style={styles.sectionsHeaderLabel}>Sections</Text>
           {chapter.sections.map((section, idx) => (
             <TouchableOpacity
               key={section.id}
@@ -100,9 +97,9 @@ export const ChapterListItem: React.FC<ChapterListItemProps> = ({
 
 const styles = StyleSheet.create({
   cardContainer: {
-    marginBottom: 10,
+    marginBottom: 12,
     backgroundColor: Colors.white,
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: 'hidden',
@@ -111,12 +108,12 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 13,
-    padding: 15,
+    gap: 14,
+    padding: 18,
   },
   numberBadge: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: Colors.palePeach,
     alignItems: 'center',
@@ -128,24 +125,19 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.primary,
   },
   chapterCopy: {
     flex: 1,
-    gap: 3,
-  },
-  chapterOrderLabel: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    color: Colors.textMuted,
-    letterSpacing: 1,
+    gap: 4,
   },
   chapterTitle: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.textPrimary,
-    lineHeight: 20,
+    lineHeight: 22,
+    letterSpacing: -0.3,
   },
   chapterDescription: {
     fontFamily: 'Manrope_500Medium',

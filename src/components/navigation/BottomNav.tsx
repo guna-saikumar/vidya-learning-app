@@ -31,7 +31,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
   };
 
   return (
-    <View style={[styles.tabBar, { paddingBottom: bottomInset, height: 58 + bottomInset }]}>
+    <View style={[styles.tabBar, { paddingBottom: bottomInset, height: 62 + bottomInset }]}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
         const color = isActive ? Colors.primary : '#99877f';
@@ -63,15 +63,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
     borderTopColor: Colors.border,
     borderTopWidth: 1,
-    paddingTop: 6,
+    paddingTop: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     elevation: 8,
     shadowColor: Colors.shadowCard,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
   tabItem: {
     flex: 1,
@@ -80,9 +80,9 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   iconPill: {
-    width: 44,
-    height: 30,
-    borderRadius: 12,
+    width: 48,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: 11,
+    marginTop: 3,
     color: '#99877f',
   },
   tabLabelActive: {

@@ -79,8 +79,8 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
       <HeaderBar
         showBack
         onBackPress={() => navigation.goBack()}
-        title={`${schoolClass.title} Subjects`}
-        subtitle={`${schoolClass.subjects.length} Enrolled`}
+        title={schoolClass.title}
+        subtitle={`${schoolClass.subjects.length} Subjects`}
         onProfilePress={() => navigation.navigate("Profile")}
       />
 
@@ -219,15 +219,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 18,
   },
   bannerContainer: {
     backgroundColor: Colors.palePeach,
     borderRadius: 20,
-    padding: 16,
+    padding: 20,
     gap: 6,
     borderWidth: 1,
     borderColor: '#ead7cd',
@@ -299,8 +299,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   pill: {
-    height: 34,
-    paddingHorizontal: 14,
+    height: 36,
+    paddingHorizontal: 16,
     borderRadius: BorderRadius.pill,
     backgroundColor: Colors.softWarm,
     borderWidth: 1,

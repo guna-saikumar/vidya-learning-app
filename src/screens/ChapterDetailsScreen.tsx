@@ -100,7 +100,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         showBack
         onBackPress={() => navigation.goBack()}
         title={chapter.title}
-        subtitle={`${schoolClass.title} • ${subject.name} • Ch ${chapter.order}`}
+        subtitle={`${subject.name} • Chapter ${chapter.order}`}
         onProfilePress={() => navigation.navigate("Profile")}
         showBookmark
         isBookmarked={isBookmarked}
@@ -474,10 +474,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 48,
+    gap: 20,
   },
   headerBlock: {
     gap: 4,
@@ -528,9 +528,9 @@ const styles = StyleSheet.create({
   },
   goalsContainer: {
     backgroundColor: Colors.palePeach,
-    borderRadius: 18,
-    padding: 18,
-    gap: 8,
+    borderRadius: 20,
+    padding: 20,
+    gap: 10,
     borderWidth: 1,
     borderColor: '#ead7cd',
   },

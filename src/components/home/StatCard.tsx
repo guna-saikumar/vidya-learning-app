@@ -23,38 +23,29 @@ export const StatCard: React.FC<StatCardProps> = ({
   isProgress = false,
 }) => {
   return (
-    <HoverCard
-      style={styles.card}
-      lift={-3}
-    >
-      {/* Left side icon */}
-      <View style={[styles.iconContainer, isProgress && styles.progressIconContainer]}>
-        <MaterialIcons
-          name={iconName}
-          size={20}
-          color={isProgress ? Colors.success : Colors.primary}
-        />
+    <HoverCard style={styles.card} lift={-3}>
+      <View style={styles.topRow}>
+        <View style={[styles.iconContainer, isProgress && styles.progressIconContainer]}>
+          <MaterialIcons
+            name={iconName}
+            size={20}
+            color={isProgress ? Colors.success : Colors.primary}
+          />
+        </View>
+        {badge ? (
+          <View style={[styles.badgeContainer, isProgress && styles.progressBadgeContainer]}>
+            <Text style={[styles.badgeText, isProgress && styles.progressBadgeText]}>
+              {badge}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
-      {/* Right side title and numbers */}
-      <View style={styles.rightContent}>
+      <View style={styles.bottomContent}>
+        <Text style={styles.valueText}>{value}</Text>
         <Text style={styles.label} numberOfLines={1}>
           {label}
         </Text>
-        <View style={styles.numberRow}>
-          <Text style={styles.valueText}>{value}</Text>
-          {badge ? (
-            <View style={[styles.badgeContainer, isProgress && styles.progressBadgeContainer]}>
-              <Text style={[styles.badgeText, isProgress && styles.progressBadgeText]}>
-                {badge}
-              </Text>
-            </View>
-          ) : subtitle ? (
-            <Text style={styles.subtitleText} numberOfLines={1}>
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
       </View>
     </HoverCard>
   );
@@ -63,21 +54,24 @@ export const StatCard: React.FC<StatCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minHeight: 76,
+    minHeight: 104,
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
     borderColor: Colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    justifyContent: 'space-between',
     ...Shadows.subtle,
   },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 12,
     backgroundColor: Colors.palePeach,
     alignItems: 'center',
@@ -86,39 +80,15 @@ const styles = StyleSheet.create({
   progressIconContainer: {
     backgroundColor: Colors.successBg,
   },
-  rightContent: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: 1,
-  },
-  label: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textSecondary,
-    letterSpacing: -0.1,
-  },
-  numberRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 5,
-    flexWrap: 'wrap',
-  },
-  valueText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
-    color: Colors.textPrimary,
-    lineHeight: 24,
-    letterSpacing: -0.4,
-  },
   badgeContainer: {
     backgroundColor: Colors.palePeach,
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   badgeText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 9,
+    fontSize: 10,
     color: Colors.primaryDark,
   },
   progressBadgeContainer: {
@@ -127,9 +97,20 @@ const styles = StyleSheet.create({
   progressBadgeText: {
     color: Colors.success,
   },
-  subtitleText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: Colors.textMuted,
+  bottomContent: {
+    gap: 3,
+  },
+  valueText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 24,
+    color: Colors.textPrimary,
+    letterSpacing: -0.5,
+    lineHeight: 28,
+  },
+  label: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.textSecondary,
+    letterSpacing: -0.1,
   },
 });
