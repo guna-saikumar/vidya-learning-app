@@ -3,8 +3,6 @@
   "include": [
     "apps/student-mobile/**/*",
     "apps/api/**/*",
-    "apps/student-web/**/*",
-    "apps/admin-web/**/*",
     "packages/**/*"
   ],
   "exclude": ["packages/db/prisma/seed.ts"]

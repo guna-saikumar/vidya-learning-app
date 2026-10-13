@@ -5,8 +5,6 @@ node_modules
 **/node_modules
 dist
 **/dist
-.next
-**/.next
 build
 **/build
 .expo

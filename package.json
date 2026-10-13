@@ -5,8 +5,6 @@
   "scripts": {
     "dev:student-mobile": "cd apps/student-mobile && npx expo start",
     "dev:admin-mobile": "cd apps/admin-mobile && npx expo start",
-    "dev:student-web": "cd apps/student-web && pnpm dev",
-    "dev:admin-web": "cd apps/admin-web && pnpm dev",
     "dev:api": "cd apps/api && pnpm dev",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",

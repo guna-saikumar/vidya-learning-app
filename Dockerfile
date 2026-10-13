@@ -16,6 +16,6 @@ COPY packages ./packages
 
 RUN pnpm install --frozen-lockfile --network-concurrency=1 --child-concurrency=1
 
-EXPOSE 4000 3000 3001 8081 8082
+EXPOSE 4000 8081 8082
 
 CMD ["pnpm", "dev:api"]
