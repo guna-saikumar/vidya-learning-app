@@ -1,6 +1,11 @@
 {
-  "extends": "expo/tsconfig.base",
-  "compilerOptions": {
-    "strict": true
-  }
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "apps/student-mobile/**/*",
+    "apps/api/**/*",
+    "apps/student-web/**/*",
+    "apps/admin-web/**/*",
+    "packages/**/*"
+  ],
+  "exclude": ["packages/db/prisma/seed.ts"]
 }

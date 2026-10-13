@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "vidya-admin-app",
+    "slug": "vidya-admin-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "../../apps/student-mobile/assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "../../apps/student-mobile/assets/android-icon-foreground.png",
+        "backgroundImage": "../../apps/student-mobile/assets/android-icon-background.png"
+      }
+    }
+  }
+}
