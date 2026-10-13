@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../../constants/colors';
-import { Spacing, BorderRadius } from '../../constants/spacing';
 
 interface HeaderBarProps {
   title?: string;
@@ -31,50 +30,48 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onProfilePress,
   rightAction,
   studentName = 'Aarav',
-  studentClass = 'Class 8',
 }) => {
   const insets = useSafeAreaInsets();
-  // Safe area top padding ensures the navbar is placed below the mobile status bar/notch
   const topInset = Math.max(
     insets.top,
     Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
   );
 
   return (
-    <View style={[styles.headerWrapper, { paddingTop: topInset }]}>
+    <View className="bg-white z-10" style={{ paddingTop: topInset }}>
       {/* Top Navbar with App Name & Profile */}
-      <View style={styles.topNavBar}>
-        <View style={styles.brandRow}>
-          <View style={styles.logoBadge}>
+      <View className="h-16 px-5 flex-row items-center justify-between bg-white border-b border-border">
+        <View className="flex-row items-center gap-2.5">
+          <View className="w-10 h-10 rounded-xl bg-palePeach border border-[#f2ded3] items-center justify-center shadow-sm">
             <Image
               source={require('../../../assets/app-images/logo.png')}
-              style={styles.logoImage as any}
+              className="w-7 h-7"
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.brandTitle}>Vidya Learning</Text>
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Vidya Learning</Text>
         </View>
 
         <TouchableOpacity
-          style={styles.profileControl}
+          className="flex-row items-center gap-2 py-1 px-2.5 rounded-full border border-border bg-white"
           onPress={onProfilePress}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel="Student profile"
         >
-          <Text style={styles.profileName}>{studentName}</Text>
+          <Text className="font-manrope-bold text-[13px] text-textPrimary">{studentName}</Text>
           <Image
             source={require('../../../assets/app-images/avatar.png')}
-            style={styles.avatarImage as any}
+            className="w-[30px] h-[30px] rounded-full"
           />
         </TouchableOpacity>
       </View>
 
       {/* Back Section seamlessly flowing into the page content below */}
       {showBack && (
-        <View style={styles.backSection}>
+        <View className="px-5 pt-3.5 pb-1 flex-row items-center justify-between bg-white gap-3">
           <TouchableOpacity
-            style={styles.backIconButton}
+            className="w-10 h-10 rounded-xl border border-border bg-white items-center justify-center shadow-sm"
             onPress={onBackPress}
             activeOpacity={0.7}
             accessibilityRole="button"
@@ -83,21 +80,25 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             <MaterialIcons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
 
-          <View style={styles.backTitleContainer}>
+          <View className="flex-1 justify-center">
             {subtitle ? (
-              <Text style={styles.backSubtitleText}>{subtitle.toUpperCase()}</Text>
+              <Text className="font-manrope-extrabold text-[10px] text-primary tracking-wider mb-0.5 uppercase">
+                {subtitle}
+              </Text>
             ) : eyebrow ? (
-              <Text style={styles.backSubtitleText}>{eyebrow.toUpperCase()}</Text>
+              <Text className="font-manrope-extrabold text-[10px] text-primary tracking-wider mb-0.5 uppercase">
+                {eyebrow}
+              </Text>
             ) : null}
             {title ? (
-              <Text style={styles.backTitleText} numberOfLines={1}>
+              <Text className="font-manrope-extrabold text-xl text-textPrimary tracking-tight" numberOfLines={1}>
                 {title}
               </Text>
             ) : null}
           </View>
 
           {rightAction && (
-            <View style={styles.rightActionContainer}>
+            <View className="flex-row items-center gap-2">
               {rightAction}
             </View>
           )}
@@ -106,118 +107,3 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  headerWrapper: {
-    backgroundColor: Colors.white,
-    zIndex: 10,
-  },
-  topNavBar: {
-    height: 64,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  logoBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Colors.palePeach,
-    borderWidth: 1,
-    borderColor: '#f2ded3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primaryDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  logoImage: {
-    width: 28,
-    height: 28,
-  },
-  brandTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 18,
-    color: Colors.textPrimary,
-    letterSpacing: -0.5,
-  },
-  profileControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
-  },
-  profileName: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.textPrimary,
-  },
-  avatarImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-  },
-  backSection: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.white,
-    gap: 12,
-  },
-  backIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.shadowCard,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  backTitleContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  backSubtitleText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    color: Colors.primary,
-    letterSpacing: 1.1,
-    marginBottom: 2,
-  },
-  backTitleText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
-    color: Colors.textPrimary,
-    letterSpacing: -0.4,
-  },
-  rightActionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-});

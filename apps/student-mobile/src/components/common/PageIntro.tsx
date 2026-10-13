@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Colors from '../../constants/colors';
+import { View, Text } from 'react-native';
 
 interface PageIntroProps {
   eyebrow?: string;
@@ -16,61 +15,27 @@ export const PageIntro: React.FC<PageIntroProps> = ({
   badge,
 }) => {
   return (
-    <View style={styles.container}>
+    <View className="py-1 gap-1">
       {eyebrow ? (
-        <View style={styles.eyebrowRow}>
-          <Text style={styles.eyebrowText}>{eyebrow.toUpperCase()}</Text>
+        <View className="flex-row items-center gap-2 mb-0.5">
+          <Text className="font-manrope-extrabold text-[11px] text-primary tracking-widest uppercase">
+            {eyebrow}
+          </Text>
           {badge && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{badge}</Text>
+            <View className="bg-palePeach px-2 py-0.5 rounded-full">
+              <Text className="font-manrope-bold text-[10px] text-primaryDark">{badge}</Text>
             </View>
           )}
         </View>
       ) : null}
-      <Text style={styles.title}>{title}</Text>
-      {description ? <Text style={styles.description}>{description}</Text> : null}
+      <Text className="font-manrope-extrabold text-[22px] text-textPrimary tracking-tight">
+        {title}
+      </Text>
+      {description ? (
+        <Text className="font-manrope-medium text-[13px] text-textSecondary leading-[19px]">
+          {description}
+        </Text>
+      ) : null}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 4,
-    gap: 4,
-  },
-  eyebrowRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 2,
-  },
-  eyebrowText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.primary,
-    letterSpacing: 1.2,
-  },
-  badge: {
-    backgroundColor: Colors.palePeach,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 20,
-  },
-  badgeText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    color: Colors.primaryDark,
-  },
-  title: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 22,
-    color: Colors.textPrimary,
-    letterSpacing: -0.4,
-  },
-  description: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 19,
-  },
-});

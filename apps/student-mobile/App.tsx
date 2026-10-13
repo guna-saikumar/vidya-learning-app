@@ -1,5 +1,6 @@
+import './global.css';
 import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -37,7 +38,7 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
@@ -50,12 +51,3 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

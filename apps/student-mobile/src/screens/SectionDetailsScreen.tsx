@@ -2,16 +2,13 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Spacing } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
 import { getSectionById } from '../services/curriculumService';
@@ -33,10 +30,10 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
   if (!section || !chapter || !subject || !schoolClass) {
     return (
-      <View style={styles.safeArea}>
+      <View className="flex-1 bg-white">
         <HeaderBar showBack onBackPress={() => navigation.goBack()} title="Section Details" />
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Section not found</Text>
+        <View className="flex-1 items-center justify-center">
+          <Text className="font-manrope-medium text-sm text-textSecondary">Section not found</Text>
         </View>
       </View>
     );
@@ -65,7 +62,7 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   };
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <HeaderBar
         showBack
@@ -76,17 +73,17 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
       />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Lead overview paragraph */}
-        <Text style={styles.leadParagraph}>{section.content}</Text>
+        <Text className="font-manrope-medium text-[15px] text-textLead leading-[25px]">{section.content}</Text>
 
         {/* Understanding the idea section matching Figma Make */}
-        <View style={styles.conceptBlock}>
-          <Text style={styles.conceptTitle}>Understanding the idea</Text>
-          <Text style={styles.conceptBody}>
+        <View className="gap-2 mt-1">
+          <Text className="font-manrope-extrabold text-[17px] text-textPrimary">Understanding the idea</Text>
+          <Text className="font-manrope-medium text-sm text-textSecondary leading-[22px]">
             Start by noticing the main idea and the words used to explain it. Connect each new detail to something you already know. This makes the concept easier to remember and use.
           </Text>
 
@@ -104,22 +101,21 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
         {/* Mark Topic Completed Button */}
         <TouchableOpacity
-          style={[
-            styles.completeButton,
-            isSectionDone && styles.completeButtonDone,
-          ]}
+          className={`flex-row items-center justify-center gap-2 min-h-[46px] rounded-xl shadow-md mt-2 ${
+            isSectionDone ? 'bg-success' : 'bg-primary'
+          }`}
           onPress={handleMarkSectionDone}
           activeOpacity={0.88}
         >
           <MaterialIcons name="check" size={19} color={Colors.white} />
-          <Text style={styles.completeButtonText}>
+          <Text className="font-manrope-bold text-[13px] text-white">
             {isSectionDone ? 'Topic Completed' : 'Mark topic as completed'}
           </Text>
         </TouchableOpacity>
 
         {/* Return to Chapter Overview Link */}
         <TouchableOpacity
-          style={styles.returnLink}
+          className="flex-row items-center justify-center gap-1.5 py-1"
           onPress={() =>
             navigation.navigate('ChapterDetails', {
               classId,
@@ -130,13 +126,15 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
           activeOpacity={0.8}
         >
           <MaterialIcons name="menu-book" size={18} color={Colors.primary} />
-          <Text style={styles.returnLinkText}>Return to Chapter Overview</Text>
+          <Text className="font-manrope-bold text-[13px] text-primary">Return to Chapter Overview</Text>
         </TouchableOpacity>
 
         {/* Pager matching Figma Make .pager */}
-        <View style={styles.pagerRow}>
+        <View className="flex-row gap-2.5 mt-1">
           <TouchableOpacity
-            style={[styles.pagerButton, !prevSection && styles.pagerButtonDisabled]}
+            className={`flex-1 min-h-[57px] flex-row items-center justify-center gap-2.5 p-2 border border-border rounded-2xl bg-white ${
+              !prevSection ? 'opacity-35' : ''
+            }`}
             disabled={!prevSection}
             onPress={() =>
               prevSection &&
@@ -155,13 +153,15 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               color={prevSection ? Colors.textPrimary : Colors.textMuted}
             />
             <View>
-              <Text style={styles.pagerSmallLabel}>PREVIOUS</Text>
-              <Text style={styles.pagerTitleLabel}>Topic</Text>
+              <Text className="font-manrope-bold text-[9px] text-textMuted tracking-wider uppercase">PREVIOUS</Text>
+              <Text className="font-manrope-extrabold text-xs text-textPrimary">Topic</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.pagerButton, !nextSection && styles.pagerButtonDisabled]}
+            className={`flex-1 min-h-[57px] flex-row items-center justify-center gap-2.5 p-2 border border-border rounded-2xl bg-white ${
+              !nextSection ? 'opacity-35' : ''
+            }`}
             disabled={!nextSection}
             onPress={() =>
               nextSection &&
@@ -174,9 +174,9 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
             }
             activeOpacity={0.8}
           >
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.pagerSmallLabel}>NEXT</Text>
-              <Text style={styles.pagerTitleLabel}>Topic</Text>
+            <View className="items-end">
+              <Text className="font-manrope-bold text-[9px] text-textMuted tracking-wider uppercase">NEXT</Text>
+              <Text className="font-manrope-extrabold text-xs text-textPrimary">Topic</Text>
             </View>
             <MaterialIcons
               name="arrow-forward"
@@ -190,124 +190,3 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
-  },
-  eyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.primary,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
-  leadParagraph: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 15,
-    color: Colors.textLead,
-    lineHeight: 25,
-  },
-  conceptBlock: {
-    gap: 8,
-    marginTop: 4,
-  },
-  conceptTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 17,
-    color: Colors.textPrimary,
-  },
-  conceptBody: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 22,
-  },
-  completeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: Colors.primary,
-    shadowColor: Colors.primaryDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 3,
-    marginTop: 8,
-  },
-  completeButtonDone: {
-    backgroundColor: Colors.success,
-  },
-  completeButtonText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.white,
-  },
-  returnLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 4,
-  },
-  returnLinkText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.primary,
-  },
-  pagerRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  pagerButton: {
-    flex: 1,
-    minHeight: 57,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    backgroundColor: Colors.white,
-  },
-  pagerButtonDisabled: {
-    opacity: 0.35,
-  },
-  pagerSmallLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 9,
-    color: Colors.textMuted,
-    letterSpacing: 0.8,
-  },
-  pagerTitleLabel: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    color: Colors.textPrimary,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-});

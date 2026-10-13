@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
-  TouchableOpacity, Platform,
-  SafeAreaView,
+  TouchableOpacity,
   StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -13,7 +11,6 @@ import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { StatCard, ClassCard } from '../components/home';
 import { SearchBar, HoverCard, CalloutCard } from '../components/common';
@@ -45,40 +42,40 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <HeaderBar onProfilePress={() => navigation.navigate('Profile')} />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 20, paddingBottom: 50, gap: 24 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Greeting & Study Streak */}
-        <View style={styles.greetingSection}>
-          <View style={styles.greetingTextContainer}>
-            <Text style={styles.greetingTitle}>
+        <View className="flex-row items-center justify-between pt-1">
+          <View className="flex-1">
+            <Text className="font-manrope-extrabold text-2xl text-textPrimary tracking-tight">
               Good morning, {profile?.displayName?.split(' ')[0] || 'Aarav'}!
             </Text>
-            <Text style={styles.greetingSubtitle}>
+            <Text className="font-manrope-medium text-[13px] text-textSecondary mt-0.5">
               What would you like to learn today?
             </Text>
           </View>
 
-          <View style={styles.streakBadge}>
+          <View className="flex-row items-center gap-1 bg-palePeach px-3 py-1.5 rounded-full shadow-sm">
             <MaterialIcons
               name="local-fire-department"
               size={18}
               color={Colors.accentGoldDark}
             />
-            <Text style={styles.streakText}>
+            <Text className="font-manrope-bold text-xs text-primaryDark">
               {profile?.streakDays || 5} Day Streak
             </Text>
           </View>
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchSection}>
+        <View className="relative z-10">
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -90,12 +87,12 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Quick Search Dropdown if typing */}
           {searchResults.length > 0 && (
-            <View style={styles.searchResultsBox}>
-              <Text style={styles.searchResultsHeader}>SEARCH RESULTS</Text>
+            <View className="bg-white rounded-2xl border border-border p-2 mt-1.5 shadow-sm">
+              <Text className="font-manrope-extrabold text-[11px] text-textMuted px-2 pb-1">SEARCH RESULTS</Text>
               {searchResults.slice(0, 5).map((item) => (
                 <TouchableOpacity
                   key={`${item.type}-${item.id}`}
-                  style={styles.searchResultItem}
+                  className="flex-row items-center gap-2.5 py-2.5 px-2 border-b border-border"
                   onPress={() => {
                     setSearchQuery('');
                     if (item.type === 'subject') {
@@ -117,9 +114,9 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
                     size={16}
                     color={Colors.primary}
                   />
-                  <View style={styles.searchResultTextContainer}>
-                    <Text style={styles.searchResultTitle}>{item.title}</Text>
-                    <Text style={styles.searchResultSubtitle}>{item.subtitle}</Text>
+                  <View className="flex-1">
+                    <Text className="font-manrope-bold text-[13px] text-textPrimary">{item.title}</Text>
+                    <Text className="font-manrope-medium text-[11px] text-textSecondary">{item.subtitle}</Text>
                   </View>
                   <MaterialIcons name="chevron-right" size={16} color={Colors.textMuted} />
                 </TouchableOpacity>
@@ -129,12 +126,12 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* Curriculum Overview / Stats Grid */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Overview</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Overview</Text>
         </View>
 
-        <View style={styles.statsGrid}>
-          <View style={styles.statsRow}>
+        <View className="gap-3">
+          <View className="flex-row gap-3">
             <StatCard
               label="Classes"
               value={stats.totalClasses}
@@ -146,7 +143,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               iconName="auto-stories"
             />
           </View>
-          <View style={styles.statsRow}>
+          <View className="flex-row gap-3">
             <StatCard
               label="Chapters"
               value={stats.totalChapters}
@@ -162,22 +159,22 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* Continue Learning Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Continue Learning</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Continue Learning</Text>
           <TouchableOpacity onPress={() => navigation.navigate('MyLearning')}>
-            <Text style={styles.linkText}>View All</Text>
+            <Text className="font-manrope-bold text-[13px] text-primary">View All</Text>
           </TouchableOpacity>
         </View>
 
         {/* Lesson Card 1: Mathematics */}
-        <HoverCard style={styles.continueCard} lift={-4}>
-          <View style={styles.continueCardHeader}>
-            <View style={styles.subjectIconBox}>
+        <HoverCard className="bg-white rounded-[20px] p-5 border border-border gap-3.5 shadow-sm" lift={-4}>
+          <View className="flex-row items-start gap-3.5">
+            <View className="w-11 h-11 rounded-xl bg-palePeach items-center justify-center">
               <MaterialIcons name="calculate" size={24} color={Colors.primary} />
             </View>
-            <View style={styles.continueCardTitleBox}>
-              <Text style={styles.continueClassText}>Mathematics • Class 8</Text>
-              <Text style={styles.continueChapterTitle} numberOfLines={1}>
+            <View className="flex-1">
+              <Text className="font-manrope-bold text-xs text-primary">Mathematics • Class 8</Text>
+              <Text className="font-manrope-extrabold text-base text-textPrimary mt-0.5 tracking-tight" numberOfLines={1}>
                 Rational Numbers
               </Text>
             </View>
@@ -196,43 +193,43 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {/* Progress Tracker */}
-          <View style={styles.progressTracker}>
-            <View style={styles.progressRowLabels}>
-              <Text style={styles.subtopicsCount}>6 of 8 topics completed</Text>
-              <Text style={styles.progressNumber}>75%</Text>
+          <View className="gap-1.5">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-manrope-medium text-xs text-textSecondary">6 of 8 topics completed</Text>
+              <Text className="font-manrope-extrabold text-xs text-primary">75%</Text>
             </View>
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: '75%' }]} />
+            <View className="h-1.5 rounded-full bg-[#F3EDE9] overflow-hidden">
+              <View className="h-full rounded-full bg-primary" style={{ width: '75%' }} />
             </View>
           </View>
 
-          <View style={styles.continueFooter}>
-            <View style={styles.timeRemainingRow}>
+          <View className="flex-row items-center justify-between pt-1">
+            <View className="flex-row items-center gap-1.5">
               <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
-              <Text style={styles.timeRemainingText}>15 mins left</Text>
+              <Text className="font-manrope-medium text-xs text-textMuted">15 mins left</Text>
             </View>
             <TouchableOpacity
-              style={styles.continueButton}
+              className="flex-row items-center gap-1 bg-primary px-[18px] py-[9px] rounded-full shadow-sm"
               onPress={() =>
                 handleOpenChapter('class-8', 'c8-maths', 'c8-m-ch1')
               }
               activeOpacity={0.85}
             >
-              <Text style={styles.continueButtonText}>Resume</Text>
+              <Text className="font-manrope-bold text-xs text-white">Resume</Text>
               <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
             </TouchableOpacity>
           </View>
         </HoverCard>
 
         {/* Lesson Card 2: Science */}
-        <HoverCard style={styles.continueCard} lift={-4}>
-          <View style={styles.continueCardHeader}>
-            <View style={styles.subjectIconBox}>
+        <HoverCard className="bg-white rounded-[20px] p-5 border border-border gap-3.5 shadow-sm" lift={-4}>
+          <View className="flex-row items-start gap-3.5">
+            <View className="w-11 h-11 rounded-xl bg-palePeach items-center justify-center">
               <MaterialIcons name="science" size={24} color={Colors.primary} />
             </View>
-            <View style={styles.continueCardTitleBox}>
-              <Text style={styles.continueClassText}>Physical Science • Class 8</Text>
-              <Text style={styles.continueChapterTitle} numberOfLines={1}>
+            <View className="flex-1">
+              <Text className="font-manrope-bold text-xs text-primary">Physical Science • Class 8</Text>
+              <Text className="font-manrope-extrabold text-base text-textPrimary mt-0.5 tracking-tight" numberOfLines={1}>
                 Force and Pressure
               </Text>
             </View>
@@ -251,43 +248,43 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {/* Progress Tracker */}
-          <View style={styles.progressTracker}>
-            <View style={styles.progressRowLabels}>
-              <Text style={styles.subtopicsCount}>2 of 5 topics completed</Text>
-              <Text style={styles.progressNumber}>40%</Text>
+          <View className="gap-1.5">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-manrope-medium text-xs text-textSecondary">2 of 5 topics completed</Text>
+              <Text className="font-manrope-extrabold text-xs text-primary">40%</Text>
             </View>
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: '40%' }]} />
+            <View className="h-1.5 rounded-full bg-[#F3EDE9] overflow-hidden">
+              <View className="h-full rounded-full bg-primary" style={{ width: '40%' }} />
             </View>
           </View>
 
-          <View style={styles.continueFooter}>
-            <View style={styles.timeRemainingRow}>
+          <View className="flex-row items-center justify-between pt-1">
+            <View className="flex-row items-center gap-1.5">
               <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
-              <Text style={styles.timeRemainingText}>28 mins left</Text>
+              <Text className="font-manrope-medium text-xs text-textMuted">28 mins left</Text>
             </View>
             <TouchableOpacity
-              style={styles.continueButton}
+              className="flex-row items-center gap-1 bg-primary px-[18px] py-[9px] rounded-full shadow-sm"
               onPress={() =>
                 handleOpenChapter('class-8', 'c8-pscience', 'c8-ps-ch1')
               }
               activeOpacity={0.85}
             >
-              <Text style={styles.continueButtonText}>Resume</Text>
+              <Text className="font-manrope-bold text-xs text-white">Resume</Text>
               <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
             </TouchableOpacity>
           </View>
         </HoverCard>
 
         {/* Select Class Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Classes</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Classes</Text>
         </View>
 
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.classCardsScroll}
+          contentContainerStyle={{ paddingVertical: 4 }}
         >
           {classes.map((c) => (
             <ClassCard
@@ -301,42 +298,41 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         </ScrollView>
 
         {/* Saved Bookmarks */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Saved Bookmarks</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Saved Bookmarks</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Bookmarks')}>
-            <Text style={styles.linkText}>View All</Text>
+            <Text className="font-manrope-bold text-[13px] text-primary">View All</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.milestonesCard}>
+        <View className="bg-white rounded-[20px] p-5 border border-border shadow-sm">
           {bookmarks.slice(0, 2).map((bm, index) => (
             <TouchableOpacity
               key={bm.id}
-              style={[
-                styles.bookmarkHighlightItem,
-                index > 0 && styles.bookmarkItemBorder,
-              ]}
+              className={`flex-row items-start gap-3.5 py-2.5 ${
+                index > 0 ? 'border-t border-border pt-3' : ''
+              }`}
               onPress={() =>
                 handleOpenChapter(bm.classId, bm.subjectId, bm.chapterId)
               }
               activeOpacity={0.75}
             >
-              <View style={styles.bookmarkIconCircle}>
+              <View className="w-[38px] h-[38px] rounded-xl bg-palePeach items-center justify-center mt-0.5">
                 <MaterialIcons
                   name={bm.type === 'formula' ? 'functions' : 'auto-stories'}
                   size={18}
                   color={Colors.primary}
                 />
               </View>
-              <View style={styles.bookmarkInfo}>
-                <View style={styles.bookmarkTopInfo}>
-                  <Text style={styles.bookmarkSubtitle}>{bm.subtitle}</Text>
-                  <Text style={styles.bookmarkTime}>Saved</Text>
+              <View className="flex-1">
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-manrope-bold text-xs text-primary">{bm.subtitle}</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textMuted">Saved</Text>
                 </View>
-                <Text style={styles.bookmarkTitle}>{bm.title}</Text>
+                <Text className="font-manrope-extrabold text-[15px] text-textPrimary mt-0.5 tracking-tight">{bm.title}</Text>
                 {bm.previewText && (
-                  <View style={styles.previewTagBox}>
-                    <Text style={styles.previewTagText} numberOfLines={1}>
+                  <View className="bg-softWarm px-2.5 py-1 rounded-md mt-1.5 self-start">
+                    <Text className="font-manrope-medium text-[11px] text-textSecondary" numberOfLines={1}>
                       {bm.previewText}
                     </Text>
                   </View>
@@ -357,300 +353,3 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 22,
-    paddingTop: 20,
-    paddingBottom: 50,
-    gap: 24,
-  },
-  greetingSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 4,
-  },
-  greetingTextContainer: {
-    flex: 1,
-  },
-  greetingTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 24,
-    color: Colors.textPrimary,
-    letterSpacing: -0.6,
-  },
-  greetingSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: Colors.palePeach,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.pill,
-    ...Shadows.subtle,
-  },
-  streakText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.primaryDark,
-  },
-  searchSection: {
-    position: 'relative',
-    zIndex: 10,
-  },
-  searchResultsBox: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.sm,
-    marginTop: 6,
-    ...Shadows.subtle,
-  },
-  searchResultsHeader: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.textMuted,
-    paddingHorizontal: 8,
-    paddingBottom: 4,
-  },
-  searchResultItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  searchResultTextContainer: {
-    flex: 1,
-  },
-  searchResultTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.textPrimary,
-  },
-  searchResultSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: Colors.textSecondary,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 18,
-    color: Colors.textPrimary,
-    letterSpacing: -0.4,
-  },
-  statsGrid: {
-    gap: 12,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  classCardsScroll: {
-    paddingVertical: 4,
-  },
-  linkText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: Colors.primary,
-  },
-  continueCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 14,
-    ...Shadows.subtle,
-    ...(Platform.OS === 'web' && {
-      transitionDuration: '220ms',
-      transitionProperty: 'transform, box-shadow, border-color',
-      transitionTimingFunction: 'cubic-bezier(0.2, 0, 0, 1)',
-      cursor: 'pointer',
-    } as any),
-  },
-  continueCardHovered: {
-    transform: [{ translateY: -4 }],
-    shadowColor: 'rgba(58, 45, 41, 0.14)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
-    elevation: 6,
-    borderColor: Colors.borderHover,
-  },
-  continueCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-  },
-  subjectIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: Colors.palePeach,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  continueCardTitleBox: {
-    flex: 1,
-  },
-  continueClassText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  continueChapterTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: Colors.textPrimary,
-    marginTop: 3,
-    letterSpacing: -0.3,
-  },
-  progressTracker: {
-    gap: 6,
-  },
-  progressRowLabels: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  subtopicsCount: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  progressNumber: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  progressBarBg: {
-    height: 6,
-    borderRadius: 20,
-    backgroundColor: '#F3EDE9',
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 20,
-    backgroundColor: Colors.primary,
-  },
-  continueFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 4,
-  },
-  timeRemainingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  timeRemainingText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textMuted,
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: BorderRadius.pill,
-    ...Shadows.subtle,
-  },
-  continueButtonText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.white,
-  },
-  milestonesCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.subtle,
-  },
-  bookmarkHighlightItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-    paddingVertical: 10,
-  },
-  bookmarkItemBorder: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: 12,
-  },
-  bookmarkIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: Colors.palePeach,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  bookmarkInfo: {
-    flex: 1,
-  },
-  bookmarkTopInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  bookmarkSubtitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  bookmarkTime: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-  bookmarkTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: Colors.textPrimary,
-    marginTop: 2,
-    letterSpacing: -0.2,
-  },
-  previewTagBox: {
-    backgroundColor: Colors.softWarm,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginTop: 6,
-  },
-  previewTagText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: Colors.textSecondary,
-  },
-});

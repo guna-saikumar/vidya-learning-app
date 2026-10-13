@@ -2,17 +2,14 @@ import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Image,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { SearchBar, HoverCard } from '../components/common';
 import { ChapterListItem } from '../components/curriculum';
@@ -58,10 +55,10 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (!subject || !schoolClass) {
     return (
-      <View style={styles.safeArea}>
+      <View className="flex-1 bg-white">
         <HeaderBar showBack onBackPress={() => navigation.goBack()} title="Subject Index" />
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>Subject not found</Text>
+        <View className="items-center justify-center py-8 gap-1.5">
+          <Text className="font-manrope-extrabold text-[15px] text-textPrimary">Subject not found</Text>
         </View>
       </View>
     );
@@ -81,7 +78,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
   const completionPercent = Math.round((completedCount / Math.max(1, totalChaptersCount)) * 100);
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <HeaderBar
         showBack
@@ -92,44 +89,49 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
       />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 18 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Subject Overview Banner with Thumbnail & Progress */}
-        <HoverCard style={styles.overviewBanner} lift={-3}>
-          <View style={styles.bannerHeader}>
-            <View style={styles.bannerTitleGroup}>
-              <View style={styles.curriculumTag}>
+        <HoverCard className="bg-palePeach rounded-[20px] p-5 gap-3 border border-[#ead7cd] shadow-sm" lift={-3}>
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1">
+              <View className="flex-row items-center gap-1.5 mb-1">
                 <MaterialIcons name="menu-book" size={16} color={Colors.primary} />
-                <Text style={styles.curriculumTagText}>{schoolClass.title} Curriculum</Text>
+                <Text className="font-manrope-extrabold text-[11px] text-primary tracking-wide">
+                  {schoolClass.title} Curriculum
+                </Text>
               </View>
-              <Text style={styles.bannerTitle}>{subject.name}</Text>
+              <Text className="font-manrope-extrabold text-[22px] text-textPrimary tracking-tight">
+                {subject.name}
+              </Text>
             </View>
 
-            <View style={styles.bannerThumbnailBox}>
+            <View className="w-12 h-12 rounded-[14px] bg-white overflow-hidden">
               <Image
                 source={require('../../assets/app-images/math_banner.png')}
-                style={styles.bannerThumbnail}
+                className="w-full h-full"
+                resizeMode="cover"
               />
             </View>
           </View>
 
           {/* Overall Subject Progress Card with Segmented Track */}
-          <View style={styles.progressCard}>
-            <View style={styles.progressCardHeader}>
-              <View style={styles.progressDoneBadge}>
+          <View className="bg-white rounded-2xl p-4 gap-2.5 border border-border">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-1 bg-successBg px-2 py-0.5 rounded-full">
                 <MaterialIcons name="check-circle" size={14} color={Colors.success} />
-                <Text style={styles.progressDoneText}>
+                <Text className="font-manrope-bold text-[11px] text-success">
                   {completionPercent}% Done
                 </Text>
               </View>
-              <Text style={styles.progressFractionText}>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary">
                 {completedCount} of {totalChaptersCount} Chapters
               </Text>
             </View>
 
-            <View style={styles.segmentedTrack}>
+            <View className="flex-row h-[5px] gap-[3px] rounded-full overflow-hidden">
               {subject.chapters.map((ch) => {
                 const p = progressMap[ch.id];
                 const isDone = p?.completed;
@@ -137,14 +139,13 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
                 return (
                   <View
                     key={ch.id}
-                    style={[
-                      styles.segment,
+                    className={`flex-1 h-full rounded-sm ${
                       isDone
-                        ? styles.segmentDone
+                        ? 'bg-success'
                         : isInProg
-                        ? styles.segmentInProgress
-                        : styles.segmentUnread,
-                    ]}
+                        ? 'bg-primary'
+                        : 'bg-[#f0e7e2]'
+                    }`}
                   />
                 );
               })}
@@ -164,59 +165,71 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pillsScroll}
+          contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingVertical: 2 }}
         >
           <TouchableOpacity
-            style={[styles.pill, statusFilter === 'all' && styles.pillActive]}
+            className={`h-[34px] px-3.5 rounded-full items-center justify-center border ${
+              statusFilter === 'all'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setStatusFilter('all')}
           >
             <Text
-              style={[
-                styles.pillText,
-                statusFilter === 'all' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                statusFilter === 'all' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               All Chapters ({totalChaptersCount})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.pill, statusFilter === 'in-progress' && styles.pillActive]}
+            className={`h-[34px] px-3.5 rounded-full items-center justify-center border ${
+              statusFilter === 'in-progress'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setStatusFilter('in-progress')}
           >
             <Text
-              style={[
-                styles.pillText,
-                statusFilter === 'in-progress' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                statusFilter === 'in-progress' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               In Progress ({inProgressCount})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.pill, statusFilter === 'completed' && styles.pillActive]}
+            className={`h-[34px] px-3.5 rounded-full items-center justify-center border ${
+              statusFilter === 'completed'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setStatusFilter('completed')}
           >
             <Text
-              style={[
-                styles.pillText,
-                statusFilter === 'completed' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                statusFilter === 'completed' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               Completed ({completedCount})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.pill, statusFilter === 'unread' && styles.pillActive]}
+            className={`h-[34px] px-3.5 rounded-full items-center justify-center border ${
+              statusFilter === 'unread'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setStatusFilter('unread')}
           >
             <Text
-              style={[
-                styles.pillText,
-                statusFilter === 'unread' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                statusFilter === 'unread' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               Unread ({unreadCount})
             </Text>
@@ -224,7 +237,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
         </ScrollView>
 
         {/* Chapter Table of Contents List */}
-        <View style={styles.chaptersList}>
+        <View className="gap-0.5">
           {filteredChapters.length > 0 ? (
             filteredChapters.map((chapter) => {
               const p = progressMap[chapter.id];
@@ -253,9 +266,9 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
               );
             })
           ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>No Chapters Found</Text>
-              <Text style={styles.emptySubtitle}>
+            <View className="items-center justify-center py-8 gap-1.5">
+              <Text className="font-manrope-extrabold text-[15px] text-textPrimary">No Chapters Found</Text>
+              <Text className="font-manrope-medium text-xs text-textMuted">
                 No chapters matching your filter or query.
               </Text>
             </View>
@@ -266,206 +279,3 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 48,
-    gap: 18,
-  },
-  breadcrumbRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 2,
-  },
-  backToSubjects: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  backToSubjectsText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  breadcrumbBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.palePeach,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.pill,
-    gap: 4,
-  },
-  breadcrumbClassText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textSecondary,
-  },
-  breadcrumbSubjectText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.primary,
-  },
-  overviewBanner: {
-    backgroundColor: Colors.palePeach,
-    borderRadius: 20,
-    padding: 20,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#ead7cd',
-    ...Shadows.subtle,
-  },
-  bannerHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  bannerTitleGroup: {
-    flex: 1,
-  },
-  curriculumTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginBottom: 4,
-  },
-  curriculumTagText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: Colors.primary,
-    letterSpacing: 0.5,
-  },
-  bannerTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 22,
-    color: Colors.textPrimary,
-    letterSpacing: -0.4,
-  },
-  bannerThumbnailBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: Colors.white,
-    overflow: 'hidden',
-  },
-  bannerThumbnail: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  bannerDescription: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 18,
-  },
-  progressCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  progressCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  progressDoneBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.successBg,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.pill,
-  },
-  progressDoneText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: Colors.success,
-  },
-  progressFractionText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: Colors.textSecondary,
-  },
-  segmentedTrack: {
-    flexDirection: 'row',
-    height: 5,
-    gap: 3,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  segment: {
-    flex: 1,
-    height: '100%',
-    borderRadius: 2,
-  },
-  segmentDone: {
-    backgroundColor: Colors.success,
-  },
-  segmentInProgress: {
-    backgroundColor: Colors.primary,
-  },
-  segmentUnread: {
-    backgroundColor: '#f0e7e2',
-  },
-  pillsScroll: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 2,
-  },
-  pill: {
-    height: 34,
-    paddingHorizontal: 14,
-    borderRadius: BorderRadius.pill,
-    backgroundColor: Colors.softWarm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  pillText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  pillTextActive: {
-    color: Colors.white,
-  },
-  chaptersList: {
-    gap: 2,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 30,
-    gap: 6,
-  },
-  emptyTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  emptySubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textMuted,
-  },
-});

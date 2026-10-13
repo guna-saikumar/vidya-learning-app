@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../../constants/colors';
-import { Spacing, BorderRadius } from '../../constants/spacing';
 
 interface HeroCardProps {
   pillText?: string;
@@ -16,78 +15,21 @@ export const HeroCard: React.FC<HeroCardProps> = ({
   subtitle = 'Pick up right where you left off or explore a new topic.',
 }) => {
   return (
-    <View style={styles.card}>
-      <View style={styles.copy}>
+    <View className="bg-primaryDark rounded-3xl p-6 relative overflow-hidden justify-center min-h-[160px]">
+      <View className="w-4/5 gap-2.5 z-10">
         {pillText ? (
-          <View style={styles.pill}>
+          <View className="self-start flex-row items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10">
             <MaterialIcons name="auto-awesome" size={13} color={Colors.white} />
-            <Text style={styles.pillText}>{pillText}</Text>
+            <Text className="text-[11px] font-manrope-bold text-white tracking-wide">{pillText}</Text>
           </View>
         ) : null}
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text className="text-xl font-manrope-extrabold text-white leading-[26px] tracking-tight">{title}</Text>
+        <Text className="text-[13px] font-manrope-medium text-primaryLight leading-[19px]">{subtitle}</Text>
       </View>
 
-      <View style={styles.iconCircle}>
+      <View className="absolute -right-2.5 -bottom-2.5 w-24 h-24 rounded-full bg-white/5 items-center justify-center">
         <MaterialIcons name="school" size={36} color="rgba(255, 255, 255, 0.25)" />
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: 24,
-    padding: 24,
-    position: 'relative',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    minHeight: 160,
-  },
-  copy: {
-    width: '80%',
-    gap: 10,
-    zIndex: 2,
-  },
-  pill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: BorderRadius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  pillText: {
-    fontSize: 11,
-    fontFamily: 'Manrope_700Bold',
-    color: Colors.white,
-    letterSpacing: 0.2,
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: 'Manrope_800ExtraBold',
-    color: Colors.white,
-    lineHeight: 26,
-    letterSpacing: -0.4,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontFamily: 'Manrope_500Medium',
-    color: Colors.primaryLight,
-    lineHeight: 19,
-  },
-  iconCircle: {
-    position: 'absolute',
-    right: -10,
-    bottom: -10,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

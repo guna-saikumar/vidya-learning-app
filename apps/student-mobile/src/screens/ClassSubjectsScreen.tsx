@@ -2,16 +2,12 @@ import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { Spacing, BorderRadius, Shadows } from '../constants/spacing';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { SearchBar } from '../components/common';
 import { SubjectCard } from '../components/curriculum';
@@ -44,10 +40,10 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (!schoolClass) {
     return (
-      <View style={styles.safeArea}>
+      <View className="flex-1 bg-white">
         <HeaderBar showBack onBackPress={() => navigation.goBack()} title="Subjects" />
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Class curriculum not found.</Text>
+        <View className="items-center justify-center py-10 gap-1.5">
+          <Text className="font-manrope-medium text-sm text-textSecondary">Class curriculum not found.</Text>
         </View>
       </View>
     );
@@ -74,7 +70,7 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.safeArea}>
+    <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <HeaderBar
         showBack
@@ -85,8 +81,8 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
       />
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 18 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Search Bar */}
@@ -101,71 +97,71 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pillsScroll}
+          contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingVertical: 2 }}
         >
           <TouchableOpacity
-            style={[
-              styles.pill,
-              selectedCategory === 'all' && styles.pillActive,
-            ]}
+            className={`h-9 px-4 rounded-full items-center justify-center border ${
+              selectedCategory === 'all'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setSelectedCategory('all')}
           >
             <Text
-              style={[
-                styles.pillText,
-                selectedCategory === 'all' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                selectedCategory === 'all' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               All ({schoolClass.subjects.length})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.pill,
-              selectedCategory === 'stem' && styles.pillActive,
-            ]}
+            className={`h-9 px-4 rounded-full items-center justify-center border ${
+              selectedCategory === 'stem'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setSelectedCategory('stem')}
           >
             <Text
-              style={[
-                styles.pillText,
-                selectedCategory === 'stem' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                selectedCategory === 'stem' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               Science & Math
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.pill,
-              selectedCategory === 'languages' && styles.pillActive,
-            ]}
+            className={`h-9 px-4 rounded-full items-center justify-center border ${
+              selectedCategory === 'languages'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setSelectedCategory('languages')}
           >
             <Text
-              style={[
-                styles.pillText,
-                selectedCategory === 'languages' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                selectedCategory === 'languages' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               Languages
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.pill,
-              selectedCategory === 'social' && styles.pillActive,
-            ]}
+            className={`h-9 px-4 rounded-full items-center justify-center border ${
+              selectedCategory === 'social'
+                ? 'bg-primary border-primary'
+                : 'bg-softWarm border-border'
+            }`}
             onPress={() => setSelectedCategory('social')}
           >
             <Text
-              style={[
-                styles.pillText,
-                selectedCategory === 'social' && styles.pillTextActive,
-              ]}
+              className={`font-manrope-bold text-xs ${
+                selectedCategory === 'social' ? 'text-white' : 'text-textSecondary'
+              }`}
             >
               Social Studies
             </Text>
@@ -173,7 +169,7 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
         </ScrollView>
 
         {/* Subjects List */}
-        <View style={styles.subjectsList}>
+        <View className="gap-0.5">
           {filteredSubjects.length > 0 ? (
             filteredSubjects.map((subject) => {
               const { percent, completed } = getSubjectProgress(
@@ -196,9 +192,9 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
               );
             })
           ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>No Subjects Found</Text>
-              <Text style={styles.emptySubtitle}>
+            <View className="items-center justify-center py-10 gap-1.5">
+              <Text className="font-manrope-extrabold text-base text-textPrimary">No Subjects Found</Text>
+              <Text className="font-manrope-medium text-xs text-textMuted">
                 Try adjusting your search or category filter.
               </Text>
             </View>
@@ -209,139 +205,3 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 48,
-    gap: 18,
-  },
-  bannerContainer: {
-    backgroundColor: Colors.palePeach,
-    borderRadius: 20,
-    padding: 20,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: '#ead7cd',
-  },
-  bannerTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  backLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  backLinkText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.white,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.pill,
-  },
-  verifiedBadgeText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    color: Colors.primary,
-  },
-  bannerTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
-    color: Colors.textPrimary,
-  },
-  bannerSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  helperNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 10,
-    gap: 8,
-    marginTop: 6,
-  },
-  helperNoticeText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-    flex: 1,
-    lineHeight: 16,
-  },
-  helperNoticeBold: {
-    fontFamily: 'Manrope_700Bold',
-    color: Colors.primary,
-  },
-  pillsScroll: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 2,
-  },
-  pill: {
-    height: 36,
-    paddingHorizontal: 16,
-    borderRadius: BorderRadius.pill,
-    backgroundColor: Colors.softWarm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  pillText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  pillTextActive: {
-    color: Colors.white,
-  },
-  subjectsList: {
-    gap: 2,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 6,
-  },
-  emptyText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  emptyTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: Colors.textPrimary,
-  },
-  emptySubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.textMuted,
-  },
-});
