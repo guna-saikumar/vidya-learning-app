@@ -1,5 +1,6 @@
-import { registerRootComponent } from "expo";
+import './global.css';
+import { registerRootComponent } from 'expo';
 
-import AdminApp from "./App";
+import App from './App';
 
-registerRootComponent(AdminApp);
+registerRootComponent(App);
