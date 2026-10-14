@@ -20,7 +20,8 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle("Vidya API")
     .setDescription(
-      "Student learning API — email/password auth with OTP, curriculum, admin ping."
+      "Student learning API. Auth is login-only (no student self-registration); " +
+        "password resets go through admin. Also: curriculum + admin ping."
     )
     .setVersion("0.1.0")
     .addBearerAuth()

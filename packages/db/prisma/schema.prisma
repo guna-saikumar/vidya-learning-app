@@ -9,6 +9,8 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+/// App users. Students are provisioned (no public registration).
+/// OTP columns are reserved for a future admin invite/reset flow.
 model User {
   id                String           @id @default(cuid())
   email             String           @unique

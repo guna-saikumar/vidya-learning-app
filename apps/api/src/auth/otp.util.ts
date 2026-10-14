@@ -1,3 +1,7 @@
+/**
+ * OTP helpers — reserved for a future **admin** password-reset / invite flow.
+ * Student self-serve register / forgot-password OTP was removed on purpose.
+ */
 import bcrypt from "bcrypt";
 import { randomInt } from "node:crypto";
 

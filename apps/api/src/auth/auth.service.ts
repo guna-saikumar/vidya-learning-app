@@ -1,26 +1,21 @@
 import { HttpException, Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import bcrypt from "bcrypt";
-import { MailerService } from "../mailer/mailer.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { signAccessToken } from "./jwt";
-import { generateOtp, hashOtp, OTP_TTL_MS, verifyOtp } from "./otp.util";
-
-type EmailOtpPurpose = "VERIFY_EMAIL" | "RESET_PASSWORD";
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-const clearOtp = {
-  emailOtpHash: null,
-  emailOtpExpiresAt: null,
-  emailOtpPurpose: null,
-} as const;
-
+/**
+ * Student auth service — login only.
+ *
+ * Registration / email OTP / forgot-password OTP are intentionally NOT
+ * implemented for students. Accounts will be created/reset by admin flows later.
+ */
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(MailerService) private readonly mailer: MailerService,
     @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
@@ -28,81 +23,11 @@ export class AuthService {
     throw new HttpException({ error: message }, statusCode);
   }
 
-  private async issueOtp(
-    userId: string,
-    email: string,
-    purpose: EmailOtpPurpose
-  ): Promise<void> {
-    const otp = generateOtp();
-    const emailOtpHash = await hashOtp(otp);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        emailOtpHash,
-        emailOtpExpiresAt: new Date(Date.now() + OTP_TTL_MS),
-        emailOtpPurpose: purpose,
-      },
-    });
-    await this.mailer.sendOtpEmail({ to: email, otp, purpose });
-  }
-
-  async register(input: { name: string; email: string; password: string }) {
-    const email = normalizeEmail(input.email);
-    const existing = await this.prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      this.fail("Email already registered", 409);
-    }
-
-    const passwordHash = await bcrypt.hash(input.password, 10);
-    const user = await this.prisma.user.create({
-      data: {
-        name: input.name.trim(),
-        email,
-        passwordHash,
-        role: "STUDENT",
-      },
-    });
-
-    await this.issueOtp(user.id, email, "VERIFY_EMAIL");
-    return { message: "Registered. Check your email for a verification code." };
-  }
-
-  async verifyEmail(input: { email: string; otp: string }) {
-    const email = normalizeEmail(input.email);
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      this.fail("Invalid verification code", 400);
-    }
-    if (user.emailVerifiedAt) {
-      return { message: "Email already verified." };
-    }
-    if (
-      user.emailOtpPurpose !== "VERIFY_EMAIL" ||
-      !user.emailOtpExpiresAt ||
-      user.emailOtpExpiresAt.getTime() < Date.now()
-    ) {
-      this.fail("Verification code expired", 400);
-    }
-    const ok = await verifyOtp(input.otp, user.emailOtpHash);
-    if (!ok) {
-      this.fail("Invalid verification code", 400);
-    }
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerifiedAt: new Date(),
-        ...clearOtp,
-      },
-    });
-
-    return { message: "Email verified. You can log in now." };
-  }
-
   async login(input: { email: string; password: string }) {
     const email = normalizeEmail(input.email);
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) {
+    if (!user || user.role !== "STUDENT") {
+      // Same message for missing/non-student — avoid account enumeration.
       this.fail("Invalid email or password", 401);
     }
 
@@ -110,8 +35,10 @@ export class AuthService {
     if (!passwordOk) {
       this.fail("Invalid email or password", 401);
     }
+
+    // Provisioned accounts should already be marked verified by admin/seed.
     if (!user.emailVerifiedAt) {
-      this.fail("Email not verified", 403);
+      this.fail("Account not active. Contact your admin.", 403);
     }
 
     const accessToken = signAccessToken(
@@ -135,56 +62,9 @@ export class AuthService {
     };
   }
 
-  async forgotPassword(input: { email: string }) {
-    const email = normalizeEmail(input.email);
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    const message =
-      "If that email is registered, a reset code has been sent.";
-
-    if (user) {
-      await this.issueOtp(user.id, email, "RESET_PASSWORD");
-    }
-
-    return { message };
-  }
-
-  async resetPassword(input: {
-    email: string;
-    otp: string;
-    newPassword: string;
-  }) {
-    const email = normalizeEmail(input.email);
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      this.fail("Invalid or expired reset code", 400);
-    }
-    if (
-      user.emailOtpPurpose !== "RESET_PASSWORD" ||
-      !user.emailOtpExpiresAt ||
-      user.emailOtpExpiresAt.getTime() < Date.now()
-    ) {
-      this.fail("Invalid or expired reset code", 400);
-    }
-    const ok = await verifyOtp(input.otp, user.emailOtpHash);
-    if (!ok) {
-      this.fail("Invalid or expired reset code", 400);
-    }
-
-    const passwordHash = await bcrypt.hash(input.newPassword, 10);
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordHash,
-        ...clearOtp,
-      },
-    });
-
-    return { message: "Password updated. You can log in now." };
-  }
-
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
+    if (!user || user.role !== "STUDENT") {
       this.fail("Unauthorized", 401);
     }
     return {

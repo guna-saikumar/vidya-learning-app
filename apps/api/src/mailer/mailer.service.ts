@@ -8,6 +8,10 @@ export type SendMailOpts = {
   text: string;
 };
 
+/**
+ * Nodemailer mailer — kept for future admin/notifications.
+ * Student auth does not send OTP emails (no self-register / forgot-password).
+ */
 @Injectable()
 export class MailerService {
   private readonly logger = new Logger(MailerService.name);

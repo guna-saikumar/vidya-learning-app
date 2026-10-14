@@ -3,7 +3,10 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-/** Local demo credentials — documented in issue #4 / PR. */
+/**
+ * Local/demo provisioned accounts (students do not self-register).
+ * In production, admins will create/reset student credentials.
+ */
 const STUDENT_EMAIL = "student@vidya.test";
 const STUDENT_PASSWORD = "StudentDemo1!";
 const ADMIN_EMAIL = "admin@example.com";
