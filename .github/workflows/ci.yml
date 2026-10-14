@@ -27,7 +27,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --dir packages/db exec prisma generate
         env:
+          # Dummy URLs — generate does not need a live database
           DATABASE_URL: postgresql://vidya:vidya@localhost:5432/vidya?schema=public
+          DIRECT_URL: postgresql://vidya:vidya@localhost:5432/vidya?schema=public
 
       - name: Typecheck
         run: pnpm exec tsc --noEmit
