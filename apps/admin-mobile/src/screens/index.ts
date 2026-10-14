@@ -6,3 +6,8 @@ export * from './AddEditMaterialScreen';
 export * from './ContentEditorScreen';
 export * from './PreviewPublishScreen';
 export * from './ProfileSettingsScreen';
+export * from './auth/LoginScreen';
+export * from './auth/RegisterScreen';
+export * from './auth/VerifyOtpScreen';
+export * from './auth/ForgotPasswordScreen';
+export * from './auth/ResetPasswordScreen';

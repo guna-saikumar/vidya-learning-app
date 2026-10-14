@@ -10,13 +10,14 @@ datasource db {
 }
 
 /// App users. Students are provisioned (no public registration).
-/// OTP columns are reserved for a future admin invite/reset flow.
+/// OTP columns are used by admin auth (verify / forgot-password) under /api/admin/auth.
 model User {
   id                String           @id @default(cuid())
   email             String           @unique
   name              String
   role              UserRole
   passwordHash      String
+  department        String?
   emailVerifiedAt   DateTime?
   emailOtpHash      String?
   emailOtpExpiresAt DateTime?

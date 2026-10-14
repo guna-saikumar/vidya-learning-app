@@ -1,34 +1,56 @@
 import { ApiError } from "./errors";
 
-export class ApiClient {
-  constructor(
-    private readonly baseUrl: string,
-    private accessToken?: string
-  ) {}
+export type ApiClientOptions = {
+  baseUrl: string;
+  authToken?: string | null;
+};
 
-  setAccessToken(token: string | undefined) {
-    this.accessToken = token;
+/**
+ * Thin fetch wrapper. Construct with a base URL string or `{ baseUrl, authToken }`.
+ */
+export class ApiClient {
+  private readonly baseUrl: string;
+  private accessToken?: string;
+
+  constructor(
+    baseUrlOrOptions: string | ApiClientOptions,
+    accessToken?: string
+  ) {
+    if (typeof baseUrlOrOptions === "string") {
+      this.baseUrl = baseUrlOrOptions;
+      this.accessToken = accessToken;
+    } else {
+      this.baseUrl = baseUrlOrOptions.baseUrl;
+      this.accessToken = baseUrlOrOptions.authToken ?? undefined;
+    }
   }
 
-  private async request<T>(
-    path: string,
-    init: RequestInit = {}
-  ): Promise<T> {
-    const headers = new Headers(init.headers);
+  setAccessToken(token: string | undefined | null) {
+    this.accessToken = token ?? undefined;
+  }
 
+  /** Alias used by admin-mobile. */
+  setAuthToken(token: string | undefined | null) {
+    this.setAccessToken(token);
+  }
+
+  getAuthToken(): string | null {
+    return this.accessToken ?? null;
+  }
+
+  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const headers = new Headers(init.headers);
     headers.set("Content-Type", "application/json");
+    headers.set("Accept", "application/json");
 
     if (this.accessToken) {
       headers.set("Authorization", `Bearer ${this.accessToken}`);
     }
 
-    const response = await fetch(
-      `${this.baseUrl}${path}`,
-      {
-        ...init,
-        headers,
-      }
-    );
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      ...init,
+      headers,
+    });
 
     if (!response.ok) {
       const body = await response.json().catch(() => ({
@@ -37,7 +59,7 @@ export class ApiClient {
 
       throw new ApiError(
         response.status,
-        body.error ?? "Request failed"
+        (body as { error?: string }).error ?? "Request failed"
       );
     }
 
@@ -48,10 +70,10 @@ export class ApiClient {
     return this.request<T>(path);
   }
 
-  post<T>(path: string, body: unknown) {
+  post<T>(path: string, body?: unknown) {
     return this.request<T>(path, {
       method: "POST",
-      body: JSON.stringify(body),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   }
 }

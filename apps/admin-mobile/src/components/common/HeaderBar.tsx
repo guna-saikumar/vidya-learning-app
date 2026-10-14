@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -55,7 +55,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             className="w-10 h-10 rounded-lg bg-palePeach border border-[#f2ded3] items-center justify-center shadow-sm overflow-hidden"
             style={{ width: 40, height: 40 }}
           >
-            <MaterialIcons name="school" size={24} color={Colors.primary} />
+            <Image
+              source={require('../../../assets/app-images/logo.png')}
+              className="w-7 h-7"
+              style={{ width: 28, height: 28 }}
+              resizeMode="contain"
+            />
           </View>
           <View className="justify-center">
             <Text className="font-manrope-extrabold text-[15px] text-textPrimary tracking-tight leading-tight">

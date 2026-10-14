@@ -1,5 +1,4 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
-import { LectureMaterial } from './materials';
 
 export type AdminTabParamList = {
   Dashboard: undefined;
@@ -9,6 +8,14 @@ export type AdminTabParamList = {
 };
 
 export type RootStackParamList = {
+  // Auth Stack
+  Login: undefined;
+  Register: undefined;
+  VerifyOtp: { email: string };
+  ForgotPassword: undefined;
+  ResetPassword: { email: string };
+
+  // Authenticated Stack
   MainTabs: NavigatorScreenParams<AdminTabParamList>;
   Subjects: { classId: string };
   Chapters: { classId: string; subjectId: string };

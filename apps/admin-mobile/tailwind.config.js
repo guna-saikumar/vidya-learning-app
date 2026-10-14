@@ -15,6 +15,7 @@ module.exports = {
         palePeach: '#fbece3',
         palePeachHover: '#f5dcd0',
         softWarm: '#faf5f2',
+        inputBg: '#faf5f2',
         surfaceSoft: '#fdf9f7',
         border: '#ede1d8',
         borderSecondary: '#e6d6ce',

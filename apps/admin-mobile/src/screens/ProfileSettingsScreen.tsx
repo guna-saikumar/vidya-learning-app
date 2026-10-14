@@ -25,8 +25,18 @@ import { AP_BOARD_CONFIG } from '../constants/curriculumConfig';
 import { useAdminAuth } from '../hooks/useAdminAuth';
 
 export const ProfileSettingsScreen: React.FC = () => {
-  const { user, updateProfile } = useAdminAuth();
+  const { user, updateProfile, logout } = useAdminAuth();
   const [isResetConfirmVisible, setIsResetConfirmVisible] = useState(false);
+  const [isLogoutConfirmVisible, setIsLogoutConfirmVisible] = useState(false);
+
+  const currentUser = user || {
+    id: 'admin-001-vidya',
+    fullName: 'Dr. Ramesh Sharma',
+    email: 'admin@vidya.edu.in',
+    phone: 'Not configured',
+    role: 'Admin',
+    department: 'Academic Director · AP SCERT Division',
+  };
 
   // Modals
   const [activeModal, setActiveModal] = useState<
@@ -35,11 +45,11 @@ export const ProfileSettingsScreen: React.FC = () => {
 
   // Form states
   const [editForm, setEditForm] = useState({
-    fullName: user.fullName || 'Admin Name',
-    email: user.email || 'admin@vidyalearning.com',
-    phone: user.phone || 'Not configured',
-    role: user.role || 'Admin',
-    department: user.department || 'Academic Director · AP SCERT Division',
+    fullName: currentUser.fullName || 'Admin Name',
+    email: currentUser.email || 'admin@vidya.edu.in',
+    phone: currentUser.phone || 'Not configured',
+    role: currentUser.role || 'Admin',
+    department: currentUser.department || 'Academic Director · AP SCERT Division',
   });
 
   // Security states
@@ -58,13 +68,15 @@ export const ProfileSettingsScreen: React.FC = () => {
 
   // Sync form when global user updates
   useEffect(() => {
-    setEditForm({
-      fullName: user.fullName || 'Admin Name',
-      email: user.email || 'admin@vidyalearning.com',
-      phone: user.phone || 'Not configured',
-      role: user.role || 'Admin',
-      department: user.department || 'Academic Director · AP SCERT Division',
-    });
+    if (user) {
+      setEditForm({
+        fullName: user.fullName || 'Admin Name',
+        email: user.email || 'admin@vidya.edu.in',
+        phone: user.phone || 'Not configured',
+        role: user.role || 'Admin',
+        department: user.department || 'Academic Director · AP SCERT Division',
+      });
+    }
   }, [user]);
 
   const handleSaveProfile = async () => {
@@ -111,11 +123,11 @@ export const ProfileSettingsScreen: React.FC = () => {
       icon: <MaterialIcons name="person-outline" size={24} color={Colors.primary} />,
       onPress: () => {
         setEditForm({
-          fullName: user.fullName || 'Admin Name',
-          email: user.email || 'admin@vidyalearning.com',
-          phone: user.phone || 'Not configured',
-          role: user.role || 'Admin',
-          department: user.department || 'Academic Director · AP SCERT Division',
+          fullName: currentUser.fullName || 'Admin Name',
+          email: currentUser.email || 'admin@vidya.edu.in',
+          phone: currentUser.phone || 'Not configured',
+          role: currentUser.role || 'Admin',
+          department: currentUser.department || 'Academic Director · AP SCERT Division',
         });
         setActiveModal('personal');
       },
@@ -193,12 +205,12 @@ export const ProfileSettingsScreen: React.FC = () => {
 
           {/* Admin Name */}
           <Text className="font-manrope-extrabold text-xl text-textPrimary text-center tracking-tight">
-            {user.fullName || 'Admin Name'}
+            {currentUser.fullName || 'Admin Name'}
           </Text>
 
           {/* Admin Email */}
           <Text className="font-manrope-medium text-sm text-textSecondary text-center mt-1">
-            {user.email || 'admin@vidyalearning.com'}
+            {currentUser.email || 'admin@vidya.edu.in'}
           </Text>
 
           {/* Admin Badge Pill */}
@@ -213,11 +225,11 @@ export const ProfileSettingsScreen: React.FC = () => {
             className="bg-primary px-8 py-2.5 rounded-2xl mt-4 shadow-sm"
             onPress={() => {
               setEditForm({
-                fullName: user.fullName || 'Admin Name',
-                email: user.email || 'admin@vidyalearning.com',
-                phone: user.phone || 'Not configured',
-                role: user.role || 'Admin',
-                department: user.department || 'Academic Director · AP SCERT Division',
+                fullName: currentUser.fullName || 'Admin Name',
+                email: currentUser.email || 'admin@vidya.edu.in',
+                phone: currentUser.phone || 'Not configured',
+                role: currentUser.role || 'Admin',
+                department: currentUser.department || 'Academic Director · AP SCERT Division',
               });
               setActiveModal('personal');
             }}
@@ -260,6 +272,33 @@ export const ProfileSettingsScreen: React.FC = () => {
               </TouchableOpacity>
             </HoverCard>
           ))}
+
+          {/* Sign Out Card */}
+          <HoverCard
+            className="bg-white rounded-[20px] p-4 border border-red-200 shadow-sm"
+            lift={-2}
+          >
+            <TouchableOpacity
+              className="flex-row items-center justify-between"
+              onPress={() => setIsLogoutConfirmVisible(true)}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center flex-1 min-w-0 mr-3">
+                <View className="w-12 h-12 rounded-[16px] bg-red-50 items-center justify-center border border-red-200 mr-3.5">
+                  <MaterialIcons name="logout" size={24} color="#DC2626" />
+                </View>
+                <View className="flex-1 min-w-0">
+                  <Text className="font-manrope-bold text-[15px] text-red-600 tracking-tight">
+                    Sign Out
+                  </Text>
+                  <Text className="font-manrope-medium text-xs text-textSecondary mt-0.5" numberOfLines={1}>
+                    End administrative session on this device
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </HoverCard>
         </View>
       </ScrollView>
 
@@ -814,6 +853,20 @@ export const ProfileSettingsScreen: React.FC = () => {
         variant="warning"
         onConfirm={handleResetData}
         onCancel={() => setIsResetConfirmVisible(false)}
+      />
+
+      {/* Logout Confirmation Modal */}
+      <ModalConfirm
+        visible={isLogoutConfirmVisible}
+        title="Sign Out of Admin Portal?"
+        message="You will need to sign in again with your email and password to access the curriculum management portal."
+        confirmLabel="Sign Out"
+        variant="danger"
+        onConfirm={async () => {
+          setIsLogoutConfirmVisible(false);
+          await logout();
+        }}
+        onCancel={() => setIsLogoutConfirmVisible(false)}
       />
     </View>
   );
