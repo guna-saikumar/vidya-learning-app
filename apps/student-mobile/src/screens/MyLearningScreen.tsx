@@ -49,7 +49,7 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <HeaderBar
         title="My learning"
         subtitle="Review your study journey and continue reading."

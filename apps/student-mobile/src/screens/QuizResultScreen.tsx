@@ -24,7 +24,7 @@ export const QuizResultScreen: React.FC<Props> = ({ route, navigation }) => {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <HeaderBar
         showBack
         onBackPress={() => navigation.navigate('Tasks')}

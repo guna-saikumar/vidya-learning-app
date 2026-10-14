@@ -6,13 +6,11 @@ import {
   Image,
   Modal,
   ScrollView,
-  Platform,
   TouchableWithoutFeedback,
   Dimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigationState } from '@react-navigation/native';
 import Colors from '../../constants/colors';
 import { getUnreadCount } from '../../services/notificationService';
 import { useAuth } from '../../hooks/useAuth';
@@ -42,11 +40,16 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   const effectiveStudentName = user?.name || studentName;
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Detect current route from React Navigation state
-  const currentNavRoute = useNavigationState((state) => {
-    if (!state || !state.routes || state.index === undefined) return undefined;
-    return state.routes[state.index]?.name;
-  });
+  // Detect current route safely without throwing navigation context errors
+  let currentNavRoute: string | undefined = undefined;
+  try {
+    const navState = navigation?.getState ? navigation.getState() : undefined;
+    if (navState && navState.routes && navState.index !== undefined) {
+      currentNavRoute = navState.routes[navState.index]?.name;
+    }
+  } catch {
+    // Context mounting fallback
+  }
 
   const [selectedRoute, setSelectedRoute] = useState<string>(
     activeRoute || currentNavRoute || 'Home'
@@ -111,7 +114,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
           className="bg-white h-full shadow-2xl justify-between"
           style={{
             width: DRAWER_WIDTH,
-            paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 24 : 12),
+            paddingTop: Math.max(insets.top, 16),
             paddingBottom: Math.max(insets.bottom, 16),
           }}
         >

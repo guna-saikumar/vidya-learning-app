@@ -82,7 +82,7 @@ export const TasksScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <HeaderBar
         activeRoute="Tasks"
         onProfilePress={() => navigation.navigate('Profile')}

@@ -172,7 +172,7 @@ export const ExamScheduleScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       {/* Clean Top Navbar without Back Section */}
       <HeaderBar activeRoute="ExamSchedule" />
 
