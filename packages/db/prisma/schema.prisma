@@ -8,14 +8,24 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  role      UserRole
-  createdAt DateTime @default(now())
+  id                String           @id @default(cuid())
+  email             String           @unique
+  name              String
+  role              UserRole
+  passwordHash      String
+  emailVerifiedAt   DateTime?
+  emailOtpHash      String?
+  emailOtpExpiresAt DateTime?
+  emailOtpPurpose   EmailOtpPurpose?
+  createdAt         DateTime         @default(now())
 }
 
 enum UserRole {
   STUDENT
   ADMIN
+}
+
+enum EmailOtpPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
 }

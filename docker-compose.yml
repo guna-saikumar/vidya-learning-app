@@ -16,17 +16,30 @@ services:
       timeout: 5s
       retries: 5
 
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: vidya-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   api:
     image: vidya-learning-app:dev
     build:
       context: .
       target: dev
     container_name: vidya-api
-    command: pnpm dev:api
+    command: sh -c "pnpm --dir packages/db exec prisma migrate deploy && pnpm --dir packages/db seed && pnpm dev:api"
     environment:
       NODE_ENV: development
       PORT: 4000
       DATABASE_URL: postgresql://vidya:vidya@postgres:5432/vidya?schema=public
+      JWT_SECRET: dev-only-jwt-secret-change-me
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_FROM: "Vidya <noreply@vidya.local>"
     ports:
       - "4000:4000"
     volumes:
@@ -37,6 +50,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mailhog:
+        condition: service_started
 
   student-mobile-web:
     image: vidya-learning-app:dev

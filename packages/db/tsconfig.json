@@ -1,7 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": false
+    "composite": false,
+    "types": ["node"],
+    "module": "commonjs",
+    "noEmit": true
   },
-  "include": ["src", "prisma/schema.prisma"]
+  "include": ["src"]
 }

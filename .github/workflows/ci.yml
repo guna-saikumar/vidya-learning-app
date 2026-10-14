@@ -24,5 +24,10 @@ jobs:
         with:
           run_install: true
 
+      - name: Generate Prisma client
+        run: pnpm --dir packages/db exec prisma generate
+        env:
+          DATABASE_URL: postgresql://vidya:vidya@localhost:5432/vidya?schema=public
+
       - name: Typecheck
         run: pnpm exec tsc --noEmit
