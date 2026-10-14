@@ -243,7 +243,11 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
-  packages/api-client: {}
+  packages/api-client:
+    dependencies:
+      '@vidya/auth':
+        specifier: workspace:*
+        version: link:../auth
 
   packages/auth: {}
 
