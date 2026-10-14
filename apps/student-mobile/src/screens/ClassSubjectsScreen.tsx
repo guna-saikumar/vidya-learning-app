@@ -77,6 +77,7 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
         onBackPress={() => navigation.goBack()}
         title={schoolClass.title}
         subtitle={`${schoolClass.subjects.length} Subjects`}
+        activeRoute="Learn"
         onProfilePress={() => navigation.navigate("Profile")}
       />
 
@@ -201,7 +202,7 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
           )}
         </View>
       </ScrollView>
-      <BottomNav activeTab="Home" navigation={navigation} />
+      <BottomNav activeTab="Learn" navigation={navigation} />
     </View>
   );
 };

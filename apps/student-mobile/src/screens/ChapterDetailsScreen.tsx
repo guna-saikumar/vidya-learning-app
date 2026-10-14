@@ -390,7 +390,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
           )}
         </View>
       </ScrollView>
-      <BottomNav activeTab="Home" navigation={navigation} />
+      <BottomNav activeTab="Learn" navigation={navigation} />
     </View>
   );
 };

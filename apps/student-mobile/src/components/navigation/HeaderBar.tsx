@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Colors from '../../constants/colors';
+import { getUnreadCount } from '../../services/notificationService';
+import { SidebarDrawer } from './SidebarDrawer';
 
 interface HeaderBarProps {
   title?: string;
@@ -16,9 +19,11 @@ interface HeaderBarProps {
   isBookmarked?: boolean;
   onBookmarkPress?: () => void;
   onProfilePress?: () => void;
+  onNotificationPress?: () => void;
   rightAction?: React.ReactNode;
   studentName?: string;
   studentClass?: string;
+  activeRoute?: string;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -28,20 +33,66 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   showBack = false,
   onBackPress,
   onProfilePress,
+  onNotificationPress,
   rightAction,
-  studentName = 'Aarav',
+  studentName = 'Aarav Sharma',
+  studentClass = 'Class 8',
+  activeRoute,
 }) => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
   const topInset = Math.max(
     insets.top,
     Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
   );
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const loadUnread = async () => {
+      try {
+        const count = await getUnreadCount();
+        setUnreadCount(count);
+      } catch {
+        setUnreadCount(0);
+      }
+    };
+    loadUnread();
+  }, []);
+
+  const handleNotificationPress = () => {
+    if (onNotificationPress) {
+      onNotificationPress();
+    } else {
+      navigation.navigate('Notifications');
+    }
+  };
+
+  const handleProfilePress = () => {
+    if (onProfilePress) {
+      onProfilePress();
+    } else {
+      navigation.navigate('Profile');
+    }
+  };
 
   return (
     <View className="bg-white z-10" style={{ paddingTop: topInset }}>
-      {/* Top Navbar with App Name & Profile */}
-      <View className="h-16 px-5 flex-row items-center justify-between bg-white border-b border-border">
-        <View className="flex-row items-center gap-2.5">
+      {/* Top Navbar with App Name, Menu, & Profile */}
+      <View className="h-16 px-4 flex-row items-center justify-between bg-white border-b border-border">
+        {/* Left side: Hamburger menu button + Logo + App Title */}
+        <View className="flex-row items-center gap-2">
+          {/* Hamburger Menu (three lines before logo) */}
+          <TouchableOpacity
+            className="w-10 h-10 rounded-xl bg-palePeach border border-[#f2ded3] items-center justify-center shadow-sm"
+            onPress={() => setIsDrawerOpen(true)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Open navigation drawer"
+          >
+            <MaterialIcons name="menu" size={22} color={Colors.primary} />
+          </TouchableOpacity>
+
           <View
             className="w-10 h-10 rounded-lg bg-palePeach border border-[#f2ded3] items-center justify-center shadow-sm overflow-hidden"
             style={{ width: 40, height: 40 }}
@@ -53,23 +104,44 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               resizeMode="contain"
             />
           </View>
-          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Vidya Learning</Text>
+          <Text className="font-manrope-extrabold text-base text-textPrimary tracking-tight">Vidya Learning</Text>
         </View>
 
-        <TouchableOpacity
-          className="flex-row items-center gap-2 py-1 px-2.5 rounded-full border border-border bg-white"
-          onPress={onProfilePress}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Student profile"
-        >
-          <Text className="font-manrope-bold text-[13px] text-textPrimary">{studentName}</Text>
-          <Image
-            source={require('../../../assets/app-images/avatar.png')}
-            className="w-[30px] h-[30px] rounded-full"
-            style={{ width: 30, height: 30, borderRadius: 15 }}
-          />
-        </TouchableOpacity>
+        {/* Right side: Notifications bell + Profile chip */}
+        <View className="flex-row items-center gap-2">
+          {/* Notification Bell */}
+          <TouchableOpacity
+            className="w-10 h-10 rounded-full border border-border items-center justify-center bg-white"
+            onPress={handleNotificationPress}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+          >
+            <MaterialIcons name="notifications-none" size={20} color={Colors.textPrimary} />
+            {unreadCount > 0 && (
+              <View className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] rounded-full bg-error items-center justify-center border-2 border-white">
+                <Text className="font-manrope-extrabold text-[9px] text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Profile Avatar Button */}
+          <TouchableOpacity
+            className="w-10 h-10 rounded-full border border-border bg-white items-center justify-center overflow-hidden shadow-sm"
+            onPress={handleProfilePress}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Student profile"
+          >
+            <Image
+              source={require('../../../assets/app-images/avatar.png')}
+              className="w-8 h-8 rounded-full"
+              style={{ width: 32, height: 32, borderRadius: 16 }}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Back Section seamlessly flowing into the page content below */}
@@ -103,12 +175,22 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           </View>
 
           {rightAction && (
-            <View className="flex-row items-center gap-2">
+            <View className="items-center justify-center">
               {rightAction}
             </View>
           )}
         </View>
       )}
+
+      {/* Persistent Sidebar Drawer accessible from anywhere */}
+      <SidebarDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        navigation={navigation}
+        studentName={studentName}
+        studentClass={studentClass}
+        activeRoute={activeRoute}
+      />
     </View>
   );
 };

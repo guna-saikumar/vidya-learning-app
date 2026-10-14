@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../../constants/colors';
 
-export type BottomNavTab = 'Home' | 'MyLearning' | 'Bookmarks' | 'Profile';
+export type BottomNavTab = 'Home' | 'Learn' | 'Tasks' | 'Progress' | 'Profile' | 'Bookmarks' | 'MyLearning';
 
 interface BottomNavProps {
   activeTab?: BottomNavTab;
@@ -17,8 +17,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
 
   const tabs: Array<{ key: BottomNavTab; label: string; icon: keyof typeof MaterialIcons.glyphMap }> = [
     { key: 'Home', label: 'Home', icon: 'home' },
-    { key: 'MyLearning', label: 'My Learning', icon: 'school' },
-    { key: 'Bookmarks', label: 'Bookmarks', icon: 'bookmark' },
+    { key: 'Learn', label: 'Learn', icon: 'auto-stories' },
+    { key: 'Tasks', label: 'Tasks', icon: 'assignment' },
+    { key: 'Progress', label: 'Progress', icon: 'bar-chart' },
     { key: 'Profile', label: 'Profile', icon: 'person' },
   ];
 
@@ -32,7 +33,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
       style={{ paddingBottom: bottomInset, height: 62 + bottomInset }}
     >
       {tabs.map((tab) => {
-        const isActive = activeTab === tab.key;
+        const isActive = activeTab === tab.key || (tab.key === 'Progress' && activeTab === 'MyLearning');
         const color = isActive ? Colors.primary : '#99877f';
 
         return (
@@ -44,11 +45,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
             accessibilityRole="button"
             accessibilityLabel={tab.label}
           >
-            <View className={`w-12 h-8 rounded-full items-center justify-center ${isActive ? 'bg-palePeach' : ''}`}>
-              <MaterialIcons name={tab.icon} size={22} color={color} />
+            <View className={`w-11 h-7 rounded-full items-center justify-center ${isActive ? 'bg-palePeach' : ''}`}>
+              <MaterialIcons name={tab.icon} size={21} color={color} />
             </View>
             <Text
-              className={`font-manrope-bold text-[11px] mt-0.5 ${isActive ? 'text-primary' : 'text-[#99877f]'}`}
+              className={`font-manrope-bold text-[10px] mt-0.5 ${isActive ? 'text-primary' : 'text-[#99877f]'}`}
             >
               {tab.label}
             </Text>

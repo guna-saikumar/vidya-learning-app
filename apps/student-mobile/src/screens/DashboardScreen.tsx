@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,30 +7,45 @@ import {
   StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { StatCard, ClassCard } from '../components/home';
 import { SearchBar, HoverCard, CalloutCard } from '../components/common';
-import { getClasses, getCurriculumStats, searchCurriculum } from '../services/curriculumService';
+import { getClasses, getCurriculumStats, searchCurriculum, getChapterById } from '../services/curriculumService';
+import { getTaskStats, initializeTasksIfNeeded } from '../services/taskService';
+import { initializeNotificationsIfNeeded } from '../services/notificationService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
-import { RootStackParamList, MainTabParamList } from '../types/navigation';
+import { RootStackParamList } from '../types/navigation';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Home'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
-  const { profile, bookmarks, selectActiveGrade } = useLearningProgress();
+  const { profile, bookmarks, progressMap, selectActiveGrade } = useLearningProgress();
   const [searchQuery, setSearchQuery] = useState('');
+  const [taskStats, setTaskStats] = useState({ total: 0, pending: 0, completed: 0, overdue: 0 });
   const classes = getClasses();
   const stats = getCurriculumStats();
 
   const activeClassId = profile?.activeClassId || 'class-8';
   const searchResults = searchQuery.trim() ? searchCurriculum(searchQuery) : [];
+
+  // Initialize services on mount
+  useEffect(() => {
+    const init = async () => {
+      await initializeTasksIfNeeded();
+      await initializeNotificationsIfNeeded();
+      const ts = await getTaskStats();
+      setTaskStats(ts);
+    };
+    init();
+  }, []);
+
+  // Get recent progress items for "Continue Learning"
+  const recentProgress = Object.values(progressMap)
+    .filter((p) => !p.completed && p.progressPercent > 0)
+    .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))
+    .slice(0, 2);
 
   const handleSelectClass = (classId: string) => {
     selectActiveGrade(classId);
@@ -41,10 +56,21 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('ChapterDetails', { classId, subjectId, chapterId });
   };
 
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-      <HeaderBar onProfilePress={() => navigation.navigate('Profile')} />
+      <HeaderBar
+        activeRoute="Home"
+        onProfilePress={() => navigation.navigate('Profile')}
+        onNotificationPress={() => navigation.navigate('Notifications')}
+      />
 
       <ScrollView
         className="flex-1"
@@ -55,7 +81,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         <View className="flex-row items-center justify-between pt-1">
           <View className="flex-1">
             <Text className="font-manrope-extrabold text-2xl text-textPrimary tracking-tight">
-              Good morning, {profile?.displayName?.split(' ')[0] || 'Aarav'}!
+              {getTimeGreeting()}, {profile?.displayName?.split(' ')[0] || 'Aarav'}!
             </Text>
             <Text className="font-manrope-medium text-[13px] text-textSecondary mt-0.5">
               What would you like to learn today?
@@ -72,6 +98,37 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               {profile?.streakDays || 5} Day Streak
             </Text>
           </View>
+        </View>
+
+        {/* Quick Actions */}
+        <View className="flex-row gap-2.5">
+          <TouchableOpacity
+            className="flex-1 flex-row items-center gap-2.5 bg-primaryDark rounded-2xl py-3.5 px-4"
+            onPress={() => navigation.navigate('Learn')}
+            activeOpacity={0.85}
+          >
+            <View className="w-9 h-9 rounded-lg bg-white/20 items-center justify-center">
+              <MaterialIcons name="auto-stories" size={20} color={Colors.white} />
+            </View>
+            <View className="flex-1">
+              <Text className="font-manrope-bold text-xs text-white">Browse</Text>
+              <Text className="font-manrope-medium text-[10px] text-primaryLight">Curriculum</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-1 flex-row items-center gap-2.5 bg-palePeach rounded-2xl py-3.5 px-4 border border-[#f2ded3]"
+            onPress={() => navigation.navigate('Tasks')}
+            activeOpacity={0.85}
+          >
+            <View className="w-9 h-9 rounded-lg bg-primary/15 items-center justify-center">
+              <MaterialIcons name="assignment" size={20} color={Colors.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="font-manrope-bold text-xs text-primaryDark">{taskStats.pending} Pending</Text>
+              <Text className="font-manrope-medium text-[10px] text-textSecondary">Tasks</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
@@ -150,131 +207,127 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               iconName="menu-book"
             />
             <StatCard
-              label="Completed"
-              value="68%"
-              iconName="insights"
+              label="Tasks"
+              value={`${taskStats.pending}`}
+              iconName="assignment"
               isProgress={true}
             />
           </View>
         </View>
 
-        {/* Continue Learning Section */}
+        {/* Continue Learning Section - Dynamic */}
         <View className="flex-row items-center justify-between">
           <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Continue Learning</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('MyLearning')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Progress')}>
             <Text className="font-manrope-bold text-[13px] text-primary">View All</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Lesson Card 1: Mathematics */}
-        <HoverCard className="bg-white rounded-[20px] p-5 border border-border gap-3.5 shadow-sm" lift={-4}>
-          <View className="flex-row items-start gap-3.5">
-            <View className="w-11 h-11 rounded-xl bg-palePeach items-center justify-center">
-              <MaterialIcons name="calculate" size={24} color={Colors.primary} />
-            </View>
-            <View className="flex-1">
-              <Text className="font-manrope-bold text-xs text-primary">Mathematics • Class 8</Text>
-              <Text className="font-manrope-extrabold text-base text-textPrimary mt-0.5 tracking-tight" numberOfLines={1}>
-                Rational Numbers
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('ChapterDetails', {
-                  classId: 'class-8',
-                  subjectId: 'c8-maths',
-                  chapterId: 'c8-m-ch1',
-                })
-              }
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <MaterialIcons name="bookmark" size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
+        {recentProgress.length > 0 ? (
+          recentProgress.map((item) => {
+            const res = getChapterById(item.chapterId);
+            if (!res) return null;
+            const { chapter, subject, schoolClass } = res;
+            const sectionsTotal = chapter.sections.length;
+            const sectionsDone = item.completedSections?.length || 0;
 
-          {/* Progress Tracker */}
-          <View className="gap-1.5">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-manrope-medium text-xs text-textSecondary">6 of 8 topics completed</Text>
-              <Text className="font-manrope-extrabold text-xs text-primary">75%</Text>
-            </View>
-            <View className="h-1.5 rounded-full bg-[#F3EDE9] overflow-hidden">
-              <View className="h-full rounded-full bg-primary" style={{ width: '75%' }} />
-            </View>
-          </View>
+            return (
+              <HoverCard
+                key={item.chapterId}
+                className="bg-white rounded-[20px] p-5 border border-border gap-3.5 shadow-sm"
+                lift={-4}
+              >
+                <View className="flex-row items-start gap-3.5">
+                  <View className="w-11 h-11 rounded-xl bg-palePeach items-center justify-center">
+                    <MaterialIcons
+                      name={(subject.icon as keyof typeof MaterialIcons.glyphMap) || 'menu-book'}
+                      size={24}
+                      color={Colors.primary}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-manrope-bold text-xs text-primary">
+                      {subject.name} • {schoolClass.title}
+                    </Text>
+                    <Text className="font-manrope-extrabold text-base text-textPrimary mt-0.5 tracking-tight" numberOfLines={1}>
+                      {chapter.title}
+                    </Text>
+                  </View>
+                </View>
 
-          <View className="flex-row items-center justify-between pt-1">
-            <View className="flex-row items-center gap-1.5">
-              <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
-              <Text className="font-manrope-medium text-xs text-textMuted">15 mins left</Text>
-            </View>
-            <TouchableOpacity
-              className="flex-row items-center gap-1 bg-primary px-[18px] py-[9px] rounded-full shadow-sm"
-              onPress={() =>
-                handleOpenChapter('class-8', 'c8-maths', 'c8-m-ch1')
-              }
-              activeOpacity={0.85}
-            >
-              <Text className="font-manrope-bold text-xs text-white">Resume</Text>
-              <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
-            </TouchableOpacity>
-          </View>
-        </HoverCard>
+                {/* Progress Tracker */}
+                <View className="gap-1.5">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-manrope-medium text-xs text-textSecondary">
+                      {sectionsDone} of {sectionsTotal} topics completed
+                    </Text>
+                    <Text className="font-manrope-extrabold text-xs text-primary">{item.progressPercent}%</Text>
+                  </View>
+                  <View className="h-1.5 rounded-full bg-[#F3EDE9] overflow-hidden">
+                    <View className="h-full rounded-full bg-primary" style={{ width: `${item.progressPercent}%` }} />
+                  </View>
+                </View>
 
-        {/* Lesson Card 2: Science */}
-        <HoverCard className="bg-white rounded-[20px] p-5 border border-border gap-3.5 shadow-sm" lift={-4}>
-          <View className="flex-row items-start gap-3.5">
-            <View className="w-11 h-11 rounded-xl bg-palePeach items-center justify-center">
-              <MaterialIcons name="science" size={24} color={Colors.primary} />
-            </View>
-            <View className="flex-1">
-              <Text className="font-manrope-bold text-xs text-primary">Physical Science • Class 8</Text>
-              <Text className="font-manrope-extrabold text-base text-textPrimary mt-0.5 tracking-tight" numberOfLines={1}>
-                Force and Pressure
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('ChapterDetails', {
-                  classId: 'class-8',
-                  subjectId: 'c8-pscience',
-                  chapterId: 'c8-ps-ch1',
-                })
-              }
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <MaterialIcons name="bookmark-border" size={20} color={Colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Progress Tracker */}
-          <View className="gap-1.5">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-manrope-medium text-xs text-textSecondary">2 of 5 topics completed</Text>
-              <Text className="font-manrope-extrabold text-xs text-primary">40%</Text>
-            </View>
-            <View className="h-1.5 rounded-full bg-[#F3EDE9] overflow-hidden">
-              <View className="h-full rounded-full bg-primary" style={{ width: '40%' }} />
-            </View>
-          </View>
-
-          <View className="flex-row items-center justify-between pt-1">
-            <View className="flex-row items-center gap-1.5">
-              <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
-              <Text className="font-manrope-medium text-xs text-textMuted">28 mins left</Text>
-            </View>
-            <TouchableOpacity
-              className="flex-row items-center gap-1 bg-primary px-[18px] py-[9px] rounded-full shadow-sm"
-              onPress={() =>
-                handleOpenChapter('class-8', 'c8-pscience', 'c8-ps-ch1')
-              }
-              activeOpacity={0.85}
-            >
-              <Text className="font-manrope-bold text-xs text-white">Resume</Text>
-              <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
-            </TouchableOpacity>
-          </View>
-        </HoverCard>
+                <View className="flex-row items-center justify-between pt-1">
+                  <View className="flex-row items-center gap-1.5">
+                    <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
+                    <Text className="font-manrope-medium text-xs text-textMuted">
+                      {Math.max(5, (sectionsTotal - sectionsDone) * 8)} mins left
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    className="flex-row items-center gap-1 bg-primary px-[18px] py-[9px] rounded-full shadow-sm"
+                    onPress={() => handleOpenChapter(schoolClass.id, subject.id, chapter.id)}
+                    activeOpacity={0.85}
+                  >
+                    <Text className="font-manrope-bold text-xs text-white">Resume</Text>
+                    <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
+                  </TouchableOpacity>
+                </View>
+              </HoverCard>
+            );
+          })
+        ) : (
+          /* Fallback static cards when no progress data */
+          <>
+            <HoverCard className="bg-white rounded-[20px] p-5 border border-border gap-3.5 shadow-sm" lift={-4}>
+              <View className="flex-row items-start gap-3.5">
+                <View className="w-11 h-11 rounded-xl bg-palePeach items-center justify-center">
+                  <MaterialIcons name="calculate" size={24} color={Colors.primary} />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-manrope-bold text-xs text-primary">Mathematics • Class 8</Text>
+                  <Text className="font-manrope-extrabold text-base text-textPrimary mt-0.5 tracking-tight" numberOfLines={1}>
+                    Rational Numbers
+                  </Text>
+                </View>
+              </View>
+              <View className="gap-1.5">
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-manrope-medium text-xs text-textSecondary">6 of 8 topics completed</Text>
+                  <Text className="font-manrope-extrabold text-xs text-primary">75%</Text>
+                </View>
+                <View className="h-1.5 rounded-full bg-[#F3EDE9] overflow-hidden">
+                  <View className="h-full rounded-full bg-primary" style={{ width: '75%' }} />
+                </View>
+              </View>
+              <View className="flex-row items-center justify-between pt-1">
+                <View className="flex-row items-center gap-1.5">
+                  <MaterialIcons name="schedule" size={14} color={Colors.textMuted} />
+                  <Text className="font-manrope-medium text-xs text-textMuted">15 mins left</Text>
+                </View>
+                <TouchableOpacity
+                  className="flex-row items-center gap-1 bg-primary px-[18px] py-[9px] rounded-full shadow-sm"
+                  onPress={() => handleOpenChapter('class-8', 'c8-maths', 'c8-m-ch1')}
+                  activeOpacity={0.85}
+                >
+                  <Text className="font-manrope-bold text-xs text-white">Resume</Text>
+                  <MaterialIcons name="play-arrow" size={16} color={Colors.white} />
+                </TouchableOpacity>
+              </View>
+            </HoverCard>
+          </>
+        )}
 
         {/* Select Class Section */}
         <View className="flex-row items-center justify-between">

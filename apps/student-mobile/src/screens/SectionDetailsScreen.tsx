@@ -186,7 +186,7 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <BottomNav activeTab="Home" navigation={navigation} />
+      <BottomNav activeTab="Learn" navigation={navigation} />
     </View>
   );
 };

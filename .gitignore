@@ -47,6 +47,6 @@ yarn-error.*
 .env.*
 !.env.example
 
-# turbo
+# turbo cache
 .turbo/
 **/.turbo/

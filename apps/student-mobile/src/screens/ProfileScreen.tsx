@@ -45,6 +45,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       <HeaderBar
         title="Profile"
         subtitle="Student preferences and study statistics."
+        activeRoute="Profile"
       />
 
       <ScrollView
@@ -141,6 +142,67 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Study Settings</Text>
 
           <View className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+            {/* Language Preference */}
+            <View className="flex-row items-center justify-between p-4 border-b border-border">
+              <View className="flex-row items-center gap-3 flex-1">
+                <MaterialIcons name="translate" size={20} color={Colors.primary} />
+                <View>
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Study Medium / Language</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">Primary instruction language</Text>
+                </View>
+              </View>
+              <View className="flex-row gap-1 bg-[#F5F2EF] p-1 rounded-xl">
+                <TouchableOpacity
+                  className="px-2.5 py-1 rounded-lg bg-primary"
+                  activeOpacity={0.8}
+                >
+                  <Text className="font-manrope-bold text-[11px] text-white">English</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="px-2.5 py-1 rounded-lg"
+                  activeOpacity={0.8}
+                  onPress={() => Alert.alert('Telugu Medium', 'Telugu medium textbooks & bilingual summaries are enabled.')}
+                >
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary">తెలుగు</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Daily Study Goal */}
+            <View className="p-4 border-b border-border">
+              <View className="flex-row items-center gap-3 mb-2.5">
+                <MaterialIcons name="timer" size={20} color={Colors.primary} />
+                <View>
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Daily Study Goal</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">Target daily learning time</Text>
+                </View>
+              </View>
+              <View className="flex-row gap-2 mt-1">
+                {['30 mins', '45 mins', '60 mins'].map((goal, idx) => {
+                  const isSelected = idx === 1; // 45 mins default
+                  return (
+                    <TouchableOpacity
+                      key={goal}
+                      className={`flex-1 py-2 rounded-xl items-center border ${
+                        isSelected ? 'bg-primary border-primary' : 'bg-white border-border'
+                      }`}
+                      activeOpacity={0.8}
+                      onPress={() => Alert.alert('Study Goal', `Daily study goal set to ${goal}`)}
+                    >
+                      <Text
+                        className={`font-manrope-bold text-[11px] ${
+                          isSelected ? 'text-white' : 'text-textSecondary'
+                        }`}
+                      >
+                        {goal}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Daily Reminders */}
             <View className="flex-row items-center justify-between p-4 border-b border-border">
               <View className="flex-row items-center gap-3 flex-1">
                 <MaterialIcons name="notifications-active" size={20} color={Colors.primary} />
@@ -157,6 +219,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
 
+            {/* Offline Content Cache */}
             <View className="flex-row items-center justify-between p-4">
               <View className="flex-row items-center gap-3 flex-1">
                 <MaterialIcons name="offline-pin" size={20} color={Colors.primary} />
@@ -173,6 +236,14 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
           </View>
+        </View>
+
+        {/* App Info & Board Compliance */}
+        <View className="items-center py-2 gap-1">
+          <Text className="font-manrope-bold text-xs text-textSecondary">Vidya Learning App v1.2.0</Text>
+          <Text className="font-manrope-medium text-[10px] text-textMuted">
+            Aligned with Andhra Pradesh SCERT Curriculum · Academic Year 2026–2027
+          </Text>
         </View>
       </ScrollView>
       <BottomNav activeTab="Profile" navigation={navigation} />

@@ -53,6 +53,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
       <HeaderBar
         title="Bookmarks"
         subtitle="Saved chapters and study notes."
+        activeRoute="Bookmarks"
         onProfilePress={() => navigation.navigate('Profile')}
       />
 
@@ -134,7 +135,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
-      <BottomNav activeTab="Bookmarks" navigation={navigation} />
+      <BottomNav activeTab="Learn" navigation={navigation} />
     </View>
   );
 };
