@@ -47,23 +47,40 @@ export class ApiClient {
       headers.set("Authorization", `Bearer ${this.accessToken}`);
     }
 
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      ...init,
-      headers,
-    });
+    const controller = new AbortController();
+    const timeoutMs = 15000;
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({
-        error: "Request failed",
-      }));
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        ...init,
+        headers,
+        signal: controller.signal,
+      });
 
-      throw new ApiError(
-        response.status,
-        (body as { error?: string }).error ?? "Request failed"
-      );
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({
+          error: "Request failed",
+        }));
+
+        throw new ApiError(
+          response.status,
+          (body as { error?: string }).error ?? "Request failed"
+        );
+      }
+
+      return response.json() as Promise<T>;
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new Error(
+          `Request timed out after ${timeoutMs / 1000}s — is the API reachable at ${this.baseUrl}?`
+        );
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeout);
     }
-
-    return response.json() as Promise<T>;
   }
 
   get<T>(path: string) {

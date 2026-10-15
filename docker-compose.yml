@@ -29,7 +29,8 @@ services:
       context: .
       target: dev
     container_name: vidya-api
-    command: sh -c "pnpm --dir packages/db exec prisma migrate deploy && pnpm --dir packages/db seed && pnpm dev:api"
+    restart: unless-stopped
+    command: sh -c "pnpm --dir packages/db exec prisma generate && pnpm --dir packages/db exec prisma migrate deploy && pnpm --dir packages/db seed && pnpm dev:api"
     environment:
       NODE_ENV: development
       PORT: 4000
@@ -48,6 +49,18 @@ services:
       - /app/node_modules
       - /app/apps/api/node_modules
       - /app/packages/db/node_modules
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,15 +73,22 @@ services:
       context: .
       target: dev
     container_name: vidya-student-mobile-web
+    # --host lan + REACT_NATIVE_PACKAGER_HOSTNAME so Expo Go on a phone can load the bundle
     command: pnpm --dir apps/student-mobile exec expo start --web --host lan --port 8081
     environment:
       EXPO_NO_TELEMETRY: "1"
+      # Physical devices cannot use localhost — must be the Mac LAN IP (set by pnpm start)
+      EXPO_PUBLIC_API_URL: http://${VIDYA_DEV_HOST:-127.0.0.1}:4000
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${VIDYA_DEV_HOST:-127.0.0.1}
     ports:
       - "8081:8081"
     volumes:
       - .:/app
       - /app/node_modules
       - /app/apps/student-mobile/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
 
   admin-mobile-web:
     image: vidya-learning-app:dev
@@ -79,12 +99,17 @@ services:
     command: pnpm --dir apps/admin-mobile exec expo start --web --host lan --port 8082
     environment:
       EXPO_NO_TELEMETRY: "1"
+      EXPO_PUBLIC_API_URL: http://${VIDYA_DEV_HOST:-127.0.0.1}:4000
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${VIDYA_DEV_HOST:-127.0.0.1}
     ports:
       - "8082:8082"
     volumes:
       - .:/app
       - /app/node_modules
       - /app/apps/admin-mobile/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres-data:

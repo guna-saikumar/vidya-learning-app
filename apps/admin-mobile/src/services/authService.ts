@@ -1,6 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { AdminAuthApi, ApiClient } from '@vidya/api-client';
+import {
+  AdminAuthApi,
+  ApiClient,
+  hostFromExpoUri,
+  resolveApiBaseUrl,
+} from '@vidya/api-client';
 import { AdminUser } from '../types/auth';
 
 export const AUTH_STORAGE_KEY = '@vidya_admin_profile_data';
@@ -18,17 +23,31 @@ export const DEFAULT_ADMIN: AdminUser = {
 
 export const DEMO_ADMIN = DEFAULT_ADMIN;
 
+const getExpoDevHost = (): string | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Constants = require('expo-constants').default;
+    return (
+      hostFromExpoUri(Constants?.expoConfig?.hostUri) ??
+      hostFromExpoUri(Constants?.manifest2?.extra?.expoClient?.hostUri) ??
+      hostFromExpoUri(Constants?.linkingUri) ??
+      hostFromExpoUri(Constants?.experienceUrl)
+    );
+  } catch {
+    return null;
+  }
+};
+
 /**
- * Resolves the Nest/Fastify API base URL.
+ * Resolves the Nest/Fastify API base URL for web, emulator, and Expo Go on device.
+ * Physical devices use the Expo bundler host (LAN IP) — never phone-local localhost.
  */
 export const getApiBaseUrl = (): string => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:4000';
-  }
-  return 'http://localhost:4000';
+  return resolveApiBaseUrl({
+    envUrl: process.env.EXPO_PUBLIC_API_URL,
+    platformOS: Platform.OS,
+    expoDevHost: getExpoDevHost(),
+  });
 };
 
 let clientInstance: ApiClient | null = null;

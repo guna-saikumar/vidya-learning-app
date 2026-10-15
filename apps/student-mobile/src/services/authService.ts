@@ -1,4 +1,10 @@
-import { ApiClient, AuthApi, ApiError } from '@vidya/api-client';
+import {
+  ApiClient,
+  AuthApi,
+  ApiError,
+  hostFromExpoUri,
+  resolveApiBaseUrl,
+} from '@vidya/api-client';
 import { AuthUser, LoginResponse } from '@vidya/auth';
 
 export const AUTH_TOKEN_KEY = '@vidya_student_auth_token';
@@ -56,18 +62,31 @@ const getPlatformOS = (): string => {
   }
 };
 
+const getExpoDevHost = (): string | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Constants = require('expo-constants').default;
+    return (
+      hostFromExpoUri(Constants?.expoConfig?.hostUri) ??
+      hostFromExpoUri(Constants?.manifest2?.extra?.expoClient?.hostUri) ??
+      hostFromExpoUri(Constants?.linkingUri) ??
+      hostFromExpoUri(Constants?.experienceUrl)
+    );
+  } catch {
+    return null;
+  }
+};
+
 /**
- * Resolves the Fastify / NestJS API base URL.
- * Supports EXPO_PUBLIC_API_URL, Android emulator loopback (10.0.2.2), and localhost.
+ * Resolves the Nest/Fastify API base URL for web, emulator, and Expo Go on device.
+ * Physical devices use the Expo bundler host (LAN IP) — never phone-local localhost.
  */
 export const getApiBaseUrl = (): string => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  if (getPlatformOS() === 'android') {
-    return 'http://10.0.2.2:4000';
-  }
-  return 'http://localhost:4000';
+  return resolveApiBaseUrl({
+    envUrl: process.env.EXPO_PUBLIC_API_URL,
+    platformOS: getPlatformOS(),
+    expoDevHost: getExpoDevHost(),
+  });
 };
 
 let clientInstance: ApiClient | null = null;
