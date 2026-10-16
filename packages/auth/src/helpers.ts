@@ -1,4 +1,4 @@
-import { type UserRole } from "./types";
+import { ADMIN_ROLE_VALUES, type AdminRole, type UserRole } from "./admin-schemas";
 
 type RoleLike = {
   role: UserRole | string;
@@ -22,8 +22,15 @@ export const isStudent = (user: RoleLike | null | undefined): boolean => {
 };
 
 /**
- * Returns true if the user is an admin.
+ * Returns true if the user is an admin (`ADMIN` or `SUPER_ADMIN`).
  */
 export const isAdmin = (user: RoleLike | null | undefined): boolean => {
-  return hasRole(user, "ADMIN");
+  return !!user && ADMIN_ROLE_VALUES.includes(user.role as AdminRole);
+};
+
+/**
+ * Returns true if the user is a super admin.
+ */
+export const isSuperAdmin = (user: RoleLike | null | undefined): boolean => {
+  return hasRole(user, "SUPER_ADMIN");
 };

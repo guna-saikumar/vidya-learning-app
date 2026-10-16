@@ -1,4 +1,6 @@
-export type UserRole = "STUDENT" | "ADMIN";
+import { type AdminRole, type UserRole } from "./admin-schemas";
+
+export type { AdminRole, UserRole };
 
 /** Authenticated user from GET /api/auth/me (student). */
 export interface AuthUser {
@@ -33,7 +35,7 @@ export interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN";
+  role: AdminRole;
   department?: string | null;
   emailVerifiedAt?: string | null;
 }
