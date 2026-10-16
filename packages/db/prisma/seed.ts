@@ -11,6 +11,8 @@ const STUDENT_EMAIL = "student@vidya.test";
 const STUDENT_PASSWORD = "StudentDemo1!";
 const ADMIN_EMAIL = "admin@example.com";
 const ADMIN_PASSWORD = "AdminDemo1!";
+const SUPER_ADMIN_EMAIL = "superadmin@vidya.edu.in";
+const SUPER_ADMIN_PASSWORD = "SuperAdminDemo1!";
 
 async function main() {
   const studentHash = await bcrypt.hash(STUDENT_PASSWORD, 10);
@@ -75,10 +77,33 @@ async function main() {
     },
   });
 
+  const superAdminHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
+  await prisma.user.upsert({
+    where: { email: SUPER_ADMIN_EMAIL },
+    update: {
+      name: "Super Admin",
+      role: "SUPER_ADMIN",
+      department: "AP SCERT Division",
+      passwordHash: superAdminHash,
+      emailVerifiedAt: new Date(),
+    },
+    create: {
+      email: SUPER_ADMIN_EMAIL,
+      name: "Super Admin",
+      role: "SUPER_ADMIN",
+      department: "AP SCERT Division",
+      passwordHash: superAdminHash,
+      emailVerifiedAt: new Date(),
+    },
+  });
+
   console.log("Seeded users:");
   console.log(`  student: ${STUDENT_EMAIL} / ${STUDENT_PASSWORD} (verified)`);
   console.log(`  admin:   ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (verified)`);
   console.log(`  admin:   ${VIDYA_ADMIN_EMAIL} / ${ADMIN_PASSWORD} (verified)`);
+  console.log(
+    `  super admin: ${SUPER_ADMIN_EMAIL} / ${SUPER_ADMIN_PASSWORD} (verified)`
+  );
 }
 
 main()

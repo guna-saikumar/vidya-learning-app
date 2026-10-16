@@ -1,10 +1,11 @@
 import { ConfigService } from "@nestjs/config";
 import jwt from "jsonwebtoken";
+import type { UserRole } from "../../../../packages/auth/src";
 
 export type JwtPayload = {
   sub: string;
   email: string;
-  role: "STUDENT" | "ADMIN";
+  role: UserRole;
   name: string;
 };
 

@@ -1,6 +1,7 @@
 import { HttpException, Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import bcrypt from "bcrypt";
+import { ADMIN_ROLE_VALUES } from "../../../../packages/auth/src";
 import { MailerService } from "../mailer/mailer.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { signAccessToken } from "./jwt";
@@ -9,6 +10,10 @@ import { generateOtp, hashOtp, OTP_TTL_MS, verifyOtp } from "./otp.util";
 type EmailOtpPurpose = "VERIFY_EMAIL" | "RESET_PASSWORD";
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+/** `ADMIN` and `SUPER_ADMIN` can both use the admin auth surface. */
+const isAdminRole = (role: string) =>
+  (ADMIN_ROLE_VALUES as readonly string[]).includes(role);
 
 const clearOtp = {
   emailOtpHash: null,
@@ -59,6 +64,8 @@ export class AdminAuthService {
     }
 
     const passwordHash = await bcrypt.hash(input.password, 10);
+    // Public self-registration always creates a plain ADMIN; SUPER_ADMIN is
+    // provisioned seed/admin-only.
     const user = await this.prisma.user.create({
       data: {
         name: input.name.trim(),
@@ -76,7 +83,7 @@ export class AdminAuthService {
   async verifyEmail(input: { email: string; otp: string }) {
     const email = normalizeEmail(input.email);
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || user.role !== "ADMIN") {
+    if (!user || !isAdminRole(user.role)) {
       this.fail("Invalid verification code", 400);
     }
     if (user.emailVerifiedAt) {
@@ -117,8 +124,8 @@ export class AdminAuthService {
       this.fail("Invalid email or password", 401);
     }
 
-    // Role verification: strictly require ADMIN
-    if (user.role !== "ADMIN") {
+    // Role verification: ADMIN and SUPER_ADMIN only
+    if (!isAdminRole(user.role)) {
       this.fail("Forbidden: Admin access required", 403);
     }
 
@@ -154,7 +161,7 @@ export class AdminAuthService {
     const message =
       "If that email is registered as an admin, a reset code has been sent.";
 
-    if (user && user.role === "ADMIN") {
+    if (user && isAdminRole(user.role)) {
       await this.issueOtp(user.id, email, "RESET_PASSWORD");
     }
 
@@ -168,7 +175,7 @@ export class AdminAuthService {
   }) {
     const email = normalizeEmail(input.email);
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || user.role !== "ADMIN") {
+    if (!user || !isAdminRole(user.role)) {
       this.fail("Invalid or expired reset code", 400);
     }
     if (
@@ -197,7 +204,7 @@ export class AdminAuthService {
 
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== "ADMIN") {
+    if (!user || !isAdminRole(user.role)) {
       this.fail("Forbidden: Admin access required", 403);
     }
     return {

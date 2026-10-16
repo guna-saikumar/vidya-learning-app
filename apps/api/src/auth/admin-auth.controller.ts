@@ -15,13 +15,14 @@ import {
 } from "@nestjs/swagger";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AdminAuthService } from "./admin-auth.service";
+import { AdminRoleGuard } from "./admin-role.guard";
 import { JwtAuthGuard, type AuthedRequest } from "./jwt.guard";
 import {
-  adminRegisterBodySchema,
-  forgotPasswordBodySchema,
-  loginBodySchema,
-  resetPasswordBodySchema,
-  verifyEmailBodySchema,
+  adminForgotPasswordSchema,
+  adminLoginBodySchema,
+  adminRegisterSchema,
+  adminResetPasswordSchema,
+  adminVerifyEmailSchema,
 } from "./schemas";
 
 @ApiTags("admin-auth")
@@ -32,9 +33,10 @@ export class AdminAuthController {
   ) {}
 
   @Post("register")
+  @HttpCode(201)
   @ApiOperation({ summary: "Register administrator (sends email OTP)" })
   async register(
-    @Body(new ZodValidationPipe(adminRegisterBodySchema))
+    @Body(new ZodValidationPipe(adminRegisterSchema))
     body: { name: string; email: string; password: string; department?: string }
   ) {
     return this.adminAuth.register(body);
@@ -44,7 +46,7 @@ export class AdminAuthController {
   @HttpCode(200)
   @ApiOperation({ summary: "Verify admin email with OTP" })
   async verifyEmail(
-    @Body(new ZodValidationPipe(verifyEmailBodySchema))
+    @Body(new ZodValidationPipe(adminVerifyEmailSchema))
     body: { email: string; otp: string }
   ) {
     return this.adminAuth.verifyEmail(body);
@@ -54,7 +56,7 @@ export class AdminAuthController {
   @HttpCode(200)
   @ApiOperation({ summary: "Admin login with email and password" })
   async login(
-    @Body(new ZodValidationPipe(loginBodySchema))
+    @Body(new ZodValidationPipe(adminLoginBodySchema))
     body: { email: string; password: string }
   ) {
     return this.adminAuth.login(body);
@@ -64,7 +66,7 @@ export class AdminAuthController {
   @HttpCode(200)
   @ApiOperation({ summary: "Request admin password reset OTP" })
   async forgotPassword(
-    @Body(new ZodValidationPipe(forgotPasswordBodySchema))
+    @Body(new ZodValidationPipe(adminForgotPasswordSchema))
     body: { email: string }
   ) {
     return this.adminAuth.forgotPassword(body);
@@ -74,14 +76,14 @@ export class AdminAuthController {
   @HttpCode(200)
   @ApiOperation({ summary: "Reset admin password with OTP" })
   async resetPassword(
-    @Body(new ZodValidationPipe(resetPasswordBodySchema))
+    @Body(new ZodValidationPipe(adminResetPasswordSchema))
     body: { email: string; otp: string; newPassword: string }
   ) {
     return this.adminAuth.resetPassword(body);
   }
 
   @Get("me")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Current authenticated admin profile" })
   async me(@Req() req: AuthedRequest) {
