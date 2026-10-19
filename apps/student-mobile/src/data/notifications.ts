@@ -19,7 +19,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: 'notif-2',
-    title: '🎉 5-Day Learning Streak Unlocked!',
+    title: '5-Day Learning Streak Unlocked!',
     message: 'You have completed 5 consecutive days of study! Keep up the brilliant pace.',
     detailedBody: 'Congratulations on maintaining consistent study habits! Consistency is the key to mastering your AP SCERT Board curriculum.\n\n• Streak Record: 5 Days\n• Time Studied This Week: 255 Minutes\n• Chapters Revised: 4 Chapters\n\nMaintain this streak through the weekend to unlock the "Dedicated Scholar" badge on your profile.',
     type: 'achievement',

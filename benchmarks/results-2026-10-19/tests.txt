@@ -1,0 +1,245 @@
+
+> @vidya/api@0.0.1 build /workspace/gh-cleanup/repos/vidya-learning-app/apps/api
+> tsc -p tsconfig.build.json
+
+
+> @vidya/api@0.0.1 test /workspace/gh-cleanup/repos/vidya-learning-app/apps/api
+> vitest run
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v5.0.5 /workspace/gh-cleanup/repos/vidya-learning-app/apps/api
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  11:14:31
+   Duration  891ms (import 50%, tests 27%, transform 22%)
+
+
+> @vidya/auth@0.0.1 test /workspace/gh-cleanup/repos/vidya-learning-app/packages/auth
+> tsx --test src/*.test.ts
+
+TAP version 13
+# Subtest: admin auth request schemas
+    # Subtest: accepts a valid register body and trims/normalizes it
+    ok 1 - accepts a valid register body and trims/normalizes it
+      ---
+      duration_ms: 3.280299
+      type: 'test'
+      ...
+    # Subtest: rejects an invalid register body
+    ok 2 - rejects an invalid register body
+      ---
+      duration_ms: 0.47353
+      type: 'test'
+      ...
+    # Subtest: accepts a valid verify-email body
+    ok 3 - accepts a valid verify-email body
+      ---
+      duration_ms: 0.905825
+      type: 'test'
+      ...
+    # Subtest: rejects a verify-email body with a non 6-digit OTP
+    ok 4 - rejects a verify-email body with a non 6-digit OTP
+      ---
+      duration_ms: 0.235909
+      type: 'test'
+      ...
+    # Subtest: accepts a valid login body
+    ok 5 - accepts a valid login body
+      ---
+      duration_ms: 0.641992
+      type: 'test'
+      ...
+    # Subtest: rejects a login body without a password
+    ok 6 - rejects a login body without a password
+      ---
+      duration_ms: 0.187576
+      type: 'test'
+      ...
+    # Subtest: accepts a valid forgot-password body
+    ok 7 - accepts a valid forgot-password body
+      ---
+      duration_ms: 0.476661
+      type: 'test'
+      ...
+    # Subtest: rejects a forgot-password body with a missing email
+    ok 8 - rejects a forgot-password body with a missing email
+      ---
+      duration_ms: 0.203756
+      type: 'test'
+      ...
+    # Subtest: accepts a valid reset-password body
+    ok 9 - accepts a valid reset-password body
+      ---
+      duration_ms: 0.857631
+      type: 'test'
+      ...
+    # Subtest: rejects a reset-password body with a short new password
+    ok 10 - rejects a reset-password body with a short new password
+      ---
+      duration_ms: 0.471663
+      type: 'test'
+      ...
+    1..10
+ok 1 - admin auth request schemas
+  ---
+  duration_ms: 9.142324
+  type: 'suite'
+  ...
+# Subtest: admin auth response schemas
+    # Subtest: accepts ADMIN and SUPER_ADMIN admin users
+    ok 1 - accepts ADMIN and SUPER_ADMIN admin users
+      ---
+      duration_ms: 1.221983
+      type: 'test'
+      ...
+    # Subtest: rejects a student role on the admin user schema
+    ok 2 - rejects a student role on the admin user schema
+      ---
+      duration_ms: 0.192696
+      type: 'test'
+      ...
+    1..2
+ok 2 - admin auth response schemas
+  ---
+  duration_ms: 1.582972
+  type: 'suite'
+  ...
+# Subtest: admin role helpers
+    # Subtest: treats ADMIN and SUPER_ADMIN as admins
+    ok 1 - treats ADMIN and SUPER_ADMIN as admins
+      ---
+      duration_ms: 0.671244
+      type: 'test'
+      ...
+    # Subtest: does not treat students as admins
+    ok 2 - does not treat students as admins
+      ---
+      duration_ms: 0.16637
+      type: 'test'
+      ...
+    # Subtest: detects super admins only
+    ok 3 - detects super admins only
+      ---
+      duration_ms: 0.112219
+      type: 'test'
+      ...
+    # Subtest: still detects students and exact roles
+    ok 4 - still detects students and exact roles
+      ---
+      duration_ms: 0.172443
+      type: 'test'
+      ...
+    1..4
+ok 3 - admin role helpers
+  ---
+  duration_ms: 2.108483
+  type: 'suite'
+  ...
+1..3
+# tests 16
+# suites 3
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 264.825365
+
+> vidya-learning-app@1.0.0 test /workspace/gh-cleanup/repos/vidya-learning-app/apps/student-mobile
+> tsx --test test/*.test.ts
+
+TAP version 13
+# Subtest: Student Authentication & Session Gate
+    # Subtest: 1. Successful Login: authenticates via POST /api/auth/login and stores session
+    ok 1 - 1. Successful Login: authenticates via POST /api/auth/login and stores session
+      ---
+      duration_ms: 18.297458
+      type: 'test'
+      ...
+    # Subtest: 2. Invalid Credentials: returns 401 error and does not persist token
+    ok 2 - 2. Invalid Credentials: returns 401 error and does not persist token
+      ---
+      duration_ms: 0.909994
+      type: 'test'
+      ...
+    # Subtest: 3. Session Restoration After Reload: calls GET /api/auth/me and restores valid session
+    ok 3 - 3. Session Restoration After Reload: calls GET /api/auth/me and restores valid session
+      ---
+      duration_ms: 0.679462
+      type: 'test'
+      ...
+    # Subtest: 4. Expired or Invalid Session on Startup: clears storage without redirect loops
+    ok 4 - 4. Expired or Invalid Session on Startup: clears storage without redirect loops
+      ---
+      duration_ms: 0.59226
+      type: 'test'
+      ...
+    # Subtest: 5. Session Loading Behavior and Route Gating State Machine
+    ok 5 - 5. Session Loading Behavior and Route Gating State Machine
+      ---
+      duration_ms: 0.354859
+      type: 'test'
+      ...
+    # Subtest: 6. Forgot Password Copy: directs user to administrator
+    ok 6 - 6. Forgot Password Copy: directs user to administrator
+      ---
+      duration_ms: 0.158066
+      type: 'test'
+      ...
+    1..6
+ok 1 - Student Authentication & Session Gate
+  ---
+  duration_ms: 21.829453
+  type: 'suite'
+  ...
+# Subtest: authService Integration Tests
+    # Subtest: loginStudent: saves token, updates ApiClient accessToken, and stores user
+    ok 1 - loginStudent: saves token, updates ApiClient accessToken, and stores user
+      ---
+      duration_ms: 103.55286
+      type: 'test'
+      ...
+    # Subtest: loginStudent: throws ApiError on 401 invalid credentials
+    ok 2 - loginStudent: throws ApiError on 401 invalid credentials
+      ---
+      duration_ms: 9.80748
+      type: 'test'
+      ...
+    # Subtest: validateSession: restores valid session via GET /api/auth/me
+    ok 3 - validateSession: restores valid session via GET /api/auth/me
+      ---
+      duration_ms: 7.428504
+      type: 'test'
+      ...
+    # Subtest: validateSession: handles 401 expired session by clearing token and returning null
+    ok 4 - validateSession: handles 401 expired session by clearing token and returning null
+      ---
+      duration_ms: 8.19004
+      type: 'test'
+      ...
+    # Subtest: logoutStudent: clears stored auth and resets client token
+    ok 5 - logoutStudent: clears stored auth and resets client token
+      ---
+      duration_ms: 5.401011
+      type: 'test'
+      ...
+    1..5
+ok 2 - authService Integration Tests
+  ---
+  duration_ms: 135.510638
+  type: 'suite'
+  ...
+1..2
+# tests 11
+# suites 2
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 332.007202

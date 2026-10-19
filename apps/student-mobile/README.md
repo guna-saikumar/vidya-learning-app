@@ -4,7 +4,7 @@ A modern, student-friendly educational mobile application for students studying 
 
 ---
 
-## 🎨 Design System: Terracotta + Cream
+## Design System: Terracotta + Cream
 
 | Token Name | Hex Code | Usage |
 | :--- | :--- | :--- |
@@ -23,10 +23,10 @@ A modern, student-friendly educational mobile application for students studying 
 
 ---
 
-## 📱 Complete Screen Hierarchy & Implemented Views
+## Complete Screen Hierarchy & Implemented Views
 
 ### 1. Dashboard (`DashboardScreen.tsx`)
-- **Header**: Warm greeting *"Good morning, Aarav!"*, subtitle *"What would you like to learn today?"*, study streak badge (*5 Day Streak 🔥*), profile avatar, and instant search.
+- **Header**: Warm greeting *"Good morning, Aarav!"*, subtitle *"What would you like to learn today?"*, study streak badge (*5 Day Streak *), profile avatar, and instant search.
 - **Curriculum Overview (4 Stat Cards)**:
   - *Total Classes*: 5 (Grades 6–10)
   - *Total Subjects*: 28 across syllabi
@@ -133,7 +133,7 @@ vidya-learning-app/
 
 ---
 
-## 🚀 Running the Application
+## Running the Application
 
 ### 1. Set Active Workspace
 It is recommended to open the project folder in your IDE:

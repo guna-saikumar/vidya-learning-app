@@ -1,0 +1,23 @@
+
+> @vidya/db@0.0.1 migrate /workspace/gh-cleanup/repos/vidya-learning-app/packages/db
+> prisma migrate deploy
+
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "vidya", schema "public" at "127.0.0.1:5544"
+
+3 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+> @vidya/db@0.0.1 seed /workspace/gh-cleanup/repos/vidya-learning-app/packages/db
+> tsx prisma/seed.ts
+
+Seeded users:
+  student: student@vidya.test / StudentDemo1! (verified)
+  admin:   admin@example.com / AdminDemo1! (verified)
+  admin:   admin@vidya.edu.in / AdminDemo1! (verified)
+  super admin: superadmin@vidya.edu.in / SuperAdminDemo1! (verified)

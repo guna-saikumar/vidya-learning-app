@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch --import reflect-metadata src/main.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node --import reflect-metadata dist/main.js",
+    "start": "node --import reflect-metadata dist/apps/api/src/main.js",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
