@@ -57,9 +57,9 @@ last run (19 oct 2026): api 7/7, auth 16/16, student-mobile 11/11, typecheck cle
 
 copy `.env.example` to `.env`.
 
-## performance (measured)
+## local benchmark
 
-measured on a single machine (8 vCPU Intel Xeon, 16 GB RAM, Linux) with k6 on the same box against one Node process (`pnpm --dir apps/api start`) and a local PostgreSQL 17 with the seed data. raw output: [`benchmarks/results-2026-10-19/`](benchmarks/results-2026-10-19/), environment: [`environment.txt`](benchmarks/results-2026-10-19/environment.txt), reproduce: [`benchmarks/run.sh`](benchmarks/run.sh).
+local benchmark, single run on one machine: 8 vCPU Intel Xeon, 16 GB RAM, Linux 6.12, node v22.20.0, PostgreSQL 17, k6 v0.54.0. k6 ran on the same box against one Node process (`pnpm --dir apps/api start`) and a local PostgreSQL 17 with the seed data. raw output: [`benchmarks/results-2026-10-19/`](benchmarks/results-2026-10-19/), environment: [`environment.txt`](benchmarks/results-2026-10-19/environment.txt), reproduce: [`benchmarks/run.sh`](benchmarks/run.sh). these are numbers from one local box, not a production deployment.
 
 | Endpoint | VUs | req/s | p50 | p95 | p99 | Errors |
 |---|---|---|---|---|---|---|
