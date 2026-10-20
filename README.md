@@ -59,7 +59,7 @@ copy `.env.example` to `.env`.
 
 ## performance (measured)
 
-Measured on a single machine (8 vCPU Intel Xeon, 16 GB RAM, Linux) with k6 on the same box against one Node process (`pnpm --dir apps/api start`) and a local PostgreSQL 17 with the seed data. Raw output: [`benchmarks/results-2026-10-19/`](benchmarks/results-2026-10-19/), environment: [`environment.txt`](benchmarks/results-2026-10-19/environment.txt), reproduce: [`benchmarks/run.sh`](benchmarks/run.sh).
+measured on a single machine (8 vCPU Intel Xeon, 16 GB RAM, Linux) with k6 on the same box against one Node process (`pnpm --dir apps/api start`) and a local PostgreSQL 17 with the seed data. raw output: [`benchmarks/results-2026-10-19/`](benchmarks/results-2026-10-19/), environment: [`environment.txt`](benchmarks/results-2026-10-19/environment.txt), reproduce: [`benchmarks/run.sh`](benchmarks/run.sh).
 
 | Endpoint | VUs | req/s | p50 | p95 | p99 | Errors |
 |---|---|---|---|---|---|---|
