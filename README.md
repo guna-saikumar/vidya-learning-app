@@ -77,3 +77,7 @@ local benchmark, single run on one machine: 8 vCPU Intel Xeon, 16 GB RAM, Linux 
 ## license
 
 [mit](LICENSE)
+
+---
+
+built by [sreecharan desu](https://www.sreecharandesu.in) · [more projects](https://www.sreecharandesu.in/work)
