@@ -1,0 +1,18 @@
+$kind: http-request
+name: PATCH /api/admin/sections/:id
+description: Update section
+url: "{{baseUrl}}/api/admin/sections/c8-demo-ch1-s1"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Demo Section Updated"
+    }
+order: 4410

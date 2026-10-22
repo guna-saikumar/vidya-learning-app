@@ -1,0 +1,10 @@
+$kind: http-request
+name: DELETE /api/admin/subjects/:id
+description: Delete subject
+url: "{{baseUrl}}/api/admin/subjects/c8-demo-subject"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+order: 4220
