@@ -1,4 +1,4 @@
-import { ApiClient } from "./client";
+import { ApiClient } from "../client";
 
 function qs(params: Record<string, string | undefined>) {
   const sp = new URLSearchParams();

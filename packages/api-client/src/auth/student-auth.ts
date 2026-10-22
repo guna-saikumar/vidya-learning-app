@@ -1,5 +1,5 @@
 import { AuthUser, LoginRequest, LoginResponse } from "@vidya/auth";
-import { ApiClient } from "./client";
+import { ApiClient } from "../client";
 
 /**
  * Student auth client — login + /me only.

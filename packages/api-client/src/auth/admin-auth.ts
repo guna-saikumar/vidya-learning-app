@@ -8,7 +8,7 @@ import type {
   AdminVerifyEmailInput,
   MessageResponse,
 } from "@vidya/auth";
-import { ApiClient } from "./client";
+import { ApiClient } from "../client";
 
 /**
  * Admin auth client — register / OTP verify / login / forgot / reset / me
@@ -55,5 +55,27 @@ export class AdminAuthApi {
 
   me() {
     return this.client.get<AdminUser>("/api/admin/auth/me");
+  }
+
+  changePassword(body: { currentPassword: string; newPassword: string }) {
+    return this.client.post("/api/admin/auth/change-password", body);
+  }
+
+  patchMe(body: { name?: string; department?: string }) {
+    return this.client.patch("/api/admin/auth/me", body);
+  }
+}
+
+/** Admin student provisioning under `/api/admin/students`. */
+export class AdminStudentsApi {
+  constructor(private readonly client: ApiClient) {}
+
+  create(body: {
+    email: string;
+    name: string;
+    password: string;
+    activeClassId?: string;
+  }) {
+    return this.client.post("/api/admin/students", body);
   }
 }

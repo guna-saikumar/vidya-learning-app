@@ -10,19 +10,25 @@ src/
   app.module.ts           # root module wiring
   docs.ts                 # CDN Swagger UI at /docs + /docs-json
   env.ts                  # root .env / .env.local + Neon→Prisma aliases
-  common/                 # pipes, filters
+  common/                 # pipes, filters, ids
   auth/                   # JWT, RBAC, student + admin auth
   prisma/                 # PrismaService
   mailer/                 # SMTP (Mailhog locally)
-  curriculum/             # thin controllers (legacy path)
-  admin/                  # thin controllers (legacy path)
-  health/                 # thin controllers (legacy path)
-  modules/
-    dashboard/            # admin + student dashboard aggregations
-    curriculum/           # CurriculumModule
-    admin/                # AdminModule
-    health/               # HealthModule
+  modules/                # feature domains (match app / Postman)
+    health/               # /health, /health/db
+    admin/                # /api/admin/ping
+    curriculum/           # classes/subjects/chapters/sections (+ admin CMS)
+    materials/            # published materials + admin CMS
+    dashboard/            # student + admin dashboards
+    me/                   # profile, progress, bookmarks, study-stats
+    quizzes/              # quizzes + attempts
+    tasks/                # student tasks + admin assign
+    notifications/        # feed + admin broadcast
+    exams/                # schedule + results
 ```
+
+Cross-cutting: `auth/`, `prisma/`, `mailer/`, `common/`.
+Feature domains: `modules/*` (same grouping as Postman `01`–`11`).
 
 ## Key routes
 

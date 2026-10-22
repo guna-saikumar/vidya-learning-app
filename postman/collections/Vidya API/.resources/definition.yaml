@@ -8,7 +8,7 @@ description: |-
   ## Setup
   1. Set collection vars `adminPassword` / `studentPassword` from seed (`packages/db/prisma/seed.ts`) — **do not commit secrets**.
   2. Run **Admin Auth → login** (or Student login) — tokens auto-save.
-  3. Hit Dashboard / protected routes.
+  3. Use folders 01–11 (Health → Exams) — same domains as `apps/api/src/modules/*`.
 
   ## Docs
   - Swagger UI: `{{baseUrl}}/docs`

@@ -5,7 +5,7 @@ import { Test, type TestingModule } from "@nestjs/testing";
 import { ConfigModule } from "@nestjs/config";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { FastifyAdapter } from "@nestjs/platform-fastify";
-import { AdminController } from "../admin/admin.controller";
+import { AdminController } from "../modules/admin/admin.controller";
 import { AuthModule } from "./auth.module";
 import { AdminRoleGuard } from "./admin-role.guard";
 import { JwtAuthGuard } from "./jwt.guard";

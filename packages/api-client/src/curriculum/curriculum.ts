@@ -1,4 +1,4 @@
-import { ApiClient } from "./client";
+import { ApiClient } from "../client";
 
 /** Curriculum read + admin CMS client (unused by apps until integrate PR). */
 export class CurriculumApi {

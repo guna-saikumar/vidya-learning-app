@@ -1,4 +1,4 @@
-import { ApiClient } from "./client";
+import { ApiClient } from "../client";
 
 /** Student profile / progress / bookmarks / study-stats. */
 export class MeApi {

@@ -1,7 +1,7 @@
 import { Controller, Get, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { AdminRoleGuard } from "../auth/admin-role.guard";
-import { JwtAuthGuard } from "../auth/jwt.guard";
+import { AdminRoleGuard } from "../../auth/admin-role.guard";
+import { JwtAuthGuard } from "../../auth/jwt.guard";
 
 @ApiTags("admin")
 @Controller("api/admin")
