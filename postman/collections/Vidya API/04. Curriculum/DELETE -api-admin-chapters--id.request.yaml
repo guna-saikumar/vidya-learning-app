@@ -1,0 +1,10 @@
+$kind: http-request
+name: DELETE /api/admin/chapters/:id
+description: Delete chapter
+url: "{{baseUrl}}/api/admin/chapters/c8-demo-ch1"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+order: 4320

@@ -1,0 +1,10 @@
+$kind: http-request
+name: DELETE /api/admin/sections/:id
+description: Delete section
+url: "{{baseUrl}}/api/admin/sections/c8-demo-ch1-s1"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+order: 4420

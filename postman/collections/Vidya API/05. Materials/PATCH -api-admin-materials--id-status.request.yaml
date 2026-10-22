@@ -1,0 +1,18 @@
+$kind: http-request
+name: PATCH /api/admin/materials/:id/status
+description: Change material status
+url: "{{baseUrl}}/api/admin/materials/mat-003/status"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "status": "published"
+    }
+order: 8220

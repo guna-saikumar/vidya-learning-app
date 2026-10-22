@@ -1,0 +1,18 @@
+$kind: http-request
+name: PATCH /api/admin/subjects/:id
+description: Update subject
+url: "{{baseUrl}}/api/admin/subjects/c8-demo-subject"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Demo Subject Updated"
+    }
+order: 4210
