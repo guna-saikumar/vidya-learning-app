@@ -7,98 +7,192 @@ const prisma = new PrismaClient();
 /**
  * Local/demo provisioned accounts (students do not self-register).
  * In production, admins will create/reset student credentials.
+ *
+ * Shared demo passwords (documented in seed console output):
+ *   Students → StudentDemo1!
+ *   Admins   → AdminDemo1!
+ *   Super    → SuperAdminDemo1!
  */
-const STUDENT_EMAIL = "student@vidya.test";
 const STUDENT_PASSWORD = "StudentDemo1!";
-const ADMIN_EMAIL = "admin@example.com";
 const ADMIN_PASSWORD = "AdminDemo1!";
-const SUPER_ADMIN_EMAIL = "superadmin@vidya.edu.in";
 const SUPER_ADMIN_PASSWORD = "SuperAdminDemo1!";
-const VIDYA_ADMIN_EMAIL = "admin@vidya.edu.in";
+
+type SeedStudent = {
+  email: string;
+  name: string;
+  activeClassId: string;
+  streakDays: number;
+  studyGoalMinutes: number;
+};
+
+type SeedAdmin = {
+  email: string;
+  name: string;
+  role: "ADMIN" | "SUPER_ADMIN";
+  department: string;
+  password: string;
+};
+
+const SEED_STUDENTS: SeedStudent[] = [
+  {
+    email: "student@vidya.test",
+    name: "Demo Student",
+    activeClassId: "class-8",
+    streakDays: 5,
+    studyGoalMinutes: 45,
+  },
+  {
+    email: "ananya.reddy@vidya.test",
+    name: "Ananya Reddy",
+    activeClassId: "class-8",
+    streakDays: 12,
+    studyGoalMinutes: 60,
+  },
+  {
+    email: "karthik.nair@vidya.test",
+    name: "Karthik Nair",
+    activeClassId: "class-9",
+    streakDays: 3,
+    studyGoalMinutes: 40,
+  },
+  {
+    email: "priya.suresh@vidya.test",
+    name: "Priya Suresh",
+    activeClassId: "class-7",
+    streakDays: 8,
+    studyGoalMinutes: 35,
+  },
+  {
+    email: "arjun.patel@vidya.test",
+    name: "Arjun Patel",
+    activeClassId: "class-10",
+    streakDays: 21,
+    studyGoalMinutes: 75,
+  },
+  {
+    email: "meera.iyer@vidya.test",
+    name: "Meera Iyer",
+    activeClassId: "class-6",
+    streakDays: 2,
+    studyGoalMinutes: 30,
+  },
+];
+
+const SEED_ADMINS: SeedAdmin[] = [
+  {
+    email: "admin@example.com",
+    name: "Admin",
+    role: "ADMIN",
+    department: "Academic Director · AP SCERT Division",
+    password: ADMIN_PASSWORD,
+  },
+  {
+    email: "admin@vidya.edu.in",
+    name: "Dr. Ramesh Sharma",
+    role: "ADMIN",
+    department: "Academic Director · AP SCERT Division",
+    password: ADMIN_PASSWORD,
+  },
+  {
+    email: "lakshmi.rao@vidya.edu.in",
+    name: "Lakshmi Rao",
+    role: "ADMIN",
+    department: "Curriculum Coordinator · Mathematics & Science",
+    password: ADMIN_PASSWORD,
+  },
+  {
+    email: "suresh.kumar@vidya.edu.in",
+    name: "Suresh Kumar",
+    role: "ADMIN",
+    department: "Assessment Lead · FA/SA Examinations",
+    password: ADMIN_PASSWORD,
+  },
+  {
+    email: "fatima.begum@vidya.edu.in",
+    name: "Fatima Begum",
+    role: "ADMIN",
+    department: "Language Studies · Telugu & English",
+    password: ADMIN_PASSWORD,
+  },
+  {
+    email: "superadmin@vidya.edu.in",
+    name: "Super Admin",
+    role: "SUPER_ADMIN",
+    department: "AP SCERT Division",
+    password: SUPER_ADMIN_PASSWORD,
+  },
+];
 
 async function seedUsers() {
   const studentHash = await bcrypt.hash(STUDENT_PASSWORD, 10);
-  const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
-  const superAdminHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
+  const passwordHashes = new Map<string, string>();
+  for (const admin of SEED_ADMINS) {
+    if (!passwordHashes.has(admin.password)) {
+      passwordHashes.set(admin.password, await bcrypt.hash(admin.password, 10));
+    }
+  }
 
-  const student = await prisma.user.upsert({
-    where: { email: STUDENT_EMAIL },
-    update: {
-      name: "Demo Student",
-      role: "STUDENT",
-      passwordHash: studentHash,
-      emailVerifiedAt: new Date(),
-      emailOtpHash: null,
-      emailOtpExpiresAt: null,
-      emailOtpPurpose: null,
-    },
-    create: {
-      email: STUDENT_EMAIL,
-      name: "Demo Student",
-      role: "STUDENT",
-      passwordHash: studentHash,
-      emailVerifiedAt: new Date(),
-    },
-  });
+  const students: { user: { id: string; email: string }; profile: SeedStudent }[] =
+    [];
 
-  await prisma.user.upsert({
-    where: { email: ADMIN_EMAIL },
-    update: {
-      name: "Admin",
-      role: "ADMIN",
-      department: "Academic Director · AP SCERT Division",
-      passwordHash: adminHash,
-      emailVerifiedAt: new Date(),
-    },
-    create: {
-      email: ADMIN_EMAIL,
-      name: "Admin",
-      role: "ADMIN",
-      department: "Academic Director · AP SCERT Division",
-      passwordHash: adminHash,
-      emailVerifiedAt: new Date(),
-    },
-  });
+  for (const s of SEED_STUDENTS) {
+    const user = await prisma.user.upsert({
+      where: { email: s.email },
+      update: {
+        name: s.name,
+        role: "STUDENT",
+        passwordHash: studentHash,
+        emailVerifiedAt: new Date(),
+        emailOtpHash: null,
+        emailOtpExpiresAt: null,
+        emailOtpPurpose: null,
+      },
+      create: {
+        email: s.email,
+        name: s.name,
+        role: "STUDENT",
+        passwordHash: studentHash,
+        emailVerifiedAt: new Date(),
+      },
+    });
+    students.push({ user, profile: s });
+  }
 
-  const vidyaAdmin = await prisma.user.upsert({
-    where: { email: VIDYA_ADMIN_EMAIL },
-    update: {
-      name: "Dr. Ramesh Sharma",
-      role: "ADMIN",
-      department: "Academic Director · AP SCERT Division",
-      passwordHash: adminHash,
-      emailVerifiedAt: new Date(),
-    },
-    create: {
-      email: VIDYA_ADMIN_EMAIL,
-      name: "Dr. Ramesh Sharma",
-      role: "ADMIN",
-      department: "Academic Director · AP SCERT Division",
-      passwordHash: adminHash,
-      emailVerifiedAt: new Date(),
-    },
-  });
+  let vidyaAdminId: string | null = null;
+  for (const a of SEED_ADMINS) {
+    const hash = passwordHashes.get(a.password)!;
+    const user = await prisma.user.upsert({
+      where: { email: a.email },
+      update: {
+        name: a.name,
+        role: a.role,
+        department: a.department,
+        passwordHash: hash,
+        emailVerifiedAt: new Date(),
+        emailOtpHash: null,
+        emailOtpExpiresAt: null,
+        emailOtpPurpose: null,
+      },
+      create: {
+        email: a.email,
+        name: a.name,
+        role: a.role,
+        department: a.department,
+        passwordHash: hash,
+        emailVerifiedAt: new Date(),
+      },
+    });
+    if (a.email === "admin@vidya.edu.in") {
+      vidyaAdminId = user.id;
+    }
+  }
 
-  await prisma.user.upsert({
-    where: { email: SUPER_ADMIN_EMAIL },
-    update: {
-      name: "Super Admin",
-      role: "SUPER_ADMIN",
-      department: "AP SCERT Division",
-      passwordHash: superAdminHash,
-      emailVerifiedAt: new Date(),
-    },
-    create: {
-      email: SUPER_ADMIN_EMAIL,
-      name: "Super Admin",
-      role: "SUPER_ADMIN",
-      department: "AP SCERT Division",
-      passwordHash: superAdminHash,
-      emailVerifiedAt: new Date(),
-    },
-  });
-
-  return { student, vidyaAdmin };
+  const primaryStudent = students[0]!;
+  return {
+    student: primaryStudent.user,
+    students,
+    vidyaAdminId: vidyaAdminId!,
+  };
 }
 
 async function seedCurriculum() {
@@ -243,25 +337,33 @@ async function seedCurriculum() {
   console.log(`Seeded curriculum: ${classes.length} classes`);
 }
 
+async function seedStudentProfiles(
+  students: { user: { id: string }; profile: SeedStudent }[]
+) {
+  for (const { user, profile } of students) {
+    await prisma.studentProfile.upsert({
+      where: { userId: user.id },
+      update: {
+        activeClassId: profile.activeClassId,
+        streakDays: profile.streakDays,
+        studyGoalMinutes: profile.studyGoalMinutes,
+        avatarUrl: "",
+      },
+      create: {
+        userId: user.id,
+        activeClassId: profile.activeClassId,
+        streakDays: profile.streakDays,
+        studyGoalMinutes: profile.studyGoalMinutes,
+      },
+    });
+  }
+}
+
 async function seedDemoContent(
   studentId: string,
-  authorId: string
+  authorId: string,
+  extraStudents: { id: string; classId: string }[] = []
 ) {
-  await prisma.studentProfile.upsert({
-    where: { userId: studentId },
-    update: {
-      activeClassId: "class-8",
-      streakDays: 5,
-      studyGoalMinutes: 45,
-      avatarUrl: "",
-    },
-    create: {
-      userId: studentId,
-      activeClassId: "class-8",
-      streakDays: 5,
-      studyGoalMinutes: 45,
-    },
-  });
 
   const materials: Prisma.MaterialCreateInput[] = [
     {
@@ -577,20 +679,69 @@ async function seedDemoContent(
     },
   });
 
-  // Weekly study minutes for charts
-  for (let i = 0; i < 7; i++) {
-    const day = new Date();
-    day.setUTCHours(0, 0, 0, 0);
-    day.setUTCDate(day.getUTCDate() - i);
-    await prisma.studySession.upsert({
+  // Weekly study minutes for charts (primary + a couple classmates)
+  const studyUsers = [
+    { userId: studentId, base: 20 },
+    ...extraStudents.slice(0, 2).map((s, idx) => ({
+      userId: s.id,
+      base: 15 + idx * 8,
+    })),
+  ];
+  for (const { userId, base } of studyUsers) {
+    for (let i = 0; i < 7; i++) {
+      const day = new Date();
+      day.setUTCHours(0, 0, 0, 0);
+      day.setUTCDate(day.getUTCDate() - i);
+      await prisma.studySession.upsert({
+        where: {
+          userId_day: { userId, day },
+        },
+        update: { minutes: base + i * 5 },
+        create: {
+          userId,
+          day,
+          minutes: base + i * 5,
+        },
+      });
+    }
+  }
+
+  // Light progress for other students so dashboards look inhabited
+  for (const extra of extraStudents) {
+    const chapterByClass: Record<string, { chapterId: string; subjectId: string }> = {
+      "class-6": { chapterId: "c6-m-ch1", subjectId: "c6-maths" },
+      "class-7": { chapterId: "c7-m-ch1", subjectId: "c7-maths" },
+      "class-8": { chapterId: "c8-m-ch1", subjectId: "c8-maths" },
+      "class-9": { chapterId: "c9-m-ch1", subjectId: "c9-maths" },
+      "class-10": { chapterId: "c10-m-ch1", subjectId: "c10-maths" },
+    };
+    const target = chapterByClass[extra.classId];
+    if (!target) continue;
+
+    // Only upsert if the chapter exists (curriculum seed may not have every id)
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: target.chapterId },
+    });
+    if (!chapter) continue;
+
+    await prisma.chapterProgress.upsert({
       where: {
-        userId_day: { userId: studentId, day },
+        userId_chapterId: {
+          userId: extra.id,
+          chapterId: target.chapterId,
+        },
       },
-      update: { minutes: 20 + i * 5 },
+      update: {
+        progressPercent: 25,
+        completed: false,
+        lastAccessed: new Date(),
+      },
       create: {
-        userId: studentId,
-        day,
-        minutes: 20 + i * 5,
+        userId: extra.id,
+        chapterId: target.chapterId,
+        subjectId: target.subjectId,
+        classId: extra.classId,
+        progressPercent: 25,
       },
     });
   }
@@ -599,17 +750,30 @@ async function seedDemoContent(
 }
 
 async function main() {
-  const { student, vidyaAdmin } = await seedUsers();
+  const { student, students, vidyaAdminId } = await seedUsers();
   await seedCurriculum();
-  await seedDemoContent(student.id, vidyaAdmin.id);
+  await seedStudentProfiles(students);
+  const extras = students.slice(1).map(({ user, profile }) => ({
+    id: user.id,
+    classId: profile.activeClassId,
+  }));
+  await seedDemoContent(student.id, vidyaAdminId, extras);
 
-  console.log("Seeded users:");
-  console.log(`  student: ${STUDENT_EMAIL} / ${STUDENT_PASSWORD} (verified)`);
-  console.log(`  admin:   ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (verified)`);
-  console.log(`  admin:   ${VIDYA_ADMIN_EMAIL} / ${ADMIN_PASSWORD} (verified)`);
-  console.log(
-    `  super admin: ${SUPER_ADMIN_EMAIL} / ${SUPER_ADMIN_PASSWORD} (verified)`
-  );
+  console.log("\nSeeded login accounts (all email-verified):\n");
+  console.log("Students (password: StudentDemo1!):");
+  for (const { profile } of students) {
+    console.log(
+      `  ${profile.email.padEnd(32)}  ${profile.name.padEnd(16)}  ${profile.activeClassId}`
+    );
+  }
+  console.log("\nAdmins (password: AdminDemo1!):");
+  for (const a of SEED_ADMINS.filter((x) => x.role === "ADMIN")) {
+    console.log(`  ${a.email.padEnd(32)}  ${a.name}`);
+  }
+  console.log("\nSuper admin (password: SuperAdminDemo1!):");
+  for (const a of SEED_ADMINS.filter((x) => x.role === "SUPER_ADMIN")) {
+    console.log(`  ${a.email.padEnd(32)}  ${a.name}`);
+  }
 }
 
 main()
