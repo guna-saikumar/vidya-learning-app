@@ -1,20 +1,25 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { AdminController } from "./admin/admin.controller";
 import { AuthModule } from "./auth/auth.module";
-import { CurriculumController } from "./curriculum/curriculum.controller";
 import {
   applyDatabaseEnvAliases,
   loadRootEnv,
   rootEnvFilePaths,
 } from "./env";
-import { HealthController } from "./health/health.controller";
 import { MailerModule } from "./mailer/mailer.module";
+import { AdminModule } from "./modules/admin/admin.module";
+import { CurriculumModule } from "./modules/curriculum/curriculum.module";
+import { DashboardModule } from "./modules/dashboard/dashboard.module";
+import { HealthModule } from "./modules/health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 loadRootEnv();
 applyDatabaseEnvAliases();
 
+/**
+ * Root Nest module — feature modules live under `src/modules/*`.
+ * Cross-cutting auth/prisma/mailer stay at `src/{auth,prisma,mailer}`.
+ */
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,7 +29,10 @@ applyDatabaseEnvAliases();
     PrismaModule,
     MailerModule,
     AuthModule,
+    HealthModule,
+    CurriculumModule,
+    AdminModule,
+    DashboardModule,
   ],
-  controllers: [HealthController, CurriculumController, AdminController],
 })
 export class AppModule {}
