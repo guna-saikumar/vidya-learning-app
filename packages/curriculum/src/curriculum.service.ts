@@ -65,11 +65,15 @@ export const getCurriculumStats = () => {
   const totalClasses = CURRICULUM_DATA.length;
   let totalSubjects = 0;
   let totalChapters = 0;
+  let totalSections = 0;
 
   for (const schoolClass of CURRICULUM_DATA) {
     totalSubjects += schoolClass.subjects.length;
     for (const subject of schoolClass.subjects) {
       totalChapters += subject.chapters.length;
+      for (const chapter of subject.chapters) {
+        totalSections += chapter.sections.length;
+      }
     }
   }
 
@@ -77,7 +81,32 @@ export const getCurriculumStats = () => {
     totalClasses,
     totalSubjects,
     totalChapters,
+    totalSections,
   };
+};
+
+/** Per-class hierarchy counts for admin/student dashboards. */
+export const getClassSummaries = () => {
+  return CURRICULUM_DATA.map((schoolClass) => {
+    let chapterCount = 0;
+    let sectionCount = 0;
+    for (const subject of schoolClass.subjects) {
+      chapterCount += subject.chapters.length;
+      for (const chapter of subject.chapters) {
+        sectionCount += chapter.sections.length;
+      }
+    }
+    return {
+      id: schoolClass.id,
+      grade: schoolClass.grade,
+      title: schoolClass.title,
+      subtitle: schoolClass.subtitle,
+      badge: schoolClass.badge,
+      subjectCount: schoolClass.subjects.length,
+      chapterCount,
+      sectionCount,
+    };
+  });
 };
 
 export const searchCurriculum = (query: string, classId?: string) => {

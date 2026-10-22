@@ -2,62 +2,26 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Vidya API",
-    "description": "Vidya learning API — student + admin auth, curriculum, health.\n\nDefault baseUrl is the Vercel production deployment. Switch the collection variable to `http://localhost:4000` for local.\n\nSet studentPassword / adminPassword / superAdminPassword in collection variables from your local seed (`packages/db/prisma/seed.ts`) — do not commit credentials.",
+    "description": "# Vidya API\n\nProduction: `https://vidya-api-kohl.vercel.app`\nLocal: `http://localhost:4000`\n\n## Setup\n1. Set collection vars `adminPassword` / `studentPassword` from seed (`packages/db/prisma/seed.ts`) — **do not commit secrets**.\n2. Run **Admin Auth → login** (or Student login) — tokens auto-save.\n3. Hit Dashboard / protected routes.\n\n## Docs\n- Swagger UI: `{{baseUrl}}/docs`\n- OpenAPI JSON: `{{baseUrl}}/docs-json`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "https://vidya-api-kohl.vercel.app"
-    },
-    {
-      "key": "studentEmail",
-      "value": "student@vidya.test"
-    },
-    {
-      "key": "studentPassword",
-      "value": ""
-    },
-    {
-      "key": "adminEmail",
-      "value": "admin@vidya.edu.in"
-    },
-    {
-      "key": "adminPassword",
-      "value": ""
-    },
-    {
-      "key": "superAdminEmail",
-      "value": "superadmin@vidya.edu.in"
-    },
-    {
-      "key": "superAdminPassword",
-      "value": ""
-    },
-    {
-      "key": "adminName",
-      "value": "Dr. Ramesh Sharma"
-    },
-    {
-      "key": "adminDepartment",
-      "value": "Academic Director · AP SCERT Division"
-    },
-    {
-      "key": "otp",
-      "value": "123456"
-    },
-    {
-      "key": "studentToken",
-      "value": ""
-    },
-    {
-      "key": "adminToken",
-      "value": ""
-    }
+    { "key": "baseUrl", "value": "https://vidya-api-kohl.vercel.app" },
+    { "key": "studentEmail", "value": "student@vidya.test" },
+    { "key": "studentPassword", "value": "" },
+    { "key": "adminEmail", "value": "admin@vidya.edu.in" },
+    { "key": "adminPassword", "value": "" },
+    { "key": "superAdminEmail", "value": "superadmin@vidya.edu.in" },
+    { "key": "superAdminPassword", "value": "" },
+    { "key": "adminName", "value": "Dr. Ramesh Sharma" },
+    { "key": "adminDepartment", "value": "Academic Director · AP SCERT Division" },
+    { "key": "otp", "value": "123456" },
+    { "key": "studentToken", "value": "" },
+    { "key": "adminToken", "value": "" }
   ],
   "item": [
     {
-      "name": "Health",
+      "name": "0. Health & Docs",
       "item": [
         {
           "name": "GET /health",
@@ -76,12 +40,7 @@
             "url": "{{baseUrl}}/health/db",
             "description": "Database connectivity probe."
           }
-        }
-      ]
-    },
-    {
-      "name": "Docs",
-      "item": [
+        },
         {
           "name": "GET /docs",
           "request": {
@@ -97,13 +56,13 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/docs-json",
-            "description": "OpenAPI JSON document."
+            "description": "OpenAPI JSON."
           }
         }
       ]
     },
     {
-      "name": "Curriculum",
+      "name": "1. Curriculum",
       "item": [
         {
           "name": "GET /api/classes",
@@ -111,13 +70,13 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/classes",
-            "description": "List curriculum classes."
+            "description": "List classes + curriculum stats (public)."
           }
         }
       ]
     },
     {
-      "name": "Student Auth",
+      "name": "2. Student Auth",
       "item": [
         {
           "name": "POST /api/auth/login",
@@ -129,8 +88,7 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
-                  "  const token = json.accessToken || json.token || (json.data && json.data.accessToken);",
-                  "  if (token) pm.collectionVariables.set('studentToken', token);",
+                  "  if (json.accessToken) pm.collectionVariables.set('studentToken', json.accessToken);",
                   "}"
                 ]
               }
@@ -138,15 +96,13 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/login",
-            "description": "Student login (provisioned accounts only). Saves studentToken on success."
+            "description": "Student login. Saves `studentToken`."
           }
         },
         {
@@ -159,42 +115,55 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/auth/me",
-            "description": "Current authenticated student."
+            "description": "Current student profile."
           }
         }
       ]
     },
     {
-      "name": "Admin Auth",
+      "name": "3. Student Dashboard",
+      "item": [
+        {
+          "name": "GET /api/dashboard",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/dashboard",
+            "description": "Student home: identity + curriculum overview."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Admin Auth",
       "item": [
         {
           "name": "POST /api/admin/auth/register",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"{{adminName}}\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"department\": \"{{adminDepartment}}\"\n}"
             },
             "url": "{{baseUrl}}/api/admin/auth/register",
-            "description": "Register admin; sends email OTP (Mailhog locally)."
+            "description": "Register admin (sends OTP)."
           }
         },
         {
           "name": "POST /api/admin/auth/verify-email",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"{{otp}}\"\n}"
             },
-            "url": "{{baseUrl}}/api/admin/auth/verify-email",
-            "description": "Verify admin email with 6-digit OTP from Mailhog / email."
+            "url": "{{baseUrl}}/api/admin/auth/verify-email"
           }
         },
         {
@@ -207,8 +176,7 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
-                  "  const token = json.accessToken || json.token || (json.data && json.data.accessToken);",
-                  "  if (token) pm.collectionVariables.set('adminToken', token);",
+                  "  if (json.accessToken) pm.collectionVariables.set('adminToken', json.accessToken);",
                   "}"
                 ]
               }
@@ -216,45 +184,37 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
             },
             "url": "{{baseUrl}}/api/admin/auth/login",
-            "description": "Admin login. Saves adminToken on success."
+            "description": "Admin login. Saves `adminToken`."
           }
         },
         {
           "name": "POST /api/admin/auth/forgot-password",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{adminEmail}}\"\n}"
             },
-            "url": "{{baseUrl}}/api/admin/auth/forgot-password",
-            "description": "Request password-reset OTP."
+            "url": "{{baseUrl}}/api/admin/auth/forgot-password"
           }
         },
         {
           "name": "POST /api/admin/auth/reset-password",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"{{otp}}\",\n  \"newPassword\": \"{{adminPassword}}\"\n}"
             },
-            "url": "{{baseUrl}}/api/admin/auth/reset-password",
-            "description": "Reset admin password with OTP."
+            "url": "{{baseUrl}}/api/admin/auth/reset-password"
           }
         },
         {
@@ -266,22 +226,88 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/admin/auth/me",
-            "description": "Current authenticated admin (ADMIN / SUPER_ADMIN)."
+            "url": "{{baseUrl}}/api/admin/auth/me"
           }
         }
       ]
     },
     {
-      "name": "Admin",
+      "name": "5. Admin Dashboard",
       "item": [
         {
           "name": "GET /api/admin/ping",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/admin/ping",
-            "description": "Admin ping."
+            "description": "Admin JWT + role gate check."
+          }
+        },
+        {
+          "name": "GET /api/admin/dashboard",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard?recentLimit=8",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "dashboard"],
+              "query": [
+                { "key": "recentLimit", "value": "8", "description": "1–50 recent users" }
+              ]
+            },
+            "description": "Admin home KPIs: curriculum, users by role, materials stub, recentUsers."
+          }
+        },
+        {
+          "name": "GET /api/admin/dashboard/users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard/users?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "dashboard", "users"],
+              "query": [
+                { "key": "role", "value": "STUDENT", "disabled": true, "description": "STUDENT | ADMIN | SUPER_ADMIN" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            },
+            "description": "Paginated users for dashboard tables."
+          }
+        },
+        {
+          "name": "GET /api/admin/dashboard/users (admins only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard/users?role=ADMIN&limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "dashboard", "users"],
+              "query": [
+                { "key": "role", "value": "ADMIN" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
           }
         }
       ]
