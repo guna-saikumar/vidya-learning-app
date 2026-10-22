@@ -27,14 +27,18 @@ ensure_dev_host() {
 }
 
 ensure_docker() {
-  if ! command -v docker >/dev/null 2>&1; then
-    echo "Docker CLI not found. Install Docker or Colima first." >&2
-    exit 1
-  fi
-
   local colima_sock="${HOME}/.colima/default/docker.sock"
+
+  # Prefer Colima socket when present (macOS); also cover Lima/Docker Desktop defaults.
   if [[ -S "${colima_sock}" ]]; then
     export DOCKER_HOST="unix://${colima_sock}"
+  elif [[ -z "${DOCKER_HOST:-}" && -S /var/run/docker.sock ]]; then
+    export DOCKER_HOST="unix:///var/run/docker.sock"
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Docker CLI not found. Run \`npm run backend\` (auto-installs on macOS) or install Docker/Colima." >&2
+    exit 1
   fi
 
   if docker info >/dev/null 2>&1; then
@@ -45,9 +49,12 @@ ensure_docker() {
     echo "Docker daemon not ready — starting Colima..."
     colima start
     export DOCKER_HOST="unix://${colima_sock}"
-  elif [[ -d "/Applications/Docker.app" ]]; then
+  elif [[ "$(uname -s)" == "Darwin" && -d "/Applications/Docker.app" ]]; then
     echo "Docker daemon not ready — launching Docker Desktop..."
     open -a Docker
+  elif [[ "$(uname -s)" == "Linux" ]] && command -v systemctl >/dev/null 2>&1; then
+    echo "Docker daemon not ready — attempting to start docker.service..."
+    sudo systemctl start docker || true
   else
     echo "No Docker runtime found. Install Colima (\`brew install colima docker\`) or Docker Desktop." >&2
     exit 1
@@ -65,6 +72,6 @@ ensure_docker() {
     sleep 2
   done
 
-  echo "Timed out waiting for Docker. Check Colima/Docker Desktop, then retry \`pnpm start\`." >&2
+  echo "Timed out waiting for Docker. Check Colima/Docker Desktop, then retry \`npm run backend\`." >&2
   exit 1
 }

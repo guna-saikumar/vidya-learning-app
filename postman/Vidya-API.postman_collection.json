@@ -1,0 +1,290 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Vidya API",
+    "description": "Vidya learning API — student + admin auth, curriculum, health.\n\nDefault baseUrl is the Vercel production deployment. Switch the collection variable to `http://localhost:4000` for local.\n\nSet studentPassword / adminPassword / superAdminPassword in collection variables from your local seed (`packages/db/prisma/seed.ts`) — do not commit credentials.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://vidya-api-kohl.vercel.app"
+    },
+    {
+      "key": "studentEmail",
+      "value": "student@vidya.test"
+    },
+    {
+      "key": "studentPassword",
+      "value": ""
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@vidya.edu.in"
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "superAdminEmail",
+      "value": "superadmin@vidya.edu.in"
+    },
+    {
+      "key": "superAdminPassword",
+      "value": ""
+    },
+    {
+      "key": "adminName",
+      "value": "Dr. Ramesh Sharma"
+    },
+    {
+      "key": "adminDepartment",
+      "value": "Academic Director · AP SCERT Division"
+    },
+    {
+      "key": "otp",
+      "value": "123456"
+    },
+    {
+      "key": "studentToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "Liveness probe."
+          }
+        },
+        {
+          "name": "GET /health/db",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health/db",
+            "description": "Database connectivity probe."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Docs",
+      "item": [
+        {
+          "name": "GET /docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/docs",
+            "description": "Swagger UI (HTML)."
+          }
+        },
+        {
+          "name": "GET /docs-json",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/docs-json",
+            "description": "OpenAPI JSON document."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Curriculum",
+      "item": [
+        {
+          "name": "GET /api/classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/classes",
+            "description": "List curriculum classes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Student Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const token = json.accessToken || json.token || (json.data && json.data.accessToken);",
+                  "  if (token) pm.collectionVariables.set('studentToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Student login (provisioned accounts only). Saves studentToken on success."
+          }
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{studentToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Current authenticated student."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Auth",
+      "item": [
+        {
+          "name": "POST /api/admin/auth/register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{adminName}}\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"department\": \"{{adminDepartment}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/auth/register",
+            "description": "Register admin; sends email OTP (Mailhog locally)."
+          }
+        },
+        {
+          "name": "POST /api/admin/auth/verify-email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"{{otp}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/auth/verify-email",
+            "description": "Verify admin email with 6-digit OTP from Mailhog / email."
+          }
+        },
+        {
+          "name": "POST /api/admin/auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const token = json.accessToken || json.token || (json.data && json.data.accessToken);",
+                  "  if (token) pm.collectionVariables.set('adminToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/auth/login",
+            "description": "Admin login. Saves adminToken on success."
+          }
+        },
+        {
+          "name": "POST /api/admin/auth/forgot-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/auth/forgot-password",
+            "description": "Request password-reset OTP."
+          }
+        },
+        {
+          "name": "POST /api/admin/auth/reset-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"{{otp}}\",\n  \"newPassword\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/auth/reset-password",
+            "description": "Reset admin password with OTP."
+          }
+        },
+        {
+          "name": "GET /api/admin/auth/me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/auth/me",
+            "description": "Current authenticated admin (ADMIN / SUPER_ADMIN)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "GET /api/admin/ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/ping",
+            "description": "Admin ping."
+          }
+        }
+      ]
+    }
+  ]
+}
