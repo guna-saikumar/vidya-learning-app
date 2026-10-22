@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/me/bookmarks
+url: "{{baseUrl}}/api/me/bookmarks"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 7500

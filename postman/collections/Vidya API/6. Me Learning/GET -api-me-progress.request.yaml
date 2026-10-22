@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/me/progress
+url: "{{baseUrl}}/api/me/progress"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 7200

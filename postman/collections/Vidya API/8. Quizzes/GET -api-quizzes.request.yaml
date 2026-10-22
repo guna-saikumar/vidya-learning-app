@@ -1,0 +1,11 @@
+$kind: http-request
+name: GET /api/quizzes
+url: "{{baseUrl}}/api/quizzes?chapterId=c8-m-ch1"
+queryParams:
+  chapterId: c8-m-ch1
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 9000

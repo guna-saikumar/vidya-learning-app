@@ -23,6 +23,16 @@ model User {
   emailOtpExpiresAt DateTime?
   emailOtpPurpose   EmailOtpPurpose?
   createdAt         DateTime         @default(now())
+
+  studentProfile StudentProfile?
+  progress       ChapterProgress[]
+  bookmarks      Bookmark[]
+  quizAttempts   QuizAttempt[]
+  tasks          Task[]            @relation("TaskAssignee")
+  notifications  Notification[]
+  examResults    ExamResult[]
+  materialsAuthored Material[]     @relation("MaterialAuthor")
+  studySessions  StudySession[]
 }
 
 enum UserRole {
@@ -34,4 +44,373 @@ enum UserRole {
 enum EmailOtpPurpose {
   VERIFY_EMAIL
   RESET_PASSWORD
+}
+
+model SchoolClass {
+  id        String    @id
+  grade     Int
+  title     String
+  subtitle  String
+  badge     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  subjects  Subject[]
+  materials Material[]
+  tasks     Task[]
+  exams     ExamScheduleItem[]
+  profiles  StudentProfile[]
+}
+
+model Subject {
+  id          String          @id
+  classId     String
+  name        String
+  description String?
+  category    SubjectCategory @default(stem)
+  icon        String          @default("book")
+  bannerUrl   String?
+  order       Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  class       SchoolClass     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  chapters    Chapter[]
+  materials   Material[]
+  tasks       Task[]
+
+  @@index([classId])
+}
+
+enum SubjectCategory {
+  all
+  stem
+  languages
+  social
+}
+
+model Chapter {
+  id              String    @id
+  subjectId       String
+  title           String
+  description     String?
+  order           Int       @default(0)
+  unitName        String?
+  durationMinutes Int?
+  learningGoals   String[]  @default([])
+  bannerUrl       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  subject         Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  sections        Section[]
+  materials       Material[]
+  quizzes         Quiz[]
+  progress        ChapterProgress[]
+  bookmarks       Bookmark[]
+  tasks           Task[]
+
+  @@index([subjectId])
+}
+
+model Section {
+  id              String   @id
+  chapterId       String
+  title           String
+  content         String   @default("")
+  order           Int      @default(0)
+  durationMinutes Int?
+  summaryPoint    String?
+  keyAxiom        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  chapter         Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  materials       Material[]
+  bookmarks       Bookmark[]
+
+  @@index([chapterId])
+}
+
+enum MaterialType {
+  pdf
+  video
+  presentation
+  notes
+  image
+  quiz
+  external
+}
+
+enum PublicationStatus {
+  draft
+  published
+  archived
+}
+
+model Material {
+  id            String            @id @default(cuid())
+  title         String
+  description   String?
+  materialType  MaterialType
+  classId       String
+  grade         Int
+  subjectId     String
+  subjectName   String
+  chapterId     String
+  chapterTitle  String
+  sectionId     String?
+  sectionTitle  String?
+  language      String            @default("English")
+  displayOrder  Int               @default(0)
+  status        PublicationStatus @default(draft)
+  fileUrl       String?
+  fileName      String?
+  fileSizeBytes Int?
+  videoUrl      String?
+  thumbnailUrl  String?
+  notesContent  String?
+  quizData      Json?
+  authorId      String?
+  authorName    String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  class   SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  chapter Chapter     @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  section Section?    @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  author  User?       @relation("MaterialAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([classId, status])
+  @@index([subjectId])
+  @@index([chapterId])
+}
+
+model StudentProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  activeClassId    String?
+  streakDays       Int      @default(0)
+  avatarUrl        String   @default("")
+  studyGoalMinutes Int      @default(30)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeClass SchoolClass? @relation(fields: [activeClassId], references: [id], onDelete: SetNull)
+}
+
+model ChapterProgress {
+  id                String   @id @default(cuid())
+  userId            String
+  chapterId         String
+  subjectId         String
+  classId           String
+  completed         Boolean  @default(false)
+  completedSections String[] @default([])
+  progressPercent   Int      @default(0)
+  lastAccessed      DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
+  @@index([userId])
+}
+
+enum BookmarkType {
+  chapter
+  section
+  formula
+}
+
+model Bookmark {
+  id          String       @id @default(cuid())
+  userId      String
+  classId     String
+  subjectId   String
+  chapterId   String
+  sectionId   String?
+  title       String
+  subtitle    String       @default("")
+  type        BookmarkType @default(chapter)
+  previewText String?
+  dateAdded   DateTime     @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  section Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model Quiz {
+  id          String         @id @default(cuid())
+  chapterId   String?
+  title       String
+  description String?
+  timeLimitMinutes Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  chapter     Chapter?       @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  questions   QuizQuestion[]
+  attempts    QuizAttempt[]
+
+  @@index([chapterId])
+}
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  quizId        String
+  question      String
+  options       String[]
+  correctIndex  Int
+  explanation   String   @default("")
+  order         Int      @default(0)
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  quizId      String
+  userId      String
+  answers     Json
+  score       Int
+  maxScore    Int
+  createdAt   DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([quizId])
+}
+
+enum TaskType {
+  quiz
+  assignment
+  practice
+  revision
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  overdue
+}
+
+enum TaskPriority {
+  high
+  medium
+  low
+}
+
+model Task {
+  id                 String       @id @default(cuid())
+  title              String
+  description        String       @default("")
+  type               TaskType
+  status             TaskStatus   @default(pending)
+  priority           TaskPriority @default(medium)
+  subjectId          String?
+  subjectName        String       @default("")
+  classId            String?
+  chapterId          String?
+  chapterTitle       String?
+  assigneeUserId     String?
+  dueDate            DateTime?
+  estimatedMinutes   Int          @default(15)
+  totalQuestions     Int?
+  completedQuestions Int?
+  score              Int?
+  maxScore           Int?
+  icon               String       @default("assignment")
+  createdAt          DateTime     @default(now())
+  completedAt        DateTime?
+  updatedAt          DateTime     @updatedAt
+
+  subject  Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  class    SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+  chapter  Chapter?     @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  assignee User?        @relation("TaskAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+
+  @@index([assigneeUserId])
+  @@index([classId])
+}
+
+enum NotificationType {
+  reminder
+  achievement
+  announcement
+  grade
+  system
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  detailedBody String          @default("")
+  type        NotificationType @default(system)
+  icon        String           @default("notifications")
+  readAt      DateTime?
+  actionRoute String?
+  actionLabel String?
+  createdAt   DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model ExamScheduleItem {
+  id          String   @id @default(cuid())
+  classId     String?
+  subjectName String
+  title       String
+  examDate    DateTime
+  startTime   String?
+  endTime     String?
+  venue       String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  class SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  @@index([classId, examDate])
+}
+
+model ExamResult {
+  id          String   @id @default(cuid())
+  userId      String
+  subjectName String
+  examTitle   String
+  marksObtained Float
+  marksMax    Float
+  grade       String?
+  remarks     String?
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model StudySession {
+  id        String   @id @default(cuid())
+  userId    String
+  minutes   Int
+  day       DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, day])
+  @@unique([userId, day])
 }

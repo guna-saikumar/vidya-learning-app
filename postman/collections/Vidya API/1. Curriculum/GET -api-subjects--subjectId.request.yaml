@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/subjects/:subjectId
+url: "{{baseUrl}}/api/subjects/c8-maths"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 2100

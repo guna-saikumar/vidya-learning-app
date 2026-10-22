@@ -30,3 +30,23 @@ export const loginBodySchema = z.object({
   email: z.string().trim().email().max(255),
   password: z.string().min(1).max(128),
 });
+
+/** POST /api/admin/auth/change-password */
+export const adminChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(8).max(128),
+});
+
+/** PATCH /api/admin/auth/me */
+export const adminUpdateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  department: z.string().trim().max(180).optional(),
+});
+
+/** POST /api/admin/students — provision a student account. */
+export const adminCreateStudentSchema = z.object({
+  email: z.string().trim().toLowerCase().max(255).pipe(z.email()),
+  name: z.string().trim().min(1).max(120),
+  password: z.string().min(8).max(128),
+  activeClassId: z.string().trim().min(1).max(120).optional(),
+});

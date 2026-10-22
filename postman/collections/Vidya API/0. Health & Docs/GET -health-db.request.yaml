@@ -1,0 +1,6 @@
+$kind: http-request
+name: GET /health/db
+description: Database connectivity probe.
+url: "{{baseUrl}}/health/db"
+method: GET
+order: 2000

@@ -1,0 +1,9 @@
+$kind: http-request
+name: POST /api/me/notifications/read-all
+url: "{{baseUrl}}/api/me/notifications/read-all"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 11100

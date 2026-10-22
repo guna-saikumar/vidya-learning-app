@@ -1,0 +1,20 @@
+$kind: http-request
+name: POST /api/admin/notifications
+url: "{{baseUrl}}/api/admin/notifications"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Reminder",
+      "message": "Complete your quiz",
+      "type": "reminder",
+      "classId": "class-8"
+    }
+order: 11200

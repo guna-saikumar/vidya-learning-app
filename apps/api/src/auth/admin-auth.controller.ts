@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Inject,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -18,10 +19,13 @@ import { AdminAuthService } from "./admin-auth.service";
 import { AdminRoleGuard } from "./admin-role.guard";
 import { JwtAuthGuard, type AuthedRequest } from "./jwt.guard";
 import {
+  adminChangePasswordSchema,
+  adminCreateStudentSchema,
   adminForgotPasswordSchema,
   adminLoginBodySchema,
   adminRegisterSchema,
   adminResetPasswordSchema,
+  adminUpdateProfileSchema,
   adminVerifyEmailSchema,
 } from "./schemas";
 
@@ -88,5 +92,54 @@ export class AdminAuthController {
   @ApiOperation({ summary: "Current authenticated admin profile" })
   async me(@Req() req: AuthedRequest) {
     return this.adminAuth.me(req.user!.sub);
+  }
+  @Patch("me")
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update current admin profile (name, department)" })
+  async updateMe(
+    @Req() req: AuthedRequest,
+    @Body(new ZodValidationPipe(adminUpdateProfileSchema))
+    body: { name?: string; department?: string }
+  ) {
+    return this.adminAuth.updateMe(req.user!.sub, body);
+  }
+
+  @Post("change-password")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Change password for the current admin" })
+  async changePassword(
+    @Req() req: AuthedRequest,
+    @Body(new ZodValidationPipe(adminChangePasswordSchema))
+    body: { currentPassword: string; newPassword: string }
+  ) {
+    return this.adminAuth.changePassword(req.user!.sub, body);
+  }
+}
+
+@ApiTags("admin-students")
+@Controller("api/admin/students")
+export class AdminStudentsController {
+  constructor(
+    @Inject(AdminAuthService) private readonly adminAuth: AdminAuthService
+  ) {}
+
+  @Post()
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Provision a student account (admin only)" })
+  async createStudent(
+    @Body(new ZodValidationPipe(adminCreateStudentSchema))
+    body: {
+      email: string;
+      name: string;
+      password: string;
+      activeClassId?: string;
+    }
+  ) {
+    return this.adminAuth.createStudent(body);
   }
 }

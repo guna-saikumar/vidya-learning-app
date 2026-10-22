@@ -10,7 +10,13 @@ import { MailerModule } from "./mailer/mailer.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { CurriculumModule } from "./modules/curriculum/curriculum.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
+import { ExamsModule } from "./modules/exams/exams.module";
 import { HealthModule } from "./modules/health/health.module";
+import { MaterialsModule } from "./modules/materials/materials.module";
+import { MeModule } from "./modules/me/me.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
+import { QuizzesModule } from "./modules/quizzes/quizzes.module";
+import { TasksModule } from "./modules/tasks/tasks.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 loadRootEnv();
@@ -33,6 +39,12 @@ applyDatabaseEnvAliases();
     CurriculumModule,
     AdminModule,
     DashboardModule,
+    MaterialsModule,
+    MeModule,
+    QuizzesModule,
+    TasksModule,
+    NotificationsModule,
+    ExamsModule,
   ],
 })
 export class AppModule {}

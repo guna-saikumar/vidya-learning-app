@@ -1,11 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  getClassSummaries,
-  getCurriculumStats,
-} from "../../../../../packages/curriculum/src/curriculum.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import type {
   AdminDashboardResponse,
+  CurriculumOverview,
+  MaterialsOverview,
   StudentDashboardResponse,
   UsersOverview,
 } from "./dashboard.types";
@@ -14,15 +12,66 @@ import type {
 export class DashboardService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  private curriculumOverview() {
-    const stats = getCurriculumStats();
-    const classes = getClassSummaries();
+  private async curriculumOverview(): Promise<CurriculumOverview> {
+    const rows = await this.prisma.schoolClass.findMany({
+      orderBy: [{ grade: "asc" }, { id: "asc" }],
+      include: {
+        subjects: {
+          select: {
+            chapters: {
+              select: { _count: { select: { sections: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    const classes = rows.map((c) => {
+      let chapterCount = 0;
+      let sectionCount = 0;
+      for (const subject of c.subjects) {
+        chapterCount += subject.chapters.length;
+        for (const chapter of subject.chapters) {
+          sectionCount += chapter._count.sections;
+        }
+      }
+      return {
+        id: c.id,
+        grade: c.grade,
+        title: c.title,
+        subtitle: c.subtitle,
+        badge: c.badge,
+        subjectCount: c.subjects.length,
+        chapterCount,
+        sectionCount,
+      };
+    });
+
     return {
-      totalClasses: stats.totalClasses,
-      totalSubjects: stats.totalSubjects,
-      totalChapters: stats.totalChapters,
-      totalSections: stats.totalSections,
+      totalClasses: classes.length,
+      totalSubjects: classes.reduce((n, c) => n + c.subjectCount, 0),
+      totalChapters: classes.reduce((n, c) => n + c.chapterCount, 0),
+      totalSections: classes.reduce((n, c) => n + c.sectionCount, 0),
       classes,
+    };
+  }
+
+  private async materialsOverview(): Promise<MaterialsOverview> {
+    const groups = await this.prisma.material.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    });
+    const count = (status: "draft" | "published" | "archived") =>
+      groups.find((g) => g.status === status)?._count._all ?? 0;
+    const published = count("published");
+    const drafts = count("draft");
+    const archived = count("archived");
+    return {
+      persisted: true,
+      total: published + drafts + archived,
+      published,
+      drafts,
+      archived,
     };
   }
 
@@ -72,9 +121,10 @@ export class DashboardService {
 
   async getAdminDashboard(recentLimit = 8): Promise<AdminDashboardResponse> {
     const limit = Math.min(Math.max(recentLimit, 1), 50);
-    const [curriculum, users, recent] = await Promise.all([
-      Promise.resolve(this.curriculumOverview()),
+    const [curriculum, users, materials, recent] = await Promise.all([
+      this.curriculumOverview(),
       this.usersOverview(),
+      this.materialsOverview(),
       this.prisma.user.findMany({
         orderBy: { createdAt: "desc" },
         take: limit,
@@ -93,13 +143,7 @@ export class DashboardService {
       generatedAt: new Date().toISOString(),
       curriculum,
       users,
-      materials: {
-        persisted: false,
-        total: 0,
-        published: 0,
-        drafts: 0,
-        archived: 0,
-      },
+      materials,
       recentUsers: recent.map((u) => ({
         id: u.id,
         name: u.name,
@@ -169,7 +213,7 @@ export class DashboardService {
         email: user?.email ?? "",
         role: user?.role ?? "STUDENT",
       },
-      curriculum: this.curriculumOverview(),
+      curriculum: await this.curriculumOverview(),
     };
   }
 }

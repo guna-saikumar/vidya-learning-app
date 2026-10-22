@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/admin/auth/me
+url: "{{baseUrl}}/api/admin/auth/me"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+order: 6000

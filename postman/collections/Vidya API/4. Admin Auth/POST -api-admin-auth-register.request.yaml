@@ -1,0 +1,17 @@
+$kind: http-request
+name: POST /api/admin/auth/register
+description: Register admin (sends OTP).
+url: "{{baseUrl}}/api/admin/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "{{adminName}}",
+      "email": "{{adminEmail}}",
+      "password": "{{adminPassword}}",
+      "department": "{{adminDepartment}}"
+    }
+order: 1000

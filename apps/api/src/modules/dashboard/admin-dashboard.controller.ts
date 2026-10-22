@@ -40,7 +40,7 @@ export class AdminDashboardController {
   @ApiOperation({
     summary: "Admin home dashboard",
     description:
-      "Curriculum hierarchy stats, user role counts, materials stub (not persisted yet), and recent users.",
+      "Curriculum hierarchy stats, user role counts, persisted material counts, and recent users.",
   })
   @ApiQuery({ name: "recentLimit", required: false, type: Number })
   getDashboard(

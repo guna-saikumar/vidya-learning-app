@@ -1,4 +1,9 @@
-import { HttpException, Inject, Injectable } from "@nestjs/common";
+import {
+  HttpException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import bcrypt from "bcrypt";
 import { ADMIN_ROLE_VALUES } from "../../../../packages/auth/src";
@@ -214,6 +219,103 @@ export class AdminAuthService {
       role: user.role,
       department: user.department || "Academic Director · AP SCERT Division",
       emailVerifiedAt: user.emailVerifiedAt,
+    };
+  }
+  async changePassword(
+    userId: string,
+    input: { currentPassword: string; newPassword: string }
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !isAdminRole(user.role)) {
+      this.fail("Forbidden: Admin access required", 403);
+    }
+    const ok = await bcrypt.compare(input.currentPassword, user.passwordHash);
+    if (!ok) {
+      this.fail("Current password is incorrect", 400);
+    }
+    if (input.currentPassword === input.newPassword) {
+      this.fail("New password must be different from the current password", 400);
+    }
+    const passwordHash = await bcrypt.hash(input.newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+    return { message: "Password changed successfully." };
+  }
+
+  async updateMe(
+    userId: string,
+    input: { name?: string; department?: string }
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !isAdminRole(user.role)) {
+      this.fail("Forbidden: Admin access required", 403);
+    }
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(input.name === undefined ? {} : { name: input.name }),
+        ...(input.department === undefined
+          ? {}
+          : { department: input.department || null }),
+      },
+    });
+    return {
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+      department:
+        updated.department || "Academic Director · AP SCERT Division",
+      emailVerifiedAt: updated.emailVerifiedAt,
+    };
+  }
+
+  /** Admin-provisioned student account (students cannot self-register). */
+  async createStudent(input: {
+    email: string;
+    name: string;
+    password: string;
+    activeClassId?: string;
+  }) {
+    const email = normalizeEmail(input.email);
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      this.fail("Email already registered", 409);
+    }
+    if (input.activeClassId) {
+      const cls = await this.prisma.schoolClass.findUnique({
+        where: { id: input.activeClassId },
+      });
+      if (!cls) {
+        throw new NotFoundException({ error: "Class not found" });
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(input.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        name: input.name.trim(),
+        passwordHash,
+        role: "STUDENT",
+        // Provisioned by an admin, so the account is active immediately.
+        emailVerifiedAt: new Date(),
+        studentProfile: {
+          create: { activeClassId: input.activeClassId ?? null },
+        },
+      },
+      include: { studentProfile: true },
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      activeClassId: user.studentProfile?.activeClassId ?? null,
+      createdAt: user.createdAt.toISOString(),
     };
   }
 }

@@ -1,0 +1,10 @@
+workspace:
+  id: 49332f71-49db-44ec-8643-9d6280be5f09
+
+localResources:
+  collections:
+    - ../postman/collections/Vidya API
+
+cloudResources:
+  collections:
+    ../postman/collections/Vidya API: a1b2c3d4-e5f6-7890-abcd-ef1234567890

@@ -1,0 +1,6 @@
+$kind: http-request
+name: GET /docs
+description: Swagger UI (HTML).
+url: "{{baseUrl}}/docs"
+method: GET
+order: 3000

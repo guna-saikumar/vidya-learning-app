@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/classes/:classId
+url: "{{baseUrl}}/api/classes/class-8"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 2000

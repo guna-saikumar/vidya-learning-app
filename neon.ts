@@ -6,7 +6,7 @@ import { defineConfig } from "@neon/config/v1";
  *   DATABASE_URL           → pooled (app runtime / Vercel)
  *   DATABASE_URL_UNPOOLED  → direct (prisma migrate; aliased to DIRECT_URL)
  *
- * Local Docker Postgres stays in `.env` (see .env.example) for pgAdmin.
+ * Local Postgres stays in `.env` (see .env.example); use `npm run pg-admin` (Homebrew) or Docker.
  * Production/preview use Neon via Vercel env or `neon env pull` → `.env.local`.
  */
 export default defineConfig({

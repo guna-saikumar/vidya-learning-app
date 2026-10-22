@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/me/tasks
+url: "{{baseUrl}}/api/me/tasks"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 10000

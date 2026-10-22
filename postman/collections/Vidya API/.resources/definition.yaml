@@ -1,0 +1,28 @@
+$kind: collection
+description: |-
+  # Vidya API
+
+  Production: `https://vidya-api-kohl.vercel.app`
+  Local: `http://localhost:4000`
+
+  ## Setup
+  1. Set collection vars `adminPassword` / `studentPassword` from seed (`packages/db/prisma/seed.ts`) — **do not commit secrets**.
+  2. Run **Admin Auth → login** (or Student login) — tokens auto-save.
+  3. Hit Dashboard / protected routes.
+
+  ## Docs
+  - Swagger UI: `{{baseUrl}}/docs`
+  - OpenAPI JSON: `{{baseUrl}}/docs-json`
+variables:
+  baseUrl: https://vidya-api-kohl.vercel.app
+  studentEmail: student@vidya.test
+  studentPassword: ""
+  adminEmail: admin@vidya.edu.in
+  adminPassword: ""
+  superAdminEmail: superadmin@vidya.edu.in
+  superAdminPassword: ""
+  adminName: Dr. Ramesh Sharma
+  adminDepartment: Academic Director · AP SCERT Division
+  otp: "123456"
+  studentToken: ""
+  adminToken: ""

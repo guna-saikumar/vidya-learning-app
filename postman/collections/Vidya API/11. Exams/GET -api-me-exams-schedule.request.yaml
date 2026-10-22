@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/me/exams/schedule
+url: "{{baseUrl}}/api/me/exams/schedule"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 12000

@@ -5,6 +5,7 @@
   "scripts": {
     "start": "bash scripts/dev-up.sh",
     "backend": "bash scripts/backend.sh",
+    "pg-admin": "bash scripts/pg-admin.sh",
     "dev:student-mobile": "cd apps/student-mobile && npx expo start",
     "dev:admin-mobile": "cd apps/admin-mobile && npx expo start",
     "dev:api": "cd apps/api && pnpm dev",

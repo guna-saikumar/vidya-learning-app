@@ -26,8 +26,8 @@ export type UsersOverview = {
 };
 
 export type MaterialsOverview = {
-  /** Materials are not yet persisted in Postgres; always zero until that lands. */
-  persisted: false;
+  /** Counts come from the persisted `Material` table. */
+  persisted: true;
   total: number;
   published: number;
   drafts: number;

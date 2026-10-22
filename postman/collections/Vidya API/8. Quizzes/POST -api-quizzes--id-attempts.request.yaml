@@ -1,0 +1,17 @@
+$kind: http-request
+name: POST /api/quizzes/:id/attempts
+url: "{{baseUrl}}/api/quizzes/quiz-c8-m-ch1/attempts"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "answers": [2, 1, 1]
+    }
+order: 9200

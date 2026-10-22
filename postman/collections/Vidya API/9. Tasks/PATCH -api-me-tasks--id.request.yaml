@@ -1,0 +1,17 @@
+$kind: http-request
+name: PATCH /api/me/tasks/:id
+url: "{{baseUrl}}/api/me/tasks/task-quiz-1"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "status": "in-progress"
+    }
+order: 10100

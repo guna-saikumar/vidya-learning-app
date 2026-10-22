@@ -1,0 +1,9 @@
+$kind: http-request
+name: GET /api/chapters/:chapterId
+url: "{{baseUrl}}/api/chapters/c8-m-ch1"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 2200

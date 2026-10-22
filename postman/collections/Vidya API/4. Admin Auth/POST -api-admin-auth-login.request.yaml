@@ -1,0 +1,23 @@
+$kind: http-request
+name: POST /api/admin/auth/login
+description: Admin login. Saves `adminToken`.
+url: "{{baseUrl}}/api/admin/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "{{adminEmail}}",
+      "password": "{{adminPassword}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 200) {
+        const json = pm.response.json();
+        if (json.accessToken) pm.collectionVariables.set('adminToken', json.accessToken);
+      }
+    language: text/javascript
+order: 3000

@@ -1,0 +1,20 @@
+$kind: http-request
+name: POST /api/admin/students
+url: "{{baseUrl}}/api/admin/students"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "newstudent@vidya.test",
+      "name": "New Student",
+      "password": "StudentDemo1!",
+      "activeClassId": "class-8"
+    }
+order: 5700
