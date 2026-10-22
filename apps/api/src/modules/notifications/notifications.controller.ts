@@ -14,12 +14,12 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
 import { AdminRoleGuard } from "../../auth/admin-role.guard";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
+import { ApiZodBody, ApiZodQueries } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   createNotificationSchema,
@@ -41,7 +41,7 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: "List my notifications" })
-  @ApiQuery({ name: "unread", required: false, enum: ["true", "false"] })
+  @ApiZodQueries(notificationListQuerySchema)
   list(
     @Req() req: AuthedRequest,
     @Query(new ZodValidationPipe(notificationListQuerySchema))
@@ -80,6 +80,7 @@ export class AdminNotificationsController {
     summary:
       "Send a notification to one user (userId), a class (classId), or all students",
   })
+  @ApiZodBody(createNotificationSchema)
   create(
     @Body(new ZodValidationPipe(createNotificationSchema))
     body: CreateNotificationInput

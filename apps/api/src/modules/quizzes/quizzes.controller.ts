@@ -13,12 +13,12 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
 import { AdminRoleGuard } from "../../auth/admin-role.guard";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
+import { ApiZodBody, ApiZodQueries } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   createQuizSchema,
@@ -39,7 +39,7 @@ export class QuizzesController {
   @Get("quizzes")
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "List quizzes (optionally by chapter)" })
-  @ApiQuery({ name: "chapterId", required: false })
+  @ApiZodQueries(quizListQuerySchema)
   list(
     @Query(new ZodValidationPipe(quizListQuerySchema)) query: QuizListQuery
   ) {
@@ -59,6 +59,7 @@ export class QuizzesController {
   @HttpCode(201)
   @UseGuards(JwtAuthGuard, StudentRoleGuard)
   @ApiOperation({ summary: "Submit a quiz attempt (student)" })
+  @ApiZodBody(submitAttemptSchema)
   submitAttempt(
     @Req() req: AuthedRequest,
     @Param("id") id: string,
@@ -84,6 +85,7 @@ export class AdminQuizzesController {
 
   @Post()
   @ApiOperation({ summary: "Create a quiz with questions" })
+  @ApiZodBody(createQuizSchema)
   create(
     @Body(new ZodValidationPipe(createQuizSchema)) body: CreateQuizInput
   ) {

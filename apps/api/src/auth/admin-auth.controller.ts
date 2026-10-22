@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { ApiZodBody } from "../common/zod-openapi";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AdminAuthService } from "./admin-auth.service";
 import { AdminRoleGuard } from "./admin-role.guard";
@@ -39,6 +40,7 @@ export class AdminAuthController {
   @Post("register")
   @HttpCode(201)
   @ApiOperation({ summary: "Register administrator (sends email OTP)" })
+  @ApiZodBody(adminRegisterSchema)
   async register(
     @Body(new ZodValidationPipe(adminRegisterSchema))
     body: { name: string; email: string; password: string; department?: string }
@@ -49,6 +51,7 @@ export class AdminAuthController {
   @Post("verify-email")
   @HttpCode(200)
   @ApiOperation({ summary: "Verify admin email with OTP" })
+  @ApiZodBody(adminVerifyEmailSchema)
   async verifyEmail(
     @Body(new ZodValidationPipe(adminVerifyEmailSchema))
     body: { email: string; otp: string }
@@ -59,6 +62,7 @@ export class AdminAuthController {
   @Post("login")
   @HttpCode(200)
   @ApiOperation({ summary: "Admin login with email and password" })
+  @ApiZodBody(adminLoginBodySchema)
   async login(
     @Body(new ZodValidationPipe(adminLoginBodySchema))
     body: { email: string; password: string }
@@ -69,6 +73,7 @@ export class AdminAuthController {
   @Post("forgot-password")
   @HttpCode(200)
   @ApiOperation({ summary: "Request admin password reset OTP" })
+  @ApiZodBody(adminForgotPasswordSchema)
   async forgotPassword(
     @Body(new ZodValidationPipe(adminForgotPasswordSchema))
     body: { email: string }
@@ -79,6 +84,7 @@ export class AdminAuthController {
   @Post("reset-password")
   @HttpCode(200)
   @ApiOperation({ summary: "Reset admin password with OTP" })
+  @ApiZodBody(adminResetPasswordSchema)
   async resetPassword(
     @Body(new ZodValidationPipe(adminResetPasswordSchema))
     body: { email: string; otp: string; newPassword: string }
@@ -97,6 +103,7 @@ export class AdminAuthController {
   @UseGuards(JwtAuthGuard, AdminRoleGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update current admin profile (name, department)" })
+  @ApiZodBody(adminUpdateProfileSchema)
   async updateMe(
     @Req() req: AuthedRequest,
     @Body(new ZodValidationPipe(adminUpdateProfileSchema))
@@ -110,6 +117,7 @@ export class AdminAuthController {
   @UseGuards(JwtAuthGuard, AdminRoleGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Change password for the current admin" })
+  @ApiZodBody(adminChangePasswordSchema)
   async changePassword(
     @Req() req: AuthedRequest,
     @Body(new ZodValidationPipe(adminChangePasswordSchema))
@@ -131,6 +139,7 @@ export class AdminStudentsController {
   @UseGuards(JwtAuthGuard, AdminRoleGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Provision a student account (admin only)" })
+  @ApiZodBody(adminCreateStudentSchema)
   async createStudent(
     @Body(new ZodValidationPipe(adminCreateStudentSchema))
     body: {

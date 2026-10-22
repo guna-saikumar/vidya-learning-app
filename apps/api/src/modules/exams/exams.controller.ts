@@ -11,6 +11,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AdminRoleGuard } from "../../auth/admin-role.guard";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
+import { ApiZodBody } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   createExamResultSchema,
@@ -49,6 +50,7 @@ export class AdminExamsController {
 
   @Post("schedule")
   @ApiOperation({ summary: "Add an exam schedule entry" })
+  @ApiZodBody(createExamScheduleSchema)
   createSchedule(
     @Body(new ZodValidationPipe(createExamScheduleSchema))
     body: CreateExamScheduleInput
@@ -58,6 +60,7 @@ export class AdminExamsController {
 
   @Post("results")
   @ApiOperation({ summary: "Publish an exam result for a student" })
+  @ApiZodBody(createExamResultSchema)
   createResult(
     @Body(new ZodValidationPipe(createExamResultSchema))
     body: CreateExamResultInput

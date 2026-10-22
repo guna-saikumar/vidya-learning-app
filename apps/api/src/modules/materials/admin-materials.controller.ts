@@ -15,11 +15,11 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
 import { AdminRoleGuard } from "../../auth/admin-role.guard";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
+import { ApiZodBody, ApiZodQueries } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   adminMaterialFiltersSchema,
@@ -43,8 +43,7 @@ export class AdminMaterialsController {
 
   @Get()
   @ApiOperation({ summary: "List all materials (any status)" })
-  @ApiQuery({ name: "status", required: false })
-  @ApiQuery({ name: "q", required: false })
+  @ApiZodQueries(adminMaterialFiltersSchema)
   list(
     @Query(new ZodValidationPipe(adminMaterialFiltersSchema))
     query: AdminMaterialFilters
@@ -62,6 +61,7 @@ export class AdminMaterialsController {
   @ApiOperation({
     summary: "Create a material (JSON; fileUrl/videoUrl/notesContent/quizData)",
   })
+  @ApiZodBody(createMaterialSchema)
   create(
     @Req() req: AuthedRequest,
     @Body(new ZodValidationPipe(createMaterialSchema)) body: CreateMaterialInput
@@ -74,6 +74,7 @@ export class AdminMaterialsController {
 
   @Patch(":id/status")
   @ApiOperation({ summary: "Change material publication status" })
+  @ApiZodBody(updateMaterialStatusSchema)
   updateStatus(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(updateMaterialStatusSchema))
@@ -84,6 +85,7 @@ export class AdminMaterialsController {
 
   @Patch(":id")
   @ApiOperation({ summary: "Update a material" })
+  @ApiZodBody(updateMaterialSchema)
   update(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(updateMaterialSchema)) body: UpdateMaterialInput

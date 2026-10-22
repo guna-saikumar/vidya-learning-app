@@ -12,6 +12,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AdminRoleGuard } from "../../auth/admin-role.guard";
 import { JwtAuthGuard } from "../../auth/jwt.guard";
+import { ApiZodBody } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   createChapterSchema,
@@ -44,6 +45,7 @@ export class AdminCurriculumController {
 
   @Post("classes")
   @ApiOperation({ summary: "Create a class" })
+  @ApiZodBody(createClassSchema)
   createClass(
     @Body(new ZodValidationPipe(createClassSchema)) body: CreateClassInput
   ) {
@@ -52,6 +54,7 @@ export class AdminCurriculumController {
 
   @Patch("classes/:id")
   @ApiOperation({ summary: "Update a class" })
+  @ApiZodBody(updateClassSchema)
   updateClass(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(updateClassSchema)) body: UpdateClassInput
@@ -68,6 +71,7 @@ export class AdminCurriculumController {
 
   @Post("subjects")
   @ApiOperation({ summary: "Create a subject" })
+  @ApiZodBody(createSubjectSchema)
   createSubject(
     @Body(new ZodValidationPipe(createSubjectSchema)) body: CreateSubjectInput
   ) {
@@ -76,6 +80,7 @@ export class AdminCurriculumController {
 
   @Patch("subjects/:id")
   @ApiOperation({ summary: "Update a subject" })
+  @ApiZodBody(updateSubjectSchema)
   updateSubject(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(updateSubjectSchema)) body: UpdateSubjectInput
@@ -92,6 +97,7 @@ export class AdminCurriculumController {
 
   @Post("chapters")
   @ApiOperation({ summary: "Create a chapter" })
+  @ApiZodBody(createChapterSchema)
   createChapter(
     @Body(new ZodValidationPipe(createChapterSchema)) body: CreateChapterInput
   ) {
@@ -100,6 +106,7 @@ export class AdminCurriculumController {
 
   @Patch("chapters/:id")
   @ApiOperation({ summary: "Update a chapter" })
+  @ApiZodBody(updateChapterSchema)
   updateChapter(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(updateChapterSchema)) body: UpdateChapterInput
@@ -116,6 +123,7 @@ export class AdminCurriculumController {
 
   @Post("sections")
   @ApiOperation({ summary: "Create a section" })
+  @ApiZodBody(createSectionSchema)
   createSection(
     @Body(new ZodValidationPipe(createSectionSchema)) body: CreateSectionInput
   ) {
@@ -124,6 +132,7 @@ export class AdminCurriculumController {
 
   @Patch("sections/:id")
   @ApiOperation({ summary: "Update a section" })
+  @ApiZodBody(updateSectionSchema)
   updateSection(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(updateSectionSchema)) body: UpdateSectionInput
