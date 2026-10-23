@@ -25,19 +25,18 @@ import { useLearningProgress } from '../hooks/useLearningProgress';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const LoadingScreen: React.FC = () => (
+  <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+    <ActivityIndicator size="large" color={Colors.primary} />
+  </View>
+);
+
 export const RootNavigator: React.FC = () => {
   const { isAuthenticated, isOnboarded, loading: authLoading } = useAuth();
   // Only hydrate learning state after auth — avoids 401 spam on the login screen.
   const { profile, loading: profileLoading } = useLearningProgress();
 
-  if (authLoading || (isAuthenticated && profileLoading)) {
-    return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
-
+  const isLoading = authLoading || (isAuthenticated && profileLoading);
   const needsOnboarding =
     isAuthenticated && !(profile?.isOnboarded ?? isOnboarded);
 
@@ -49,7 +48,13 @@ export const RootNavigator: React.FC = () => {
         animation: 'slide_from_right',
       }}
     >
-        {!isAuthenticated ? (
+      {isLoading ? (
+        <Stack.Screen
+          name="Loading"
+          component={LoadingScreen}
+          options={{ animation: 'none' }}
+        />
+      ) : !isAuthenticated ? (
           // Unauthenticated Stack: Protected routes are inaccessible
           <Stack.Group>
             <Stack.Screen
@@ -74,26 +79,24 @@ export const RootNavigator: React.FC = () => {
             {/* 3 Main Bottom Tab Screens */}
             <Stack.Screen name="Home" component={DashboardScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Learn" component={LearnScreen} options={{ animation: 'fade' }} />
-
-            {/* Student Onboarding & Academic Details Editor */}
-            <Stack.Screen name="StudentOnboarding" component={StudentOnboardingScreen} />
-
-            {/* Account & Profile Screen */}
-            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ animation: 'fade' }} />
 
             {/* Secondary Screens */}
             <Stack.Screen name="MyLearning" component={MyLearningScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ animation: 'fade' }} />
 
+            {/* Student Onboarding & Academic Details Editor */}
+            <Stack.Screen name="StudentOnboarding" component={StudentOnboardingScreen} options={{ animation: 'slide_from_bottom' }} />
+
             {/* Curriculum Screens */}
-            <Stack.Screen name="ClassSubjects" component={ClassSubjectsScreen} />
-            <Stack.Screen name="SubjectIndex" component={SubjectIndexScreen} />
-            <Stack.Screen name="ChapterDetails" component={ChapterDetailsScreen} />
-            <Stack.Screen name="SectionDetails" component={SectionDetailsScreen} />
+            <Stack.Screen name="ClassSubjects" component={ClassSubjectsScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="SubjectIndex" component={SubjectIndexScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="ChapterDetails" component={ChapterDetailsScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="SectionDetails" component={SectionDetailsScreen} options={{ animation: 'slide_from_right' }} />
 
             {/* Notifications */}
-            <Stack.Screen name="Notifications" component={NotificationsScreen} />
-            <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} options={{ animation: 'slide_from_right' }} />
           </Stack.Group>
         )}
       </Stack.Navigator>

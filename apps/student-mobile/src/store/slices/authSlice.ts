@@ -138,8 +138,16 @@ export const logoutUserThunk = createAsyncThunk('auth/logoutUser', async () => {
     if (refreshToken) {
       await authApi.logout(refreshToken);
     }
+  } catch (e) {
+    console.warn('Backend logout failed, continuing with local cleanup:', e);
   } finally {
-    await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, AUTH_USER_KEY]);
+    await AsyncStorage.multiRemove([
+      AUTH_TOKEN_KEY,
+      AUTH_REFRESH_TOKEN_KEY,
+      AUTH_USER_KEY,
+      '@vidya_user_profile',
+      '@vidya_chapter_progress',
+    ]);
   }
 });
 
@@ -213,7 +221,25 @@ const authSlice = createSlice({
     });
 
     // logout
+    builder.addCase(logoutUserThunk.pending, (state) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      state.token = null;
+      state.refreshToken = null;
+      state.isOnboarded = false;
+      state.loading = false;
+      state.error = null;
+    });
     builder.addCase(logoutUserThunk.fulfilled, (state) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      state.token = null;
+      state.refreshToken = null;
+      state.isOnboarded = false;
+      state.loading = false;
+      state.error = null;
+    });
+    builder.addCase(logoutUserThunk.rejected, (state) => {
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
