@@ -68,13 +68,6 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const handleFillDemo = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setErrorMessage(null);
-    setForgotPasswordNotice(null);
-  };
-
   const handleForgotPassword = () => {
     const copy = 'Please contact the administrator to reset your password.';
     setForgotPasswordNotice(copy);
@@ -119,7 +112,7 @@ export const LoginScreen: React.FC = () => {
         <View className="mb-5">
           <Text className="font-manrope-bold text-xl text-textPrimary">Sign In</Text>
           <Text className="font-manrope-medium text-xs text-textSecondary mt-1 leading-relaxed">
-            Enter your student credentials to access textbook lessons, practice quizzes, and exam results.
+            Enter your student credentials to access your textbook lessons.
           </Text>
         </View>
 
@@ -148,7 +141,7 @@ export const LoginScreen: React.FC = () => {
             <MaterialIcons name="mail-outline" size={20} color={Colors.textSecondary} />
             <TextInput
               className="flex-1 ml-2.5 font-manrope-medium text-sm text-textPrimary"
-              placeholder="e.g. student@vidya.test"
+              placeholder="Enter your email"
               placeholderTextColor={Colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -212,65 +205,6 @@ export const LoginScreen: React.FC = () => {
             <Text className="font-manrope-bold text-sm text-white">Sign In as Student</Text>
           )}
         </TouchableOpacity>
-
-        {/* Quick Demo Credentials */}
-        <View className="mt-7 p-3.5 rounded-xl bg-palePeach/70 border border-[#f2ded3]">
-          <Text className="font-manrope-bold text-[11px] text-primary uppercase tracking-wider mb-2">
-            Quick Test Credentials
-          </Text>
-          <TouchableOpacity
-            className="py-2 px-3 rounded-lg bg-white border border-primaryLight flex-row items-center justify-between"
-            onPress={() => handleFillDemo('student@vidya.test', 'StudentDemo1!')}
-            activeOpacity={0.7}
-          >
-            <View>
-              <Text className="font-manrope-semibold text-[12px] text-textPrimary">student@vidya.test</Text>
-              <Text className="font-manrope-medium text-[10px] text-textSecondary">Default AP Student Account</Text>
-            </View>
-            <Text className="font-manrope-bold text-[11px] text-primary">Use</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Divider */}
-        <View className="flex-row items-center my-6">
-          <View className="flex-1 h-[1px] bg-border" />
-          <Text className="mx-3 font-manrope-medium text-[11px] text-textMuted uppercase tracking-wider">
-            or continue with
-          </Text>
-          <View className="flex-1 h-[1px] bg-border" />
-        </View>
-
-        {/* Social login kept as stale UI — not wired (out of scope). */}
-        <View className="gap-2.5">
-          <TouchableOpacity
-            className="h-11 rounded-xl border border-border bg-white flex-row items-center justify-center px-4 gap-3 shadow-xs opacity-60"
-            activeOpacity={0.7}
-            onPress={() =>
-              Alert.alert('Unavailable', 'Google sign-in is not available for student accounts.')
-            }
-          >
-            <MaterialIcons name="g-mobiledata" size={24} color="#EA4335" />
-            <Text className="font-manrope-semibold text-xs text-textPrimary">
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="h-11 rounded-xl border border-border bg-white flex-row items-center justify-center px-4 gap-3 shadow-xs opacity-60"
-            activeOpacity={0.7}
-            onPress={() =>
-              Alert.alert(
-                'Unavailable',
-                'School Student ID sign-in is not available yet. Use your provisioned email and password.'
-              )
-            }
-          >
-            <MaterialIcons name="badge" size={18} color={Colors.primary} />
-            <Text className="font-manrope-semibold text-xs text-textPrimary">
-              Continue with School Student ID
-            </Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Account Provisioning Footer Note */}
         <View className="mt-8 p-3 rounded-xl bg-slate-50 border border-slate-200">

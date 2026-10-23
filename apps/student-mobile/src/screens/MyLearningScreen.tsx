@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
@@ -15,17 +13,14 @@ import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { getChapterById, getCurriculumStats } from '../services/curriculumService';
-import { MainTabParamList, RootStackParamList } from '../types/navigation';
+import { RootStackParamList } from '../types/navigation';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'MyLearning'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type Props = NativeStackScreenProps<RootStackParamList, 'MyLearning'>;
 
 type TabFilter = 'all' | 'in-progress' | 'completed';
 
 export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
-  const { progressMap, profile } = useLearningProgress();
+  const { progressMap } = useLearningProgress();
   const [selectedTab, setSelectedTab] = useState<TabFilter>('all');
   const stats = getCurriculumStats();
 
@@ -206,7 +201,7 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
-      <BottomNav activeTab="Progress" navigation={navigation} />
+      <BottomNav activeTab="Learn" navigation={navigation} />
     </View>
   );
 };

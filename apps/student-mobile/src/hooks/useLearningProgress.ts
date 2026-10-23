@@ -3,7 +3,7 @@ import {
   getAllProgress,
   getAllBookmarks,
   getUserProfile,
-  seedInitialDataIfNeeded,
+  updateUserProfile,
   updateActiveGrade,
   toggleChapterCompletion,
   toggleBookmark,
@@ -18,7 +18,6 @@ export const useLearningProgress = () => {
 
   const refreshData = useCallback(async () => {
     try {
-      await seedInitialDataIfNeeded();
       const [uProfile, uProgress, uBookmarks] = await Promise.all([
         getUserProfile(),
         getAllProgress(),
@@ -43,6 +42,13 @@ export const useLearningProgress = () => {
     await refreshData();
   };
 
+  const saveProfile = async (updates: Partial<UserProfile>): Promise<UserProfile> => {
+    const updated = await updateUserProfile(updates);
+    setProfile(updated);
+    await refreshData();
+    return updated;
+  };
+
   const handleToggleChapterCompletion = async (classId: string, subjectId: string, chapterId: string) => {
     const newState = await toggleChapterCompletion(classId, subjectId, chapterId);
     await refreshData();
@@ -62,6 +68,7 @@ export const useLearningProgress = () => {
     bookmarks,
     refreshData,
     selectActiveGrade,
+    saveProfile,
     handleToggleChapterCompletion,
     handleToggleBookmark,
   };

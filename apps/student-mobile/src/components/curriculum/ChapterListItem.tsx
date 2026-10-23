@@ -9,6 +9,8 @@ interface ChapterListItemProps {
   chapter: Chapter;
   isCompleted?: boolean;
   progressPercent?: number;
+  isBookmarked?: boolean;
+  onBookmarkPress?: () => void;
   onPress: () => void;
   onSectionPress?: (sectionId: string) => void;
 }
@@ -16,6 +18,8 @@ interface ChapterListItemProps {
 export const ChapterListItem: React.FC<ChapterListItemProps> = ({
   chapter,
   isCompleted = false,
+  isBookmarked = false,
+  onBookmarkPress,
   onPress,
   onSectionPress,
 }) => {
@@ -60,17 +64,38 @@ export const ChapterListItem: React.FC<ChapterListItemProps> = ({
           </Text>
         </View>
 
-        <TouchableOpacity
-          className="self-center p-0.5"
-          onPress={() => setIsExpanded(!isExpanded)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <MaterialIcons
-            name={isExpanded ? 'expand-less' : 'chevron-right'}
-            size={22}
-            color={Colors.textMuted}
-          />
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-1 self-center">
+          {onBookmarkPress && (
+            <TouchableOpacity
+              className="p-1.5 rounded-full"
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onBookmarkPress();
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel={isBookmarked ? 'Bookmarked' : 'Add bookmark'}
+            >
+              <MaterialIcons
+                name={isBookmarked ? 'bookmark' : 'bookmark-border'}
+                size={22}
+                color={isBookmarked ? Colors.primary : Colors.textMuted}
+              />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            className="p-1"
+            onPress={() => setIsExpanded(!isExpanded)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <MaterialIcons
+              name={isExpanded ? 'expand-less' : 'chevron-right'}
+              size={22}
+              color={Colors.textMuted}
+            />
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
 
       {/* Expandable Section Links */}

@@ -1,46 +1,9 @@
-import { Notification } from '../types/quiz';
+import { Notification } from '../types/curriculum';
 
 const now = Date.now();
-const HOUR = 3600000;
 const DAY = 86400000;
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'notif-1',
-    title: 'New Quiz Available: Rational Numbers',
-    message: 'Test your understanding on Rational Numbers properties before this Friday.',
-    detailedBody: 'The chapter-end formative assessment for Class 8 Mathematics — Chapter 1: Rational Numbers is now open.\n\n• Number of Questions: 5 Multiple Choice Questions\n• Time Limit: 10 Minutes\n• Passing Criteria: Minimum 60% (3 out of 5 correct)\n• Covered Concepts: Closure, Commutativity, Associativity, Distributive Law, and Additive/Multiplicative Inverses.\n\nComplete this assessment to earn mastery points on your student profile!',
-    type: 'reminder',
-    icon: 'quiz',
-    read: false,
-    createdAt: now - HOUR * 2,
-    actionRoute: 'Tasks',
-    actionLabel: 'Go to Quiz in Tasks',
-  },
-  {
-    id: 'notif-2',
-    title: '5-Day Learning Streak Unlocked!',
-    message: 'You have completed 5 consecutive days of study! Keep up the brilliant pace.',
-    detailedBody: 'Congratulations on maintaining consistent study habits! Consistency is the key to mastering your AP SCERT Board curriculum.\n\n• Streak Record: 5 Days\n• Time Studied This Week: 255 Minutes\n• Chapters Revised: 4 Chapters\n\nMaintain this streak through the weekend to unlock the "Dedicated Scholar" badge on your profile.',
-    type: 'achievement',
-    icon: 'emoji-events',
-    read: false,
-    createdAt: now - HOUR * 5,
-    actionRoute: 'Progress',
-    actionLabel: 'View Streak on Progress Page',
-  },
-  {
-    id: 'notif-3',
-    title: 'AP SCERT Board: SA-1 Examination Timetable Released',
-    message: 'Official timetable for Summative Assessment-1 (Classes 6 to 10) announced for 2026–2027.',
-    detailedBody: 'The Department of School Education, Andhra Pradesh has published the schedule for Summative Assessment-1 (SA-1) examinations for the academic year 2026–2027.\n\nKey Highlights:\n• Examination Window: November 16, 2026 to November 24, 2026\n• Timing: 09:30 AM to 12:15 PM (includes 15 minutes question paper reading time)\n• Portion Coverage: First 5 units in Mathematics, Science, Social Studies, Telugu, and English.\n• Blueprints & Model Papers: Available in the Exam Schedule section.\n\nReview the subject-wise timetable and revision milestones in the app to prepare effectively.',
-    type: 'announcement',
-    icon: 'campaign',
-    read: false,
-    createdAt: now - DAY,
-    actionRoute: 'ExamSchedule',
-    actionLabel: 'View Complete Exam Schedule',
-  },
   {
     id: 'notif-4',
     title: 'New Curriculum Content: Understanding Quadrilaterals',
@@ -64,17 +27,5 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     createdAt: now - DAY * 3,
     actionRoute: 'Learn',
     actionLabel: 'Resume Science Chapter',
-  },
-  {
-    id: 'notif-6',
-    title: 'Weekly Learning Report: High Mathematics Engagement',
-    message: 'Your weekly progress report is compiled. You dedicated 4.2 hours across 4 subjects.',
-    detailedBody: 'Here is your weekly study breakdown:\n\n• Mathematics: 135 minutes (Chapter 1 & 2 completed)\n• Physical Science: 65 minutes\n• Social Studies: 35 minutes\n• English: 20 minutes\n\nOverall syllabus completion for Class 8 reached 18%. Keep up the regular practice schedule!',
-    type: 'update',
-    icon: 'assessment',
-    read: true,
-    createdAt: now - DAY * 5,
-    actionRoute: 'Progress',
-    actionLabel: 'Review Analytics in Progress',
   },
 ];

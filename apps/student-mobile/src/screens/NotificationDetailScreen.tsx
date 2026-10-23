@@ -11,10 +11,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
-import { HoverCard } from '../components/common';
 import { getNotificationById, markAsRead } from '../services/notificationService';
 import { RootStackParamList } from '../types/navigation';
-import { Notification } from '../types/quiz';
+import { Notification } from '../types/curriculum';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NotificationDetail'>;
 
@@ -101,7 +100,6 @@ export const NotificationDetailScreen: React.FC<Props> = ({ route, navigation })
         onBackPress={() => navigation.goBack()}
         title="Notification Details"
         subtitle={config.label}
-        activeRoute="Notifications"
       />
 
       <ScrollView
