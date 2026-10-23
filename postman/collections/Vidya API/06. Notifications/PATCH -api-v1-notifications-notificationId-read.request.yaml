@@ -1,0 +1,10 @@
+$kind: http-request
+name: "PATCH /api/v1/notifications/:id/read"
+description: "Mark as read."
+url: "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 3000

@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@fastify/multipart": "^10.1.6",
     "@fastify/static": "^10.1.6",
     "@nestjs/common": "^11.2.7",
     "@nestjs/config": "^4.0.4",

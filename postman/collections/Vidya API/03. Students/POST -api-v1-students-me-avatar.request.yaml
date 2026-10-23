@@ -1,0 +1,16 @@
+$kind: http-request
+name: "POST /api/v1/students/me/avatar"
+description: "Upload profile photo (multipart, field `file`, JPEG/PNG/WebP/GIF, max 5 MB)."
+url: "{{baseUrl}}/api/v1/students/me/avatar"
+method: POST
+body:
+  type: form-data
+  content:
+    - key: file
+      type: file
+      value: ""
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 5000

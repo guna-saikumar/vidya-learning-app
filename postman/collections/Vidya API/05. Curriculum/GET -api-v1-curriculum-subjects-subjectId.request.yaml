@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/curriculum/subjects/:subjectId"
+description: "Subject with chapter index."
+url: "{{baseUrl}}/api/v1/curriculum/subjects/{{subjectId}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 3000

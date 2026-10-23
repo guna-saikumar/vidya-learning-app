@@ -1,0 +1,10 @@
+$kind: http-request
+name: "DELETE /api/v1/students/me/bookmarks/by-section/:sectionId"
+description: "Remove bookmark(s) by section id."
+url: "{{baseUrl}}/api/v1/students/me/bookmarks/by-section/{{sectionId}}"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 12000

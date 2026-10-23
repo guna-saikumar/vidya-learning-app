@@ -1,5 +1,5 @@
 // k6 load test for the Vidya API (apps/api, NestJS on Fastify).
-// SCENARIO: health | classes | me | login
+// SCENARIO: health | classes | me | login (all under /api/v1)
 import http from "k6/http";
 import { check } from "k6";
 
@@ -15,14 +15,14 @@ export const options = {
 };
 
 export function setup() {
-  return { token: http.post(`${BASE}/api/auth/login`, CREDS, { headers: JSON_H }).json("accessToken") };
+  return { token: http.post(`${BASE}/api/v1/auth/login`, CREDS, { headers: JSON_H }).json("accessToken") };
 }
 
 export default function (data) {
   let res;
   if (SCENARIO === "health") res = http.get(`${BASE}/health`);
-  else if (SCENARIO === "classes") res = http.get(`${BASE}/api/classes`);
-  else if (SCENARIO === "me") res = http.get(`${BASE}/api/auth/me`, { headers: { Authorization: `Bearer ${data.token}` } });
-  else res = http.post(`${BASE}/api/auth/login`, CREDS, { headers: JSON_H });
+  else if (SCENARIO === "classes") res = http.get(`${BASE}/api/v1/curriculum/classes`, { headers: { Authorization: `Bearer ${data.token}` } });
+  else if (SCENARIO === "me") res = http.get(`${BASE}/api/v1/auth/me`, { headers: { Authorization: `Bearer ${data.token}` } });
+  else res = http.post(`${BASE}/api/v1/auth/login`, CREDS, { headers: JSON_H });
   check(res, { "status 2xx": (r) => r.status >= 200 && r.status < 300 });
 }

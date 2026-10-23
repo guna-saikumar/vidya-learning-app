@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/students/me/progress"
+description: "`{ overallPercent, chapters: { [chapterId]: {...} } }`."
+url: "{{baseUrl}}/api/v1/students/me/progress"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 7000

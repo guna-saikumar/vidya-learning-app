@@ -1,9 +1,0 @@
-$kind: http-request
-name: GET /api/sections/:sectionId
-url: "{{baseUrl}}/api/sections/c8-m-ch1-s1"
-method: GET
-auth:
-  type: bearer
-  credentials:
-    token: "{{studentToken}}"
-order: 2300

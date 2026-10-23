@@ -7,6 +7,8 @@ type ClassRow = {
   title: string;
   subtitle: string;
   badge: string;
+  subjectsCount: number;
+  chaptersCount: number;
 };
 
 type SubjectRow = {
@@ -18,6 +20,8 @@ type SubjectRow = {
   icon: string;
   bannerUrl: string | null;
   order: number;
+  chapterCount: number;
+  durationMinutes: number;
 };
 
 type ChapterRow = {
@@ -30,6 +34,8 @@ type ChapterRow = {
   durationMinutes: number | null;
   learningGoals: string[] | null;
   bannerUrl: string | null;
+  pdfUrl: string | null;
+  sectionCount: number;
 };
 
 type SectionRow = {
@@ -41,276 +47,173 @@ type SectionRow = {
   durationMinutes: number | null;
   summaryPoint: string | null;
   keyAxiom: string | null;
-};
-
-type QuizPreviewRow = {
-  chapterId: string;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
+  keyPoints: string[] | null;
+  diagrams: unknown;
 };
 
 const nullToUndef = <T>(v: T | null): T | undefined => v ?? undefined;
 
 export const toSectionDto = (s: SectionRow) => ({
   id: s.id,
+  chapterId: s.chapterId,
   title: s.title,
-  content: s.content,
+  contentMarkdown: s.content,
   order: s.order,
   durationMinutes: nullToUndef(s.durationMinutes),
   summaryPoint: nullToUndef(s.summaryPoint),
   keyAxiom: nullToUndef(s.keyAxiom),
+  keyPoints: s.keyPoints ?? [],
+  diagrams: Array.isArray(s.diagrams) ? s.diagrams : [],
 });
 
-export const toChapterDto = (
-  c: ChapterRow,
-  sections: SectionRow[],
-  quiz: QuizPreviewRow | undefined
-) => ({
+const toChapterSummaryDto = (c: ChapterRow) => ({
   id: c.id,
+  subjectId: c.subjectId,
   title: c.title,
   description: nullToUndef(c.description),
   order: c.order,
   unitName: nullToUndef(c.unitName),
   durationMinutes: nullToUndef(c.durationMinutes),
-  learningGoals: c.learningGoals ?? [],
   bannerUrl: nullToUndef(c.bannerUrl),
-  sections: sections.map(toSectionDto),
-  quiz: quiz
-    ? {
-        question: quiz.question,
-        options: quiz.options,
-        correctIndex: quiz.correctIndex,
-        explanation: quiz.explanation,
-      }
-    : undefined,
+  pdfUrl: nullToUndef(c.pdfUrl),
+  sectionCount: c.sectionCount,
 });
 
-type ChapterDto = ReturnType<typeof toChapterDto>;
+/** Stable display code derived from the id, e.g. `c8-maths` → `C8-MATHS`. */
+const subjectCode = (id: string) => id.toUpperCase();
 
-type SubjectDto = {
-  id: string;
-  name: string;
-  description: string | undefined;
-  category: string;
-  icon: string;
-  bannerUrl: string | undefined;
-  chapters: ChapterDto[];
-};
+const toSubjectSummaryDto = (s: SubjectRow) => ({
+  id: s.id,
+  classId: s.classId,
+  title: s.name,
+  code: subjectCode(s.id),
+  description: nullToUndef(s.description),
+  category: s.category,
+  icon: s.icon,
+  bannerUrl: nullToUndef(s.bannerUrl),
+  order: s.order,
+  totalChapters: s.chapterCount,
+  estimatedHours: Math.round((s.durationMinutes / 60) * 10) / 10,
+});
 
-const groupBy = <T>(items: T[], key: (item: T) => string): Map<string, T[]> => {
-  const map = new Map<string, T[]>();
-  for (const item of items) {
-    const k = key(item);
-    const bucket = map.get(k);
-    if (bucket) bucket.push(item);
-    else map.set(k, [item]);
-  }
-  return map;
-};
+const SUBJECT_SELECT = `
+  SELECT s."id", s."classId", s."name", s."description", s."category", s."icon",
+         s."bannerUrl", s."order",
+         (SELECT COUNT(*)::int FROM "Chapter" c WHERE c."subjectId" = s."id") AS "chapterCount",
+         (SELECT COALESCE(SUM(c."durationMinutes"), 0)::int FROM "Chapter" c WHERE c."subjectId" = s."id") AS "durationMinutes"
+    FROM "Subject" s`;
+
+const CHAPTER_SELECT = `
+  SELECT c."id", c."subjectId", c."title", c."description", c."order", c."unitName",
+         c."durationMinutes", c."learningGoals", c."bannerUrl", c."pdfUrl",
+         (SELECT COUNT(*)::int FROM "Section" se WHERE se."chapterId" = c."id") AS "sectionCount"
+    FROM "Chapter" c`;
 
 @Injectable()
 export class CurriculumService {
   constructor(@Inject(DbService) private readonly db: DbService) {}
 
-  // ------------------------------------------------------------- loaders --
-
-  private async loadChapters(chapterRows: ChapterRow[]) {
-    if (chapterRows.length === 0) {
-      return new Map<string, ChapterDto>();
-    }
-    const chapterIds = chapterRows.map((c) => c.id);
-
-    const [sections, previews] = await Promise.all([
-      this.db.query<SectionRow>(
-        `SELECT "id", "chapterId", "title", "content", "order", "durationMinutes",
-                "summaryPoint", "keyAxiom"
-           FROM "Section"
-          WHERE "chapterId" = ANY($1::text[])
-          ORDER BY "order" ASC`,
-        [chapterIds]
-      ),
-      // First quiz (by createdAt) per chapter, and that quiz's first question.
-      this.db.query<QuizPreviewRow>(
-        `SELECT q."chapterId", qq."question", qq."options", qq."correctIndex", qq."explanation"
-           FROM (
-             SELECT DISTINCT ON ("chapterId") "id", "chapterId"
-               FROM "Quiz"
-              WHERE "chapterId" = ANY($1::text[])
-              ORDER BY "chapterId", "createdAt" ASC
-           ) q
-           JOIN LATERAL (
-             SELECT "question", "options", "correctIndex", "explanation"
-               FROM "QuizQuestion"
-              WHERE "quizId" = q."id"
-              ORDER BY "order" ASC
-              LIMIT 1
-           ) qq ON true`,
-        [chapterIds]
-      ),
-    ]);
-
-    const sectionsByChapter = groupBy(sections.rows, (s) => s.chapterId);
-    const previewByChapter = new Map(
-      previews.rows.map((p) => [p.chapterId, p])
+  /** GET /curriculum/classes */
+  async listClasses() {
+    const { rows } = await this.db.query<ClassRow>(
+      `SELECT sc."id", sc."grade", sc."title", sc."subtitle", sc."badge",
+              (SELECT COUNT(*)::int FROM "Subject" s WHERE s."classId" = sc."id") AS "subjectsCount",
+              (SELECT COUNT(*)::int FROM "Chapter" c
+                 JOIN "Subject" s ON s."id" = c."subjectId"
+                WHERE s."classId" = sc."id") AS "chaptersCount"
+         FROM "SchoolClass" sc
+        ORDER BY sc."grade" ASC, sc."id" ASC`
     );
-
-    return new Map(
-      chapterRows.map((c) => [
-        c.id,
-        toChapterDto(
-          c,
-          sectionsByChapter.get(c.id) ?? [],
-          previewByChapter.get(c.id)
-        ),
-      ])
-    );
-  }
-
-  private async loadSubjectDtos(subjectRows: SubjectRow[]) {
-    if (subjectRows.length === 0) {
-      return new Map<string, SubjectDto>();
-    }
-    const { rows: chapterRows } = await this.db.query<ChapterRow>(
-      `SELECT "id", "subjectId", "title", "description", "order", "unitName",
-              "durationMinutes", "learningGoals", "bannerUrl"
-         FROM "Chapter"
-        WHERE "subjectId" = ANY($1::text[])
-        ORDER BY "order" ASC`,
-      [subjectRows.map((s) => s.id)]
-    );
-    const chapterDtos = await this.loadChapters(chapterRows);
-    const chaptersBySubject = groupBy(chapterRows, (c) => c.subjectId);
-
-    return new Map(
-      subjectRows.map((s) => [
-        s.id,
-        this.toSubjectDto(
-          s,
-          (chaptersBySubject.get(s.id) ?? []).map(
-            (c) => chapterDtos.get(c.id)!
-          )
-        ),
-      ])
-    );
-  }
-
-  private toSubjectDto(s: SubjectRow, chapters: ChapterDto[]): SubjectDto {
-    return {
-      id: s.id,
-      name: s.name,
-      description: nullToUndef(s.description),
-      category: s.category,
-      icon: s.icon,
-      bannerUrl: nullToUndef(s.bannerUrl),
-      chapters,
-    };
-  }
-
-  private async subjectsForClasses(classIds: string[]) {
-    if (classIds.length === 0) return new Map<string, SubjectRow[]>();
-    const { rows } = await this.db.query<SubjectRow>(
-      `SELECT "id", "classId", "name", "description", "category", "icon", "bannerUrl", "order"
-         FROM "Subject"
-        WHERE "classId" = ANY($1::text[])
-        ORDER BY "order" ASC`,
-      [classIds]
-    );
-    return groupBy(rows, (s) => s.classId);
-  }
-
-  private async classTree(classRows: ClassRow[]) {
-    const subjectsByClass = await this.subjectsForClasses(
-      classRows.map((c) => c.id)
-    );
-    const allSubjects = [...subjectsByClass.values()].flat();
-    const subjectDtos = await this.loadSubjectDtos(allSubjects);
-
-    return classRows.map((c) => ({
+    return rows.map((c) => ({
       id: c.id,
       grade: c.grade,
       title: c.title,
       subtitle: c.subtitle,
       badge: c.badge,
-      subjects: (subjectsByClass.get(c.id) ?? []).map(
-        (s) => subjectDtos.get(s.id)!
-      ),
+      subjectsCount: c.subjectsCount,
+      chaptersCount: c.chaptersCount,
     }));
   }
 
-  // ---------------------------------------------------------------- reads --
-
-  async listClasses() {
-    const { rows } = await this.db.query<ClassRow>(
-      `SELECT "id", "grade", "title", "subtitle", "badge"
-         FROM "SchoolClass"
-        ORDER BY "grade" ASC, "id" ASC`
-    );
-    const classes = await this.classTree(rows);
-
-    const stats = {
-      totalClasses: classes.length,
-      totalSubjects: 0,
-      totalChapters: 0,
-      totalSections: 0,
-    };
-    for (const c of classes) {
-      stats.totalSubjects += c.subjects.length;
-      for (const s of c.subjects) {
-        stats.totalChapters += s.chapters.length;
-        for (const ch of s.chapters) stats.totalSections += ch.sections.length;
-      }
-    }
-    return { classes, stats };
-  }
-
-  async getClass(classId: string) {
-    const row = await this.db.queryOne<ClassRow>(
-      `SELECT "id", "grade", "title", "subtitle", "badge"
-         FROM "SchoolClass" WHERE "id" = $1`,
+  /** GET /curriculum/classes/:classId/subjects */
+  async listSubjectsForClass(classId: string) {
+    const cls = await this.db.queryOne<{ id: string }>(
+      `SELECT "id" FROM "SchoolClass" WHERE "id" = $1`,
       [classId]
     );
-    if (!row) throw new NotFoundException({ error: "Class not found" });
-    const [tree] = await this.classTree([row]);
-    return tree!;
+    if (!cls) throw new NotFoundException({ error: "Class not found" });
+
+    const { rows } = await this.db.query<SubjectRow>(
+      `${SUBJECT_SELECT} WHERE s."classId" = $1 ORDER BY s."order" ASC, s."id" ASC`,
+      [classId]
+    );
+    return rows.map(toSubjectSummaryDto);
   }
 
+  /** GET /curriculum/subjects/:subjectId */
   async getSubject(subjectId: string) {
-    const row = await this.db.queryOne<SubjectRow>(
-      `SELECT "id", "classId", "name", "description", "category", "icon", "bannerUrl", "order"
-         FROM "Subject" WHERE "id" = $1`,
+    const subject = await this.db.queryOne<SubjectRow>(
+      `${SUBJECT_SELECT} WHERE s."id" = $1`,
       [subjectId]
     );
-    if (!row) throw new NotFoundException({ error: "Subject not found" });
-    const dtos = await this.loadSubjectDtos([row]);
-    return { ...dtos.get(row.id)!, classId: row.classId };
+    if (!subject) throw new NotFoundException({ error: "Subject not found" });
+
+    const { rows: chapters } = await this.db.query<ChapterRow>(
+      `${CHAPTER_SELECT} WHERE c."subjectId" = $1 ORDER BY c."order" ASC, c."id" ASC`,
+      [subjectId]
+    );
+    return {
+      ...toSubjectSummaryDto(subject),
+      chapters: chapters.map(toChapterSummaryDto),
+    };
   }
 
+  /** GET /curriculum/chapters/:chapterId */
   async getChapter(chapterId: string) {
-    const row = await this.db.queryOne<ChapterRow & { classId: string }>(
+    const chapter = await this.db.queryOne<ChapterRow & { classId: string }>(
       `SELECT c."id", c."subjectId", c."title", c."description", c."order", c."unitName",
-              c."durationMinutes", c."learningGoals", c."bannerUrl", s."classId"
+              c."durationMinutes", c."learningGoals", c."bannerUrl", c."pdfUrl",
+              0 AS "sectionCount", s."classId"
          FROM "Chapter" c
          JOIN "Subject" s ON s."id" = c."subjectId"
         WHERE c."id" = $1`,
       [chapterId]
     );
-    if (!row) throw new NotFoundException({ error: "Chapter not found" });
-    const dtos = await this.loadChapters([row]);
+    if (!chapter) throw new NotFoundException({ error: "Chapter not found" });
+
+    const { rows: sections } = await this.db.query<SectionRow>(
+      `SELECT "id", "chapterId", "title", "content", "order", "durationMinutes",
+              "summaryPoint", "keyAxiom", "keyPoints", "diagrams"
+         FROM "Section"
+        WHERE "chapterId" = $1
+        ORDER BY "order" ASC, "id" ASC`,
+      [chapterId]
+    );
+
     return {
-      ...dtos.get(row.id)!,
-      subjectId: row.subjectId,
-      classId: row.classId,
+      id: chapter.id,
+      subjectId: chapter.subjectId,
+      classId: chapter.classId,
+      title: chapter.title,
+      description: nullToUndef(chapter.description),
+      order: chapter.order,
+      unitName: nullToUndef(chapter.unitName),
+      durationMinutes: nullToUndef(chapter.durationMinutes),
+      learningGoals: chapter.learningGoals ?? [],
+      bannerUrl: nullToUndef(chapter.bannerUrl),
+      pdfUrl: nullToUndef(chapter.pdfUrl),
+      sections: sections.map(toSectionDto),
     };
   }
 
+  /** GET /curriculum/sections/:sectionId */
   async getSection(sectionId: string) {
     const row = await this.db.queryOne<
       SectionRow & { subjectId: string; classId: string }
     >(
       `SELECT se."id", se."chapterId", se."title", se."content", se."order",
               se."durationMinutes", se."summaryPoint", se."keyAxiom",
+              se."keyPoints", se."diagrams",
               ch."subjectId", s."classId"
          FROM "Section" se
          JOIN "Chapter" ch ON ch."id" = se."chapterId"
@@ -321,7 +224,6 @@ export class CurriculumService {
     if (!row) throw new NotFoundException({ error: "Section not found" });
     return {
       ...toSectionDto(row),
-      chapterId: row.chapterId,
       subjectId: row.subjectId,
       classId: row.classId,
     };

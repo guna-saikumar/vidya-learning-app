@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/curriculum/chapters/:chapterId"
+description: "Chapter with sections and `pdfUrl`."
+url: "{{baseUrl}}/api/v1/curriculum/chapters/{{chapterId}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 4000

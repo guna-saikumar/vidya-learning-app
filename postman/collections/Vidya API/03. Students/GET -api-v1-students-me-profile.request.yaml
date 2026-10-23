@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/students/me/profile"
+description: "Full student profile."
+url: "{{baseUrl}}/api/v1/students/me/profile"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 1000

@@ -4,21 +4,15 @@ import { Pool, type PoolClient } from "pg";
 import { getClasses } from "../../curriculum/src/curriculum.service";
 
 /**
- * Student-focused seed using plain `pg` (no Prisma).
+ * Student-only seed using plain `pg` (no ORM).
  *
- * Seeds: students + student profiles, curriculum (classes → subjects →
- * chapters → sections + chapter quizzes), demo materials, quizzes, tasks,
- * notifications, exam schedule/results, chapter progress and study sessions.
+ * Seeds: students + student profiles, AP sample schools, curriculum
+ * (classes → subjects → chapters → sections), notifications and a little
+ * chapter progress. Nothing else (no quizzes/tasks/exams/materials/admin).
  *
- * Only a single admin row (admin@vidya.edu.in) is created, solely to satisfy
- * the Material.authorId foreign key.
- *
- * Shared demo passwords (documented in seed console output):
- *   Students → StudentDemo1!
- *   Admin    → AdminDemo1!
+ * Shared demo password: StudentDemo1!
  */
 const STUDENT_PASSWORD = "StudentDemo1!";
-const ADMIN_PASSWORD = "AdminDemo1!";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -39,129 +33,357 @@ function newId(): string {
   );
 }
 
-type SeedStudent = {
-  email: string;
+const iso = (d: Date) => d.toISOString();
+
+// ---------------------------------------------------------------- schools --
+
+type SeedSchool = {
+  id: string;
   name: string;
-  activeClassId: string;
-  streakDays: number;
-  studyGoalMinutes: number;
+  udiseCode: string;
+  district: string;
+  mandal: string;
+  address: string;
 };
 
-type SeedUser = { id: string; email: string };
+/** Sample Andhra Pradesh schools (UDISE codes are illustrative). */
+const SEED_SCHOOLS: SeedSchool[] = [
+  {
+    id: "school-vzg-001",
+    name: "ZPHS Gajuwaka",
+    udiseCode: "28010100101",
+    district: "Visakhapatnam",
+    mandal: "Gajuwaka",
+    address: "Main Road, Gajuwaka, Visakhapatnam - 530026",
+  },
+  {
+    id: "school-vzg-002",
+    name: "MPPS Pendurthi",
+    udiseCode: "28010200202",
+    district: "Visakhapatnam",
+    mandal: "Pendurthi",
+    address: "Bazaar Street, Pendurthi, Visakhapatnam - 531173",
+  },
+  {
+    id: "school-gnt-001",
+    name: "ZPHS Tenali",
+    udiseCode: "28150100303",
+    district: "Guntur",
+    mandal: "Tenali",
+    address: "Station Road, Tenali, Guntur - 522201",
+  },
+  {
+    id: "school-gnt-002",
+    name: "AP Model School Mangalagiri",
+    udiseCode: "28150200404",
+    district: "Guntur",
+    mandal: "Mangalagiri",
+    address: "NH-16, Mangalagiri, Guntur - 522503",
+  },
+  {
+    id: "school-krs-001",
+    name: "ZPHS Gudivada",
+    udiseCode: "28120100505",
+    district: "Krishna",
+    mandal: "Gudivada",
+    address: "Bus Stand Road, Gudivada, Krishna - 521301",
+  },
+  {
+    id: "school-ctr-001",
+    name: "ZPHS Tirupati Rural",
+    udiseCode: "28220100606",
+    district: "Tirupati",
+    mandal: "Tirupati Rural",
+    address: "Renigunta Road, Tirupati - 517502",
+  },
+  {
+    id: "school-knl-001",
+    name: "ZPHS Nandyal",
+    udiseCode: "28180100707",
+    district: "Nandyal",
+    mandal: "Nandyal",
+    address: "Gandhi Chowk, Nandyal - 518501",
+  },
+  {
+    id: "school-atp-001",
+    name: "ZPHS Dharmavaram",
+    udiseCode: "28200100808",
+    district: "Sri Sathya Sai",
+    mandal: "Dharmavaram",
+    address: "Silk Market Road, Dharmavaram - 515671",
+  },
+  {
+    id: "school-egd-001",
+    name: "ZPHS Rajahmundry Urban",
+    udiseCode: "28050100909",
+    district: "East Godavari",
+    mandal: "Rajahmundry Urban",
+    address: "Danavaipeta, Rajahmundry - 533103",
+  },
+  {
+    id: "school-nlr-001",
+    name: "ZPHS Kavali",
+    udiseCode: "28170101010",
+    district: "Nellore",
+    mandal: "Kavali",
+    address: "Trunk Road, Kavali, Nellore - 524201",
+  },
+];
+
+async function seedSchools(db: PoolClient) {
+  for (const s of SEED_SCHOOLS) {
+    await db.query(
+      `INSERT INTO "School"
+         ("id", "name", "udiseCode", "district", "mandal", "address", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7::timestamp)
+       ON CONFLICT ("id") DO UPDATE SET
+         "name" = EXCLUDED."name",
+         "udiseCode" = EXCLUDED."udiseCode",
+         "district" = EXCLUDED."district",
+         "mandal" = EXCLUDED."mandal",
+         "address" = EXCLUDED."address",
+         "updatedAt" = EXCLUDED."updatedAt"`,
+      [s.id, s.name, s.udiseCode, s.district, s.mandal, s.address, iso(new Date())]
+    );
+  }
+  console.log(`Seeded schools: ${SEED_SCHOOLS.length}`);
+}
+
+// ---------------------------------------------------------------- students --
+
+type SeedStudent = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  gender: "MALE" | "FEMALE";
+  dob: string;
+  activeClassId: string;
+  grade: string;
+  streakDays: number;
+  schoolId: string;
+  isOnboarded: boolean;
+  language: "en" | "te";
+};
 
 const SEED_STUDENTS: SeedStudent[] = [
   {
     email: "student@vidya.test",
-    name: "Demo Student",
+    firstName: "Demo",
+    lastName: "Student",
+    gender: "MALE",
+    dob: "2012-06-15",
     activeClassId: "class-8",
+    grade: "8",
     streakDays: 5,
-    studyGoalMinutes: 45,
+    schoolId: "school-vzg-001",
+    isOnboarded: true,
+    language: "en",
   },
   {
     email: "ananya.reddy@vidya.test",
-    name: "Ananya Reddy",
+    firstName: "Ananya",
+    lastName: "Reddy",
+    gender: "FEMALE",
+    dob: "2012-03-02",
     activeClassId: "class-8",
+    grade: "8",
     streakDays: 12,
-    studyGoalMinutes: 60,
+    schoolId: "school-gnt-001",
+    isOnboarded: true,
+    language: "te",
   },
   {
     email: "karthik.nair@vidya.test",
-    name: "Karthik Nair",
+    firstName: "Karthik",
+    lastName: "Nair",
+    gender: "MALE",
+    dob: "2011-11-21",
     activeClassId: "class-9",
+    grade: "9",
     streakDays: 3,
-    studyGoalMinutes: 40,
+    schoolId: "school-krs-001",
+    isOnboarded: true,
+    language: "en",
   },
   {
     email: "priya.suresh@vidya.test",
-    name: "Priya Suresh",
+    firstName: "Priya",
+    lastName: "Suresh",
+    gender: "FEMALE",
+    dob: "2013-01-09",
     activeClassId: "class-7",
+    grade: "7",
     streakDays: 8,
-    studyGoalMinutes: 35,
+    schoolId: "school-egd-001",
+    isOnboarded: true,
+    language: "en",
   },
   {
     email: "arjun.patel@vidya.test",
-    name: "Arjun Patel",
+    firstName: "Arjun",
+    lastName: "Patel",
+    gender: "MALE",
+    dob: "2010-08-30",
     activeClassId: "class-10",
+    grade: "10",
     streakDays: 21,
-    studyGoalMinutes: 75,
+    schoolId: "school-nlr-001",
+    isOnboarded: true,
+    language: "en",
   },
   {
+    // Not onboarded on purpose: exercises PUT /students/me/onboarding.
     email: "meera.iyer@vidya.test",
-    name: "Meera Iyer",
+    firstName: "Meera",
+    lastName: "Iyer",
+    gender: "FEMALE",
+    dob: "2014-05-12",
     activeClassId: "class-6",
-    streakDays: 2,
-    studyGoalMinutes: 30,
+    grade: "6",
+    streakDays: 0,
+    schoolId: "school-ctr-001",
+    isOnboarded: false,
+    language: "en",
   },
 ];
 
-const VIDYA_ADMIN = {
-  email: "admin@vidya.edu.in",
-  name: "Dr. Ramesh Sharma",
-  role: "ADMIN",
-  department: "Academic Director · AP SCERT Division",
-} as const;
+type SeedUser = { id: string; email: string };
 
-const iso = (d: Date) => d.toISOString();
-
-async function upsertUser(
+async function upsertStudentUser(
   db: PoolClient,
-  u: {
-    email: string;
-    name: string;
-    role: "STUDENT" | "ADMIN" | "SUPER_ADMIN";
-    department?: string | null;
-    passwordHash: string;
-  }
+  u: { email: string; name: string; passwordHash: string }
 ): Promise<SeedUser> {
   const { rows } = await db.query<SeedUser>(
     `INSERT INTO "User"
-       ("id", "email", "name", "role", "department", "passwordHash", "emailVerifiedAt")
-     VALUES ($1, $2, $3, $4::"UserRole", $5, $6, $7::timestamp)
+       ("id", "email", "name", "role", "passwordHash", "emailVerifiedAt")
+     VALUES ($1, $2, $3, 'STUDENT'::"UserRole", $4, $5::timestamp)
      ON CONFLICT ("email") DO UPDATE SET
        "name" = EXCLUDED."name",
        "role" = EXCLUDED."role",
-       "department" = EXCLUDED."department",
        "passwordHash" = EXCLUDED."passwordHash",
        "emailVerifiedAt" = EXCLUDED."emailVerifiedAt",
        "emailOtpHash" = NULL,
        "emailOtpExpiresAt" = NULL,
        "emailOtpPurpose" = NULL
      RETURNING "id", "email"`,
-    [
-      newId(),
-      u.email,
-      u.name,
-      u.role,
-      u.department ?? null,
-      u.passwordHash,
-      iso(new Date()),
-    ]
+    [newId(), u.email, u.name, u.passwordHash, iso(new Date())]
   );
   return rows[0]!;
 }
 
 async function seedUsers(db: PoolClient) {
-  const studentHash = await bcrypt.hash(STUDENT_PASSWORD, 10);
-  const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  // Legacy admin account from earlier seeds (admin surface no longer exists).
+  await db.query(`DELETE FROM "User" WHERE "email" = 'admin@vidya.edu.in'`);
 
+  const hash = await bcrypt.hash(STUDENT_PASSWORD, 10);
   const students: { user: SeedUser; profile: SeedStudent }[] = [];
   for (const s of SEED_STUDENTS) {
-    const user = await upsertUser(db, {
+    const user = await upsertStudentUser(db, {
       email: s.email,
-      name: s.name,
-      role: "STUDENT",
-      passwordHash: studentHash,
+      name: `${s.firstName} ${s.lastName}`,
+      passwordHash: hash,
     });
     students.push({ user, profile: s });
   }
-
-  const admin = await upsertUser(db, {
-    ...VIDYA_ADMIN,
-    passwordHash: adminHash,
-  });
-
-  return { student: students[0]!.user, students, vidyaAdminId: admin.id };
+  return students;
 }
+
+async function seedStudentProfiles(
+  db: PoolClient,
+  students: { user: SeedUser; profile: SeedStudent }[]
+) {
+  for (const { user, profile: p } of students) {
+    const school = SEED_SCHOOLS.find((s) => s.id === p.schoolId)!;
+    const onboarded = p.isOnboarded;
+    const idx = SEED_STUDENTS.indexOf(p) + 1;
+
+    await db.query(
+      `INSERT INTO "StudentProfile"
+         ("id", "userId", "activeClassId", "streakDays", "avatarUrl", "updatedAt",
+          "firstName", "lastName", "gender", "dob", "bloodGroup", "casteCategory",
+          "doorNo", "street", "villageCity", "mandal", "district", "state", "pincode",
+          "schoolId", "schoolName", "schoolCode", "grade", "section", "medium",
+          "rollNumber", "admissionNumber", "fatherName", "motherName",
+          "parentPhone", "guardianPhone", "language", "notificationsEnabled", "isOnboarded")
+       VALUES ($1, $2, $3, $4, '', $5::timestamp,
+               $6, $7, $8, $9::date, $10, $11,
+               $12, $13, $14, $15, $16, $17, $18,
+               $19, $20, $21, $22, $23, $24,
+               $25, $26, $27, $28,
+               $29, $30, $31, true, $32)
+       ON CONFLICT ("userId") DO UPDATE SET
+         "activeClassId" = EXCLUDED."activeClassId",
+         "streakDays" = EXCLUDED."streakDays",
+         "avatarUrl" = '',
+         "updatedAt" = EXCLUDED."updatedAt",
+         "firstName" = EXCLUDED."firstName",
+         "lastName" = EXCLUDED."lastName",
+         "gender" = EXCLUDED."gender",
+         "dob" = EXCLUDED."dob",
+         "bloodGroup" = EXCLUDED."bloodGroup",
+         "casteCategory" = EXCLUDED."casteCategory",
+         "doorNo" = EXCLUDED."doorNo",
+         "street" = EXCLUDED."street",
+         "villageCity" = EXCLUDED."villageCity",
+         "mandal" = EXCLUDED."mandal",
+         "district" = EXCLUDED."district",
+         "state" = EXCLUDED."state",
+         "pincode" = EXCLUDED."pincode",
+         "schoolId" = EXCLUDED."schoolId",
+         "schoolName" = EXCLUDED."schoolName",
+         "schoolCode" = EXCLUDED."schoolCode",
+         "grade" = EXCLUDED."grade",
+         "section" = EXCLUDED."section",
+         "medium" = EXCLUDED."medium",
+         "rollNumber" = EXCLUDED."rollNumber",
+         "admissionNumber" = EXCLUDED."admissionNumber",
+         "fatherName" = EXCLUDED."fatherName",
+         "motherName" = EXCLUDED."motherName",
+         "parentPhone" = EXCLUDED."parentPhone",
+         "guardianPhone" = EXCLUDED."guardianPhone",
+         "language" = EXCLUDED."language",
+         "notificationsEnabled" = true,
+         "isOnboarded" = EXCLUDED."isOnboarded"`,
+      [
+        newId(),
+        user.id,
+        p.activeClassId,
+        p.streakDays,
+        iso(new Date()),
+        p.firstName,
+        p.lastName,
+        p.gender,
+        p.dob,
+        onboarded ? "B+" : null,
+        onboarded ? ["OC", "BC", "SC", "ST"][idx % 4]! : null,
+        onboarded ? `${10 + idx}-${idx}` : null,
+        onboarded ? "Temple Street" : null,
+        onboarded ? school.mandal : null,
+        onboarded ? school.mandal : null,
+        onboarded ? school.district : null,
+        onboarded ? "Andhra Pradesh" : null,
+        onboarded ? "530026" : null,
+        p.schoolId,
+        school.name,
+        school.udiseCode,
+        p.grade,
+        onboarded ? "A" : null,
+        onboarded ? (p.language === "te" ? "TELUGU" : "ENGLISH") : null,
+        onboarded ? String(idx).padStart(2, "0") : null,
+        onboarded ? `ADM-2026-${String(idx).padStart(4, "0")}` : null,
+        onboarded ? `${p.lastName} Sr.` : null,
+        onboarded ? `Mrs. ${p.lastName}` : null,
+        onboarded ? `98480000${String(idx).padStart(2, "0")}` : null,
+        onboarded ? `98490000${String(idx).padStart(2, "0")}` : null,
+        p.language,
+        onboarded,
+      ]
+    );
+  }
+  console.log(`Seeded student profiles: ${students.length}`);
+}
+
+// -------------------------------------------------------------- curriculum --
 
 async function seedCurriculum(db: PoolClient) {
   const classes = getClasses();
@@ -246,36 +468,15 @@ async function seedCurriculum(db: PoolClient) {
           ]
         );
 
-        // Inline chapter quiz from curriculum package → Quiz + question
-        if (chapter.quiz) {
-          const quizId = `quiz-${chapter.id}`;
-          await upsertQuiz(db, {
-            id: quizId,
-            chapterId: chapter.id,
-            title: `${chapter.title} Check`,
-            description: chapter.quiz.question.slice(0, 120),
-            timeLimitMinutes: 10,
-          });
-          await db.query(`DELETE FROM "QuizQuestion" WHERE "quizId" = $1`, [
-            quizId,
-          ]);
-          await insertQuizQuestion(db, {
-            id: `${quizId}-q1`,
-            quizId,
-            question: chapter.quiz.question,
-            options: chapter.quiz.options,
-            correctIndex: chapter.quiz.correctIndex,
-            explanation: chapter.quiz.explanation,
-            order: 0,
-          });
-        }
-
         for (const section of chapter.sections) {
+          const keyPoints = [section.summaryPoint, section.keyAxiom].filter(
+            (v): v is string => typeof v === "string" && v.length > 0
+          );
           await db.query(
             `INSERT INTO "Section"
                ("id", "chapterId", "title", "content", "order", "durationMinutes",
-                "summaryPoint", "keyAxiom", "updatedAt")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::timestamp)
+                "summaryPoint", "keyAxiom", "keyPoints", "updatedAt")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::text[], $10::timestamp)
              ON CONFLICT ("id") DO UPDATE SET
                "chapterId" = EXCLUDED."chapterId",
                "title" = EXCLUDED."title",
@@ -284,6 +485,7 @@ async function seedCurriculum(db: PoolClient) {
                "durationMinutes" = EXCLUDED."durationMinutes",
                "summaryPoint" = EXCLUDED."summaryPoint",
                "keyAxiom" = EXCLUDED."keyAxiom",
+               "keyPoints" = EXCLUDED."keyPoints",
                "updatedAt" = EXCLUDED."updatedAt"`,
             [
               section.id,
@@ -294,6 +496,7 @@ async function seedCurriculum(db: PoolClient) {
               section.durationMinutes ?? null,
               section.summaryPoint ?? null,
               section.keyAxiom ?? null,
+              keyPoints,
               iso(new Date()),
             ]
           );
@@ -304,606 +507,145 @@ async function seedCurriculum(db: PoolClient) {
   console.log(`Seeded curriculum: ${classes.length} classes`);
 }
 
-async function upsertQuiz(
-  db: PoolClient,
-  q: {
-    id: string;
-    chapterId: string;
-    title: string;
-    description: string;
-    timeLimitMinutes: number;
-  }
-) {
-  await db.query(
-    `INSERT INTO "Quiz"
-       ("id", "chapterId", "title", "description", "timeLimitMinutes", "updatedAt")
-     VALUES ($1, $2, $3, $4, $5, $6::timestamp)
-     ON CONFLICT ("id") DO UPDATE SET
-       "chapterId" = EXCLUDED."chapterId",
-       "title" = EXCLUDED."title",
-       "description" = EXCLUDED."description",
-       "timeLimitMinutes" = EXCLUDED."timeLimitMinutes",
-       "updatedAt" = EXCLUDED."updatedAt"`,
-    [q.id, q.chapterId, q.title, q.description, q.timeLimitMinutes, iso(new Date())]
-  );
-}
+// ----------------------------------------------------- notifications/progress --
 
-async function insertQuizQuestion(
-  db: PoolClient,
-  q: {
-    id: string;
-    quizId: string;
-    question: string;
-    options: string[];
-    correctIndex: number;
-    explanation: string;
-    order: number;
-  }
-) {
-  await db.query(
-    `INSERT INTO "QuizQuestion"
-       ("id", "quizId", "question", "options", "correctIndex", "explanation", "order")
-     VALUES ($1, $2, $3, $4::text[], $5, $6, $7)
-     ON CONFLICT ("id") DO UPDATE SET
-       "quizId" = EXCLUDED."quizId",
-       "question" = EXCLUDED."question",
-       "options" = EXCLUDED."options",
-       "correctIndex" = EXCLUDED."correctIndex",
-       "explanation" = EXCLUDED."explanation",
-       "order" = EXCLUDED."order"`,
-    [q.id, q.quizId, q.question, q.options, q.correctIndex, q.explanation, q.order]
-  );
-}
-
-async function seedStudentProfiles(
+async function seedNotifications(
   db: PoolClient,
   students: { user: SeedUser; profile: SeedStudent }[]
 ) {
-  for (const { user, profile } of students) {
-    await db.query(
-      `INSERT INTO "StudentProfile"
-         ("id", "userId", "activeClassId", "streakDays", "studyGoalMinutes", "avatarUrl", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, '', $6::timestamp)
-       ON CONFLICT ("userId") DO UPDATE SET
-         "activeClassId" = EXCLUDED."activeClassId",
-         "streakDays" = EXCLUDED."streakDays",
-         "studyGoalMinutes" = EXCLUDED."studyGoalMinutes",
-         "avatarUrl" = '',
-         "updatedAt" = EXCLUDED."updatedAt"`,
-      [
-        newId(),
-        user.id,
-        profile.activeClassId,
-        profile.streakDays,
-        profile.studyGoalMinutes,
-        iso(new Date()),
-      ]
-    );
-  }
-}
+  // Legacy notifications from earlier seeds (linked to removed Tasks/Exams screens).
+  await db.query(
+    `DELETE FROM "Notification" WHERE "id" IN ('notif-1', 'notif-2', 'notif-3')`
+  );
 
-type SeedMaterial = {
-  id: string;
-  title: string;
-  description: string;
-  materialType: "pdf" | "video" | "presentation";
-  grade: number;
-  subjectName: string;
-  chapterTitle: string;
-  sectionTitle?: string;
-  language: string;
-  displayOrder: number;
-  status: "draft" | "published";
-  fileName?: string;
-  fileSizeBytes?: number;
-  fileUrl?: string;
-  videoUrl?: string;
-  authorName: string;
-  classId: string;
-  subjectId: string;
-  chapterId: string;
-  sectionId?: string;
-};
-
-async function seedDemoContent(
-  db: PoolClient,
-  studentId: string,
-  authorId: string,
-  extraStudents: { id: string; classId: string }[] = []
-) {
-  const materials: SeedMaterial[] = [
-    {
-      id: "mat-001",
-      title: "Rational Numbers - Chapter Reference Notes",
-      description:
-        "SCERT textbook notes covering closure, commutative and distributive properties.",
-      materialType: "pdf",
-      grade: 8,
-      subjectName: "Mathematics",
-      chapterTitle: "Rational Numbers",
-      sectionTitle: "Properties of Rational Numbers",
-      language: "English",
-      displayOrder: 1,
-      status: "published",
-      fileName: "Class8_Maths_Ch1_RationalNumbers.pdf",
-      fileSizeBytes: 2450000,
-      fileUrl: "https://cdn.vidya.edu.in/materials/c8/maths/ch1_notes.pdf",
-      authorName: "Dr. Ramesh Sharma",
-      classId: "class-8",
-      subjectId: "c8-maths",
-      chapterId: "c8-m-ch1",
-      sectionId: "c8-m-ch1-s1",
-    },
-    {
-      id: "mat-002",
-      title: "Distributive Law Animation",
-      description: "Visual proof of a(b + c) = ab + ac with geometry tiles.",
-      materialType: "video",
-      grade: 8,
-      subjectName: "Mathematics",
-      chapterTitle: "Rational Numbers",
-      language: "English",
-      displayOrder: 2,
-      status: "published",
-      videoUrl: "https://www.youtube.com/watch?v=demo-distributive-law",
-      authorName: "S. K. Verma",
-      classId: "class-8",
-      subjectId: "c8-maths",
-      chapterId: "c8-m-ch1",
-    },
-    {
-      id: "mat-003",
-      title: "Linear Equations Lecture Slides",
-      description: "Classroom deck on transposing and word problems.",
-      materialType: "presentation",
-      grade: 8,
-      subjectName: "Mathematics",
-      chapterTitle: "Linear Equations in One Variable",
-      language: "English",
-      displayOrder: 1,
-      status: "draft",
-      fileUrl: "https://cdn.vidya.edu.in/materials/c8/maths/ch2_slides.pptx",
-      authorName: "Dr. Ramesh Sharma",
-      classId: "class-8",
-      subjectId: "c8-maths",
-      chapterId: "c8-m-ch2",
-    },
-  ];
-
-  for (const m of materials) {
-    await db.query(
-      `INSERT INTO "Material"
-         ("id", "title", "description", "materialType", "classId", "grade",
-          "subjectId", "subjectName", "chapterId", "chapterTitle", "sectionId",
-          "sectionTitle", "language", "displayOrder", "status", "fileUrl",
-          "fileName", "fileSizeBytes", "videoUrl", "authorId", "authorName", "updatedAt")
-       VALUES ($1, $2, $3, $4::"MaterialType", $5, $6, $7, $8, $9, $10, $11, $12,
-               $13, $14, $15::"PublicationStatus", $16, $17, $18, $19, $20, $21, $22::timestamp)
-       ON CONFLICT ("id") DO UPDATE SET
-         "title" = EXCLUDED."title",
-         "description" = EXCLUDED."description",
-         "status" = EXCLUDED."status",
-         "fileUrl" = EXCLUDED."fileUrl",
-         "videoUrl" = EXCLUDED."videoUrl",
-         "updatedAt" = EXCLUDED."updatedAt"`,
-      [
-        m.id,
-        m.title,
-        m.description,
-        m.materialType,
-        m.classId,
-        m.grade,
-        m.subjectId,
-        m.subjectName,
-        m.chapterId,
-        m.chapterTitle,
-        m.sectionId ?? null,
-        m.sectionTitle ?? null,
-        m.language,
-        m.displayOrder,
-        m.status,
-        m.fileUrl ?? null,
-        m.fileName ?? null,
-        m.fileSizeBytes ?? null,
-        m.videoUrl ?? null,
-        authorId,
-        m.authorName,
-        iso(new Date()),
-      ]
-    );
-  }
-
-  // Multi-question demo quiz matching student mock
-  const demoQuizId = "quiz-c8-m-ch1";
-  await upsertQuiz(db, {
-    id: demoQuizId,
-    chapterId: "c8-m-ch1",
-    title: "Rational Numbers Quiz",
-    description: "Test your understanding of rational number properties.",
-    timeLimitMinutes: 10,
-  });
-  await db.query(`DELETE FROM "QuizQuestion" WHERE "quizId" = $1`, [demoQuizId]);
-  const demoQuestions = [
-    {
-      id: "q1",
-      question:
-        "Which property states that a × (b + c) = a × b + a × c for rational numbers?",
-      options: ["Commutative", "Associative", "Distributive", "Closure"],
-      correctIndex: 2,
-      explanation:
-        "The Distributive Property states that multiplication distributes over addition.",
-      order: 0,
-    },
-    {
-      id: "q2",
-      question: "What is the additive identity for rational numbers?",
-      options: ["1", "0", "-1", "½"],
-      correctIndex: 1,
-      explanation: "Zero (0) is the additive identity.",
-      order: 1,
-    },
-    {
-      id: "q3",
-      question: "The multiplicative inverse of -3/7 is:",
-      options: ["3/7", "-7/3", "7/3", "-3/7"],
-      correctIndex: 1,
-      explanation: "The reciprocal of -3/7 is -7/3.",
-      order: 2,
-    },
-  ];
-  for (const q of demoQuestions) {
-    await insertQuizQuestion(db, { ...q, quizId: demoQuizId });
-  }
-
-  const now = Date.now();
-  const DAY = 86400000;
-  const tasks = [
-    {
-      id: "task-quiz-1",
-      title: "Rational Numbers Quiz",
-      description: "Test your understanding of properties of rational numbers.",
-      type: "quiz",
-      status: "pending",
-      priority: "high",
-      subjectId: "c8-maths",
-      subjectName: "Mathematics",
-      classId: "class-8",
-      chapterId: "c8-m-ch1",
-      chapterTitle: "Rational Numbers",
-      dueDate: new Date(now + DAY * 2),
-      estimatedMinutes: 15,
-      totalQuestions: 10,
-      completedQuestions: null as number | null,
-      icon: "quiz",
-    },
-    {
-      id: "task-assign-1",
-      title: "Force & Pressure Worksheet",
-      description: "Complete the worksheet on types of forces and pressure.",
-      type: "assignment",
-      status: "pending",
-      priority: "medium",
-      subjectId: "c8-pscience",
-      subjectName: "Physical Science",
-      classId: "class-8",
-      chapterId: "c8-ps-ch1",
-      chapterTitle: "Force and Pressure",
-      dueDate: new Date(now + DAY * 3),
-      estimatedMinutes: 30,
-      totalQuestions: 15,
-      completedQuestions: null as number | null,
-      icon: "assignment",
-    },
-    {
-      id: "task-practice-1",
-      title: "Daily Practice: Linear Equations",
-      description: "Solve 5 practice problems on linear equations.",
-      type: "practice",
-      status: "in_progress",
-      priority: "medium",
-      subjectId: "c8-maths",
-      subjectName: "Mathematics",
-      classId: "class-8",
-      chapterId: "c8-m-ch2",
-      chapterTitle: "Linear Equations in One Variable",
-      dueDate: new Date(now + DAY),
-      estimatedMinutes: 20,
-      totalQuestions: 5,
-      completedQuestions: 2 as number | null,
-      icon: "fitness-center",
-    },
-  ];
-
-  for (const t of tasks) {
-    await db.query(
-      `INSERT INTO "Task"
-         ("id", "title", "description", "type", "status", "priority", "subjectId",
-          "subjectName", "classId", "chapterId", "chapterTitle", "assigneeUserId",
-          "dueDate", "estimatedMinutes", "totalQuestions", "completedQuestions",
-          "icon", "updatedAt")
-       VALUES ($1, $2, $3, $4::"TaskType", $5::"TaskStatus", $6::"TaskPriority",
-               $7, $8, $9, $10, $11, $12, $13::timestamp, $14, $15, $16, $17, $18::timestamp)
-       ON CONFLICT ("id") DO UPDATE SET
-         "title" = EXCLUDED."title",
-         "status" = EXCLUDED."status",
-         "dueDate" = EXCLUDED."dueDate",
-         "updatedAt" = EXCLUDED."updatedAt"`,
-      [
-        t.id,
-        t.title,
-        t.description,
-        t.type,
-        t.status,
-        t.priority,
-        t.subjectId,
-        t.subjectName,
-        t.classId,
-        t.chapterId,
-        t.chapterTitle,
-        studentId,
-        iso(t.dueDate),
-        t.estimatedMinutes,
-        t.totalQuestions,
-        t.completedQuestions,
-        t.icon,
-        iso(new Date()),
-      ]
-    );
-  }
-
-  await db.query(`DELETE FROM "Notification" WHERE "userId" = $1`, [studentId]);
   const notifications = [
     {
-      id: "notif-1",
-      title: "New Quiz Available: Rational Numbers",
-      message:
-        "Test your understanding on Rational Numbers properties before this Friday.",
-      detailedBody: "Chapter-end formative assessment is now open.",
-      type: "reminder",
-      icon: "quiz",
-      actionRoute: "Tasks",
-      actionLabel: "Go to Quiz in Tasks",
+      key: "welcome",
+      title: "Welcome to Vidya",
+      message: "Your learning journey starts here.",
+      detailedBody:
+        "Browse your class subjects, open a chapter and keep track of your progress.",
+      type: "system",
+      icon: "school",
+      actionRoute: "Learn",
+      actionLabel: "Start learning",
+      read: false,
     },
     {
-      id: "notif-2",
-      title: "5-Day Learning Streak Unlocked!",
-      message: "You have completed 5 consecutive days of study!",
-      detailedBody: "Keep up the brilliant pace.",
+      key: "streak",
+      title: "Learning streak unlocked!",
+      message: "You are on a roll — keep studying every day.",
+      detailedBody: "Consistent daily study builds long-term understanding.",
       type: "achievement",
       icon: "emoji-events",
       actionRoute: "Progress",
-      actionLabel: "View Streak on Progress Page",
+      actionLabel: "View progress",
+      read: false,
     },
     {
-      id: "notif-3",
-      title: "AP SCERT Board: SA-1 Examination Timetable Released",
-      message: "Official timetable for Summative Assessment-1 announced.",
-      detailedBody: "Examination window: November 16–24, 2026.",
+      key: "announcement",
+      title: "AP SCERT: new textbook content added",
+      message: "Fresh chapter notes are now available in your curriculum.",
+      detailedBody: "Open Learn to explore the latest chapters and sections.",
       type: "announcement",
       icon: "campaign",
-      actionRoute: "ExamSchedule",
-      actionLabel: "View Exam Schedule",
+      actionRoute: "Learn",
+      actionLabel: "Open Learn",
+      read: true,
     },
-  ];
-  for (const n of notifications) {
-    await db.query(
-      `INSERT INTO "Notification"
-         ("id", "userId", "title", "message", "detailedBody", "type", "icon",
-          "actionRoute", "actionLabel")
-       VALUES ($1, $2, $3, $4, $5, $6::"NotificationType", $7, $8, $9)
-       ON CONFLICT ("id") DO UPDATE SET
-         "userId" = EXCLUDED."userId",
-         "title" = EXCLUDED."title",
-         "message" = EXCLUDED."message",
-         "detailedBody" = EXCLUDED."detailedBody",
-         "type" = EXCLUDED."type",
-         "icon" = EXCLUDED."icon",
-         "actionRoute" = EXCLUDED."actionRoute",
-         "actionLabel" = EXCLUDED."actionLabel"`,
-      [
-        n.id,
-        studentId,
-        n.title,
-        n.message,
-        n.detailedBody,
-        n.type,
-        n.icon,
-        n.actionRoute,
-        n.actionLabel,
-      ]
-    );
-  }
+  ] as const;
 
-  await db.query(`DELETE FROM "ExamScheduleItem" WHERE "classId" = $1`, [
-    "class-8",
-  ]);
-  const exams = [
-    {
-      id: "exam-sa1-math",
-      subjectName: "Mathematics",
-      title: "SA-1 Mathematics",
-      examDate: new Date("2026-11-16T09:30:00Z"),
-      startTime: "09:30",
-      endTime: "12:15",
-      venue: "Main Hall",
-      notes: "Units 1–5" as string | null,
-    },
-    {
-      id: "exam-sa1-science",
-      subjectName: "Physical Science",
-      title: "SA-1 Physical Science",
-      examDate: new Date("2026-11-18T09:30:00Z"),
-      startTime: "09:30",
-      endTime: "12:15",
-      venue: "Lab Block",
-      notes: null as string | null,
-    },
-  ];
-  for (const e of exams) {
-    await db.query(
-      `INSERT INTO "ExamScheduleItem"
-         ("id", "classId", "subjectName", "title", "examDate", "startTime",
-          "endTime", "venue", "notes", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5::timestamp, $6, $7, $8, $9, $10::timestamp)
-       ON CONFLICT ("id") DO UPDATE SET
-         "classId" = EXCLUDED."classId",
-         "subjectName" = EXCLUDED."subjectName",
-         "title" = EXCLUDED."title",
-         "examDate" = EXCLUDED."examDate",
-         "startTime" = EXCLUDED."startTime",
-         "endTime" = EXCLUDED."endTime",
-         "venue" = EXCLUDED."venue",
-         "notes" = EXCLUDED."notes",
-         "updatedAt" = EXCLUDED."updatedAt"`,
-      [
-        e.id,
-        "class-8",
-        e.subjectName,
-        e.title,
-        iso(e.examDate),
-        e.startTime,
-        e.endTime,
-        e.venue,
-        e.notes,
-        iso(new Date()),
-      ]
-    );
-  }
-
-  await db.query(`DELETE FROM "ExamResult" WHERE "userId" = $1`, [studentId]);
-  const results = [
-    {
-      id: "result-fa1-math",
-      subjectName: "Mathematics",
-      examTitle: "FA-1 Mathematics",
-      marksObtained: 18,
-      marksMax: 20,
-      grade: "A1",
-      remarks: "Excellent" as string | null,
-    },
-    {
-      id: "result-fa1-eng",
-      subjectName: "English",
-      examTitle: "FA-1 English",
-      marksObtained: 16,
-      marksMax: 20,
-      grade: "A2",
-      remarks: null as string | null,
-    },
-  ];
-  for (const r of results) {
-    await db.query(
-      `INSERT INTO "ExamResult"
-         ("id", "userId", "subjectName", "examTitle", "marksObtained", "marksMax",
-          "grade", "remarks")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT ("id") DO UPDATE SET
-         "userId" = EXCLUDED."userId",
-         "subjectName" = EXCLUDED."subjectName",
-         "examTitle" = EXCLUDED."examTitle",
-         "marksObtained" = EXCLUDED."marksObtained",
-         "marksMax" = EXCLUDED."marksMax",
-         "grade" = EXCLUDED."grade",
-         "remarks" = EXCLUDED."remarks"`,
-      [
-        r.id,
-        studentId,
-        r.subjectName,
-        r.examTitle,
-        r.marksObtained,
-        r.marksMax,
-        r.grade,
-        r.remarks,
-      ]
-    );
-  }
-
-  await db.query(
-    `INSERT INTO "ChapterProgress"
-       ("id", "userId", "chapterId", "subjectId", "classId", "completedSections",
-        "progressPercent", "updatedAt")
-     VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8::timestamp)
-     ON CONFLICT ("userId", "chapterId") DO UPDATE SET
-       "completedSections" = EXCLUDED."completedSections",
-       "progressPercent" = EXCLUDED."progressPercent",
-       "completed" = false,
-       "lastAccessed" = CURRENT_TIMESTAMP,
-       "updatedAt" = EXCLUDED."updatedAt"`,
-    [
-      newId(),
-      studentId,
-      "c8-m-ch1",
-      "c8-maths",
-      "class-8",
-      ["c8-m-ch1-s1", "c8-m-ch1-s2"],
-      50,
-      iso(new Date()),
-    ]
-  );
-
-  // Weekly study minutes for charts (primary + a couple classmates)
-  const studyUsers = [
-    { userId: studentId, base: 20 },
-    ...extraStudents.slice(0, 2).map((s, idx) => ({
-      userId: s.id,
-      base: 15 + idx * 8,
-    })),
-  ];
-  for (const { userId, base } of studyUsers) {
-    for (let i = 0; i < 7; i++) {
-      const day = new Date();
-      day.setUTCHours(0, 0, 0, 0);
-      day.setUTCDate(day.getUTCDate() - i);
+  for (const { user } of students) {
+    for (const n of notifications) {
       await db.query(
-        `INSERT INTO "StudySession" ("id", "userId", "minutes", "day")
-         VALUES ($1, $2, $3, $4::date)
-         ON CONFLICT ("userId", "day") DO UPDATE SET
-           "minutes" = EXCLUDED."minutes"`,
-        [newId(), userId, base + i * 5, day.toISOString().slice(0, 10)]
+        `INSERT INTO "Notification"
+           ("id", "userId", "title", "message", "detailedBody", "type", "icon",
+            "actionRoute", "actionLabel", "readAt")
+         VALUES ($1, $2, $3, $4, $5, $6::"NotificationType", $7, $8, $9, $10::timestamp)
+         ON CONFLICT ("id") DO UPDATE SET
+           "title" = EXCLUDED."title",
+           "message" = EXCLUDED."message",
+           "detailedBody" = EXCLUDED."detailedBody",
+           "type" = EXCLUDED."type",
+           "icon" = EXCLUDED."icon",
+           "actionRoute" = EXCLUDED."actionRoute",
+           "actionLabel" = EXCLUDED."actionLabel",
+           "readAt" = EXCLUDED."readAt"`,
+        [
+          `notif-${n.key}-${user.id}`,
+          user.id,
+          n.title,
+          n.message,
+          n.detailedBody,
+          n.type,
+          n.icon,
+          n.actionRoute,
+          n.actionLabel,
+          n.read ? iso(new Date()) : null,
+        ]
       );
     }
   }
+  console.log(`Seeded notifications: ${students.length * notifications.length}`);
+}
 
-  // Light progress for other students so dashboards look inhabited
-  const chapterByClass: Record<string, { chapterId: string; subjectId: string }> =
-    {
-      "class-6": { chapterId: "c6-m-ch1", subjectId: "c6-maths" },
-      "class-7": { chapterId: "c7-m-ch1", subjectId: "c7-maths" },
-      "class-8": { chapterId: "c8-m-ch1", subjectId: "c8-maths" },
-      "class-9": { chapterId: "c9-m-ch1", subjectId: "c9-maths" },
-      "class-10": { chapterId: "c10-m-ch1", subjectId: "c10-maths" },
-    };
-  for (const extra of extraStudents) {
-    const target = chapterByClass[extra.classId];
-    if (!target) continue;
-
-    // Only insert if the chapter exists (curriculum may not have every id)
-    const exists = await db.query(`SELECT 1 FROM "Chapter" WHERE "id" = $1`, [
-      target.chapterId,
-    ]);
-    if (exists.rowCount === 0) continue;
-
-    await db.query(
-      `INSERT INTO "ChapterProgress"
-         ("id", "userId", "chapterId", "subjectId", "classId", "progressPercent", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, 25, $6::timestamp)
-       ON CONFLICT ("userId", "chapterId") DO UPDATE SET
-         "progressPercent" = 25,
-         "completed" = false,
-         "lastAccessed" = CURRENT_TIMESTAMP,
-         "updatedAt" = EXCLUDED."updatedAt"`,
-      [
-        newId(),
-        extra.id,
-        target.chapterId,
-        target.subjectId,
-        extra.classId,
-        iso(new Date()),
-      ]
+async function seedChapterProgress(
+  db: PoolClient,
+  students: { user: SeedUser; profile: SeedStudent }[]
+) {
+  let count = 0;
+  for (const { user, profile } of students) {
+    // First two chapters of the first subject in the student's class.
+    const { rows: chapters } = await db.query<{
+      id: string;
+      subjectId: string;
+      firstSectionId: string | null;
+    }>(
+      `SELECT c."id", c."subjectId",
+              (SELECT se."id" FROM "Section" se
+                WHERE se."chapterId" = c."id"
+                ORDER BY se."order" ASC LIMIT 1) AS "firstSectionId"
+         FROM "Chapter" c
+         JOIN "Subject" s ON s."id" = c."subjectId"
+        WHERE s."classId" = $1
+        ORDER BY s."order" ASC, c."order" ASC
+        LIMIT 2`,
+      [profile.activeClassId]
     );
-  }
 
-  console.log("Seeded demo materials, tasks, notifications, exams, progress");
+    for (let i = 0; i < chapters.length; i++) {
+      const ch = chapters[i]!;
+      const completed = i === 0 && profile.streakDays >= 5;
+      const percent = completed ? 100 : 25 + i * 10;
+      await db.query(
+        `INSERT INTO "ChapterProgress"
+           ("id", "userId", "chapterId", "subjectId", "classId", "completed",
+            "completedSections", "progressPercent", "lastSectionId", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8, $9, $10::timestamp)
+         ON CONFLICT ("userId", "chapterId") DO UPDATE SET
+           "completed" = EXCLUDED."completed",
+           "completedSections" = EXCLUDED."completedSections",
+           "progressPercent" = EXCLUDED."progressPercent",
+           "lastSectionId" = EXCLUDED."lastSectionId",
+           "lastAccessed" = (NOW() AT TIME ZONE 'UTC'),
+           "updatedAt" = EXCLUDED."updatedAt"`,
+        [
+          newId(),
+          user.id,
+          ch.id,
+          ch.subjectId,
+          profile.activeClassId,
+          completed,
+          ch.firstSectionId ? [ch.firstSectionId] : [],
+          percent,
+          ch.firstSectionId,
+          iso(new Date()),
+        ]
+      );
+      count++;
+    }
+  }
+  console.log(`Seeded chapter progress rows: ${count}`);
 }
 
 async function main() {
@@ -911,26 +653,23 @@ async function main() {
   try {
     await db.query("BEGIN");
 
-    const { student, students, vidyaAdminId } = await seedUsers(db);
+    await seedSchools(db);
+    const students = await seedUsers(db);
     await seedCurriculum(db);
     await seedStudentProfiles(db, students);
-    const extras = students.slice(1).map(({ user, profile }) => ({
-      id: user.id,
-      classId: profile.activeClassId,
-    }));
-    await seedDemoContent(db, student.id, vidyaAdminId, extras);
+    await seedNotifications(db, students);
+    await seedChapterProgress(db, students);
 
     await db.query("COMMIT");
 
-    console.log("\nSeeded login accounts (all email-verified):\n");
-    console.log("Students (password: StudentDemo1!):");
+    console.log("\nSeeded student accounts (password: StudentDemo1!):\n");
     for (const { profile } of students) {
       console.log(
-        `  ${profile.email.padEnd(32)}  ${profile.name.padEnd(16)}  ${profile.activeClassId}`
+        `  ${profile.email.padEnd(32)}  ${`${profile.firstName} ${profile.lastName}`.padEnd(16)}  ${profile.activeClassId}${
+          profile.isOnboarded ? "" : "  (not onboarded)"
+        }`
       );
     }
-    console.log("\nAdmin (password: AdminDemo1!):");
-    console.log(`  ${VIDYA_ADMIN.email.padEnd(32)}  ${VIDYA_ADMIN.name}`);
   } catch (e) {
     await db.query("ROLLBACK").catch(() => undefined);
     throw e;

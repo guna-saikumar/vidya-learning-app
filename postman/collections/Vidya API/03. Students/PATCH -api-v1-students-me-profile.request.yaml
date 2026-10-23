@@ -1,0 +1,19 @@
+$kind: http-request
+name: "PATCH /api/v1/students/me/profile"
+description: "Partial profile update."
+url: "{{baseUrl}}/api/v1/students/me/profile"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "section": "A",
+      "guardianPhone": "9000000000"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 3000

@@ -1,0 +1,44 @@
+$kind: http-request
+name: "PUT /api/v1/students/me/onboarding"
+description: "Submit the 4-step onboarding wizard."
+url: "{{baseUrl}}/api/v1/students/me/onboarding"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "firstName": "Meera",
+      "lastName": "Iyer",
+      "gender": "FEMALE",
+      "dob": "2014-05-12",
+      "aadharNumber": "123456789012",
+      "bloodGroup": "O+",
+      "casteCategory": "BC",
+      "doorNo": "4-5",
+      "street": "Main Street",
+      "villageCity": "Tirupati",
+      "mandal": "Tirupati Rural",
+      "district": "Tirupati",
+      "state": "Andhra Pradesh",
+      "pincode": "517502",
+      "schoolId": "school-ctr-001",
+      "schoolName": "ZPHS Tirupati Rural",
+      "schoolCode": "28220100606",
+      "classId": "class-7",
+      "grade": "7",
+      "section": "B",
+      "medium": "TELUGU",
+      "rollNumber": "12",
+      "admissionNumber": "ADM-2026-0077",
+      "fatherName": "R Iyer",
+      "motherName": "S Iyer",
+      "parentPhone": "9876543210",
+      "guardianPhone": "9876543211"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 2000

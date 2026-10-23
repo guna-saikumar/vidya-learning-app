@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/students/me/bookmarks"
+description: "List bookmarks."
+url: "{{baseUrl}}/api/v1/students/me/bookmarks"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 9000

@@ -1,16 +1,16 @@
-import { type AdminRole, type UserRole } from "./admin-schemas";
+/** Roles that may use the API. Only students are issued tokens. */
+export const USER_ROLE_VALUES = ["STUDENT"] as const;
+export type UserRole = (typeof USER_ROLE_VALUES)[number];
 
-export type { AdminRole, UserRole };
-
-/** Authenticated user from GET /api/auth/me (student). */
+/** Minimal authenticated user (`{ id, email }`) as returned by the API. */
 export interface AuthUser {
   id: string;
-  name: string;
   email: string;
-  role: UserRole;
-  emailVerifiedAt: string | null;
+  /** Optional display name — not returned by the auth API; may be hydrated client-side. */
+  name?: string;
 }
 
+/** POST /api/v1/auth/login */
 export interface LoginRequest {
   email: string;
   password: string;
@@ -18,60 +18,35 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-  };
+  refreshToken: string;
+  user: AuthUser;
+}
+
+/** POST /api/v1/auth/refresh */
+export interface RefreshRequest {
+  refreshToken: string;
+}
+
+export interface RefreshResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/** POST /api/v1/auth/logout */
+export interface LogoutRequest {
+  refreshToken: string;
+}
+
+export interface LogoutResponse {
+  success: boolean;
+}
+
+/** GET /api/v1/auth/me */
+export interface MeResponse {
+  user: AuthUser;
+  isOnboarded: boolean;
 }
 
 export interface ErrorResponse {
   error: string;
-}
-
-/** Admin profile from GET /api/admin/auth/me */
-export interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  role: AdminRole;
-  department?: string | null;
-  emailVerifiedAt?: string | null;
-}
-
-export interface AdminLoginInput {
-  email: string;
-  password: string;
-}
-
-export interface AdminRegisterInput {
-  name: string;
-  email: string;
-  password: string;
-  department?: string;
-}
-
-export interface AdminVerifyEmailInput {
-  email: string;
-  otp: string;
-}
-
-export interface AdminForgotPasswordInput {
-  email: string;
-}
-
-export interface AdminResetPasswordInput {
-  email: string;
-  otp: string;
-  newPassword: string;
-}
-
-export interface AdminAuthResponse {
-  accessToken: string;
-  user: AdminUser;
-}
-
-export interface MessageResponse {
-  message: string;
 }

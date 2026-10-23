@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { ApiClient, AuthApi, ApiError } from '@vidya/api-client';
-import { AuthUser, LoginRequest, LoginResponse } from '@vidya/auth';
+import { AuthUser, LoginResponse, MeResponse, RefreshResponse } from '@vidya/auth';
 
 // In-memory mock storage simulating AsyncStorage
 class MockStorage {
@@ -43,7 +43,7 @@ describe('Student Authentication & Session Gate', () => {
     originalFetch = globalThis.fetch;
   });
 
-  it('1. Successful Login: authenticates via POST /api/auth/login and stores session', async () => {
+  it('1. Successful Login: authenticates via POST /api/v1/auth/login and stores session', async () => {
     let requestedUrl = '';
     let requestMethod = '';
     let requestBody: any = null;
@@ -55,11 +55,10 @@ describe('Student Authentication & Session Gate', () => {
 
       const mockResponse: LoginResponse = {
         accessToken: 'mock-jwt-token-12345',
+        refreshToken: 'mock-refresh-token-67890',
         user: {
           id: 'student-id-1',
-          name: 'Demo Student',
           email: 'student@vidya.test',
-          role: 'STUDENT',
         },
       };
 
@@ -78,7 +77,7 @@ describe('Student Authentication & Session Gate', () => {
     });
 
     // Verify correct endpoint and payload
-    assert.strictEqual(requestedUrl, 'http://localhost:4000/api/auth/login');
+    assert.strictEqual(requestedUrl, 'http://localhost:4000/api/v1/auth/login');
     assert.strictEqual(requestMethod, 'POST');
     assert.deepStrictEqual(requestBody, {
       email: 'student@vidya.test',
@@ -88,7 +87,7 @@ describe('Student Authentication & Session Gate', () => {
     // Verify response
     assert.strictEqual(loginRes.accessToken, 'mock-jwt-token-12345');
     assert.strictEqual(loginRes.user.email, 'student@vidya.test');
-    assert.strictEqual(loginRes.user.role, 'STUDENT');
+    assert.strictEqual(loginRes.refreshToken, 'mock-refresh-token-67890');
 
     // Simulate saving session to persistent storage
     await mockStorage.setItem(AUTH_TOKEN_KEY, loginRes.accessToken);
@@ -133,21 +132,18 @@ describe('Student Authentication & Session Gate', () => {
     assert.strictEqual(client.getAuthToken(), null);
   });
 
-  it('3. Session Restoration After Reload: calls GET /api/auth/me and restores valid session', async () => {
+  it('3. Session Restoration After Reload: calls GET /api/v1/auth/me and restores valid session', async () => {
     // Simulate pre-existing token saved in storage from previous session
     await mockStorage.setItem(AUTH_TOKEN_KEY, 'saved-valid-jwt-token');
 
     let meHeaders: Headers | undefined;
     globalThis.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
       meHeaders = new Headers(init?.headers);
-      const mockUser: AuthUser = {
-        id: 'student-id-1',
-        name: 'Demo Student',
-        email: 'student@vidya.test',
-        role: 'STUDENT',
-        emailVerifiedAt: '2026-10-14T00:00:00.000Z',
+      const mockMe: MeResponse = {
+        user: { id: 'student-id-1', email: 'student@vidya.test' },
+        isOnboarded: true,
       };
-      return new Response(JSON.stringify(mockUser), {
+      return new Response(JSON.stringify(mockMe), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -161,13 +157,58 @@ describe('Student Authentication & Session Gate', () => {
     assert.ok(storedToken);
     client.setAccessToken(storedToken);
 
-    const user = await authApi.me();
+    const me = await authApi.me();
 
-    // Verify Authorization Bearer header was sent to GET /api/auth/me
+    // Verify Authorization Bearer header was sent to GET /api/v1/auth/me
     assert.strictEqual(meHeaders?.get('Authorization'), 'Bearer saved-valid-jwt-token');
-    assert.strictEqual(user.id, 'student-id-1');
-    assert.strictEqual(user.email, 'student@vidya.test');
-    assert.strictEqual(user.role, 'STUDENT');
+    assert.strictEqual(me.user.id, 'student-id-1');
+    assert.strictEqual(me.user.email, 'student@vidya.test');
+    assert.strictEqual(me.isOnboarded, true);
+  });
+
+  it('3b. Token Refresh: POST /api/v1/auth/refresh rotates the token pair', async () => {
+    let requestedUrl = '';
+    let requestBody: any = null;
+    globalThis.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
+      requestedUrl = url.toString();
+      requestBody = init?.body ? JSON.parse(init.body as string) : null;
+      const res: RefreshResponse = {
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+      };
+      return new Response(JSON.stringify(res), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const authApi = new AuthApi(new ApiClient('http://localhost:4000'));
+    const res = await authApi.refresh('old-refresh');
+
+    assert.strictEqual(requestedUrl, 'http://localhost:4000/api/v1/auth/refresh');
+    assert.deepStrictEqual(requestBody, { refreshToken: 'old-refresh' });
+    assert.strictEqual(res.accessToken, 'new-access');
+    assert.strictEqual(res.refreshToken, 'new-refresh');
+  });
+
+  it('3c. Logout: POST /api/v1/auth/logout revokes the refresh token', async () => {
+    let requestedUrl = '';
+    let requestBody: any = null;
+    globalThis.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
+      requestedUrl = url.toString();
+      requestBody = init?.body ? JSON.parse(init.body as string) : null;
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const authApi = new AuthApi(new ApiClient('http://localhost:4000'));
+    const res = await authApi.logout('some-refresh');
+
+    assert.strictEqual(requestedUrl, 'http://localhost:4000/api/v1/auth/logout');
+    assert.deepStrictEqual(requestBody, { refreshToken: 'some-refresh' });
+    assert.deepStrictEqual(res, { success: true });
   });
 
   it('4. Expired or Invalid Session on Startup: clears storage without redirect loops', async () => {
@@ -193,7 +234,7 @@ describe('Student Authentication & Session Gate', () => {
 
     let sessionUser: AuthUser | null = null;
     try {
-      sessionUser = await authApi.me();
+      sessionUser = (await authApi.me()).user;
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         await mockStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_USER_KEY]);
@@ -245,7 +286,7 @@ describe('Student Authentication & Session Gate', () => {
 
     // In Unauthenticated state: Login screen is active, protected screens blocked
     const accessibleRoutesUnauthenticated = ['Login'];
-    const protectedRoutes = ['Home', 'Learn', 'Tasks', 'Progress', 'Profile', 'ExamResults'];
+    const protectedRoutes = ['Home', 'Learn', 'Tasks', 'Progress', 'Profile', 'Notifications'];
     for (const r of protectedRoutes) {
       assert.strictEqual(accessibleRoutesUnauthenticated.includes(r), false);
     }
@@ -253,10 +294,7 @@ describe('Student Authentication & Session Gate', () => {
     // State 3: User logs in successfully -> Transition to Authenticated
     const loggedInUser: AuthUser = {
       id: 's-1',
-      name: 'Demo Student',
       email: 'student@vidya.test',
-      role: 'STUDENT',
-      emailVerifiedAt: '2026-10-14T00:00:00Z',
     };
     state = {
       loading: false,
