@@ -5,6 +5,7 @@ import {
   loginUserThunk,
   checkSessionThunk,
   logoutUserThunk,
+  forceLogout,
 } from '../store/slices/authSlice';
 
 interface AuthContextType {
@@ -43,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    dispatch(forceLogout());
     await dispatch(logoutUserThunk());
   };
 

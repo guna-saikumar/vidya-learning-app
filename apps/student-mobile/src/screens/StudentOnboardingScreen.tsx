@@ -25,7 +25,7 @@ import { RootStackParamList } from '../types/navigation';
 import { useAppDispatch } from '../store';
 import { submitOnboardingThunk } from '../store/slices/studentSlice';
 import { setIsOnboarded } from '../store/slices/authSlice';
-import { toIsoDateOfBirth } from '../services/profileMapper';
+import { toIsoDateOfBirth, validateDateOfBirth } from '../services/profileMapper';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StudentOnboarding'>;
 
@@ -244,6 +244,11 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
 
   const handleConfirmCalendarDate = () => {
     const formatted = `${calDay.toString().padStart(2, '0')}/${(calMonth + 1).toString().padStart(2, '0')}/${calYear}`;
+    const result = validateDateOfBirth(formatted);
+    if (!result.valid) {
+      Alert.alert('Invalid Date of Birth', result.error);
+      return;
+    }
     setDateOfBirth(formatted);
     setShowCalendar(false);
   };
@@ -285,6 +290,11 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       }
       if (!dateOfBirth.trim()) {
         Alert.alert('Required Field', 'Please select student date of birth.');
+        return false;
+      }
+      const dobResult = validateDateOfBirth(dateOfBirth);
+      if (!dobResult.valid) {
+        Alert.alert('Invalid Date of Birth', dobResult.error);
         return false;
       }
       if (!gender) {
@@ -358,12 +368,13 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
     const cleanGrade = activeClassId.replace(/\D/g, '') || '8';
-    const cleanDob = toIsoDateOfBirth(dateOfBirth);
+    const dobResult = validateDateOfBirth(dateOfBirth);
 
-    if (!cleanDob) {
-      Alert.alert('Invalid date', 'Please choose a valid date of birth.');
+    if (!dobResult.valid) {
+      Alert.alert('Invalid Date of Birth', dobResult.error);
       return;
     }
+    const cleanDob = dobResult.iso!;
     if (cleanPhone.length !== 10) {
       Alert.alert(
         'Invalid phone',
@@ -671,7 +682,9 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                       {dateOfBirth || 'Choose Date of Birth'}
                     </Text>
                     <Text className="font-manrope-medium text-[11px] text-textSecondary">
-                      Tap to open visual calendar picker
+                      {dateOfBirth && validateDateOfBirth(dateOfBirth).valid
+                        ? `Age: ${validateDateOfBirth(dateOfBirth).age} years • Verified`
+                        : 'Tap to open visual calendar picker'}
                     </Text>
                   </View>
                 </View>

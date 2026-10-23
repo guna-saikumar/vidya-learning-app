@@ -118,6 +118,50 @@ export function toIsoDateOfBirth(raw: string): string | null {
   return iso;
 }
 
+export interface DobValidationResult {
+  valid: boolean;
+  error?: string;
+  iso?: string;
+  age?: number;
+}
+
+/** Comprehensive validation for Student Date of Birth (format, future date, age range). */
+export function validateDateOfBirth(raw: string): DobValidationResult {
+  if (!raw || !raw.trim()) {
+    return { valid: false, error: 'Please enter or select a date of birth.' };
+  }
+  const iso = toIsoDateOfBirth(raw);
+  if (!iso) {
+    return { valid: false, error: 'Please enter a valid date in DD/MM/YYYY or YYYY-MM-DD format.' };
+  }
+
+  const [y, m, d] = iso.split('-').map((n) => parseInt(n, 10));
+  const dobDate = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (dobDate.getTime() > today.getTime()) {
+    return { valid: false, error: 'Date of birth cannot be in the future.' };
+  }
+
+  // Calculate age accurately
+  let age = today.getFullYear() - y;
+  const monthDiff = today.getMonth() - (m - 1);
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) {
+    age--;
+  }
+
+  if (age < 5) {
+    return { valid: false, error: 'Student must be at least 5 years old to enroll.' };
+  }
+  if (age > 25) {
+    return { valid: false, error: 'Student age cannot exceed 25 years.' };
+  }
+
+  return { valid: true, iso, age };
+}
+
+
 /** Map API bookmark DTO onto the mobile `BookmarkItem` shape. */
 export function normalizeBookmark(api: Record<string, unknown>): BookmarkItem {
   const sectionId =
