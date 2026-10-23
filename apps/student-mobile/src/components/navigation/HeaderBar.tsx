@@ -37,12 +37,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   rightAction,
 }) => {
   const insets = useSafeAreaInsets();
-  let navigation: any = null;
-  try {
-    navigation = useNavigation<any>();
-  } catch {
-    // Fallback if rendered outside navigation context
-  }
+  const navigation = useNavigation<any>();
   const { profile } = useLearningProgress();
   // insets.top adapts across notches/islands and edge-to-edge status bars without double-padding.
   const topInset = insets.top;

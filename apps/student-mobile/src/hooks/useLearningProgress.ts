@@ -13,6 +13,9 @@ import {
 } from '../store/slices/progressSlice';
 import { BookmarkItem, UserProfile } from '../types/curriculum';
 
+let lastFetchedAt = 0;
+const CACHE_TTL_MS = 60000; // 1 minute in-memory cache TTL
+
 export const useLearningProgress = () => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
@@ -24,18 +27,34 @@ export const useLearningProgress = () => {
 
   const loading = isAuthenticated && studentLoading && !profile;
 
-  const refreshData = useCallback(async () => {
-    if (!isAuthenticated) return;
-    await Promise.all([
-      dispatch(fetchProfileThunk()),
-      dispatch(fetchProgressThunk()),
-      dispatch(fetchBookmarksThunk()),
-    ]);
-  }, [dispatch, isAuthenticated]);
+  const refreshData = useCallback(
+    async (force = false) => {
+      if (!isAuthenticated) return;
+      const now = Date.now();
+      const isStale = now - lastFetchedAt > CACHE_TTL_MS;
+      const hasData = !!profile && Object.keys(progressMap).length > 0;
+
+      if (!force && hasData && !isStale) {
+        return;
+      }
+
+      lastFetchedAt = now;
+      await Promise.all([
+        dispatch(fetchProfileThunk()),
+        dispatch(fetchProgressThunk()),
+        dispatch(fetchBookmarksThunk()),
+      ]);
+    },
+    [dispatch, isAuthenticated, profile, progressMap]
+  );
 
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    const hasData = !!profile && Object.keys(progressMap).length > 0;
+    const isStale = Date.now() - lastFetchedAt > CACHE_TTL_MS;
+    if (!hasData || isStale) {
+      refreshData();
+    }
+  }, [refreshData, profile, progressMap]);
 
   const selectActiveGrade = async (gradeId: string) => {
     await dispatch(updateProfileThunk({ activeClassId: gradeId }));

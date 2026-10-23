@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,22 +23,30 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   const { profile, bookmarks, progressMap } = useLearningProgress();
 
   const activeClassId = profile?.activeClassId;
-  const enrolledStats = getEnrolledClassStats(activeClassId);
+  const enrolledStats = useMemo(() => getEnrolledClassStats(activeClassId), [activeClassId]);
   const activeClass = enrolledStats.schoolClass;
 
-  const enrolledCompletedChaptersCount = Object.values(progressMap).filter(
-    (p) => p.completed && activeClass?.subjects?.some((s) => s.chapters?.some((ch) => ch.id === p.chapterId))
-  ).length;
+  const { enrolledCompletedChaptersCount, overallProgressPercent } = useMemo(() => {
+    if (!activeClass) {
+      return { enrolledCompletedChaptersCount: 0, overallProgressPercent: 0 };
+    }
+    const completedCount = Object.values(progressMap).filter(
+      (p) => p.completed && activeClass?.subjects?.some((s) => s.chapters?.some((ch) => ch.id === p.chapterId))
+    ).length;
 
-  const enrolledChapterIds = activeClass?.subjects?.flatMap((s) => s.chapters?.map((c) => c.id) || []) || [];
-  const totalProgressSum = enrolledChapterIds.reduce((sum, chId) => {
-    const p = progressMap[chId];
-    if (!p) return sum;
-    return sum + (p.completed ? 100 : (p.progressPercent || 0));
-  }, 0);
-  const overallProgressPercent = enrolledChapterIds.length > 0
-    ? Math.round(totalProgressSum / enrolledChapterIds.length)
-    : 0;
+    const chapterIds = activeClass?.subjects?.flatMap((s) => s.chapters?.map((c) => c.id) || []) || [];
+    const totalProgress = chapterIds.reduce((sum, chId) => {
+      const p = progressMap[chId];
+      if (!p) return sum;
+      return sum + (p.completed ? 100 : (p.progressPercent || 0));
+    }, 0);
+    const percent = chapterIds.length > 0 ? Math.round(totalProgress / chapterIds.length) : 0;
+
+    return {
+      enrolledCompletedChaptersCount: completedCount,
+      overallProgressPercent: percent,
+    };
+  }, [activeClass, progressMap]);
 
   // Initialize services on mount
   useEffect(() => {
@@ -49,10 +57,12 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   // Get recent progress items for "Continue Learning"
-  const recentProgress = Object.values(progressMap)
-    .filter((p) => !p.completed && p.progressPercent > 0)
-    .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))
-    .slice(0, 2);
+  const recentProgress = useMemo(() => {
+    return Object.values(progressMap)
+      .filter((p) => !p.completed && p.progressPercent > 0)
+      .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))
+      .slice(0, 2);
+  }, [progressMap]);
 
   const handleOpenChapter = (classId: string, subjectId: string, chapterId: string) => {
     navigation.navigate('ChapterDetails', { classId, subjectId, chapterId });
