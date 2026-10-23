@@ -6,6 +6,7 @@ import {
   toApiProfilePatch,
 } from '../../services/profileMapper';
 import { UserProfile } from '../../types/curriculum';
+import { logoutUserThunk, forceLogout } from './authSlice';
 
 const USER_PROFILE_STORAGE_KEY = '@vidya_user_profile';
 
@@ -200,6 +201,29 @@ const studentSlice = createSlice({
     // fetch schools
     builder.addCase(fetchSchoolsThunk.fulfilled, (state, action) => {
       state.schools = action.payload || [];
+    });
+
+    // logout cleanup
+    builder.addCase(logoutUserThunk.pending, (state) => {
+      state.profile = null;
+      state.schools = [];
+      state.loading = false;
+      state.saving = false;
+      state.error = null;
+    });
+    builder.addCase(logoutUserThunk.fulfilled, (state) => {
+      state.profile = null;
+      state.schools = [];
+      state.loading = false;
+      state.saving = false;
+      state.error = null;
+    });
+    builder.addCase(forceLogout, (state) => {
+      state.profile = null;
+      state.schools = [];
+      state.loading = false;
+      state.saving = false;
+      state.error = null;
     });
   },
 });

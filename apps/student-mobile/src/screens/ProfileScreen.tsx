@@ -72,6 +72,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { profile, bookmarks, progressMap, saveProfile } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
   const classes = getClasses();
 
   const completedCount = Object.values(progressMap).filter((p) => p.completed).length;
@@ -484,17 +485,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View className="gap-2">
           <TouchableOpacity
             className="flex-row items-center justify-center p-3.5 rounded-2xl bg-red-50 border border-red-200 gap-2 shadow-xs"
-            onPress={() => {
-              Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Sign Out',
-                  style: 'destructive',
-                  onPress: () => logout(),
-                },
-              ]);
-            }}
+            onPress={() => setShowSignOutModal(true)}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out of student account"
           >
             <MaterialIcons name="logout" size={18} color="#DC2626" />
             <Text className="font-manrope-bold text-sm text-red-600">Sign Out</Text>
@@ -622,6 +616,49 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 activeOpacity={0.8}
               >
                 <Text className="font-manrope-bold text-xs text-textSecondary">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Cross-Platform Sign Out Confirmation Modal */}
+      <Modal
+        visible={showSignOutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSignOutModal(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50 px-6">
+          <View className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-border gap-4">
+            <View className="w-14 h-14 rounded-2xl bg-red-100 items-center justify-center mx-auto">
+              <MaterialIcons name="logout" size={28} color="#DC2626" />
+            </View>
+            <View className="items-center gap-1.5">
+              <Text className="font-manrope-extrabold text-xl text-textPrimary text-center">
+                Sign Out
+              </Text>
+              <Text className="font-manrope-medium text-xs text-textSecondary text-center leading-relaxed">
+                Are you sure you want to sign out of your Vidya student account?
+              </Text>
+            </View>
+            <View className="flex-row gap-3 pt-2">
+              <TouchableOpacity
+                className="flex-1 py-3.5 rounded-xl bg-surfaceSoft border border-border items-center justify-center"
+                onPress={() => setShowSignOutModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text className="font-manrope-bold text-sm text-textSecondary">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 py-3.5 rounded-xl bg-red-600 items-center justify-center shadow-xs"
+                onPress={async () => {
+                  setShowSignOutModal(false);
+                  await logout();
+                }}
+                activeOpacity={0.85}
+              >
+                <Text className="font-manrope-bold text-sm text-white">Sign Out</Text>
               </TouchableOpacity>
             </View>
           </View>

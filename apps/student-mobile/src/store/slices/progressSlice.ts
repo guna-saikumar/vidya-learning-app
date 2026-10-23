@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { studentsApi } from '../../services/apiClient';
 import { normalizeBookmark } from '../../services/profileMapper';
 import { BookmarkItem, ChapterProgress } from '../../types/curriculum';
+import { logoutUserThunk, forceLogout } from './authSlice';
 
 const STORAGE_KEYS = {
   BOOKMARKS: '@vidya_bookmarks',
@@ -228,6 +229,29 @@ const progressSlice = createSlice({
     // delete bookmark
     builder.addCase(deleteBookmarkThunk.fulfilled, (state, action) => {
       state.bookmarks = state.bookmarks.filter((b) => b.id !== action.payload);
+    });
+
+    // logout cleanup
+    builder.addCase(logoutUserThunk.pending, (state) => {
+      state.progressMap = {};
+      state.bookmarks = [];
+      state.overallPercent = 0;
+      state.loading = false;
+      state.error = null;
+    });
+    builder.addCase(logoutUserThunk.fulfilled, (state) => {
+      state.progressMap = {};
+      state.bookmarks = [];
+      state.overallPercent = 0;
+      state.loading = false;
+      state.error = null;
+    });
+    builder.addCase(forceLogout, (state) => {
+      state.progressMap = {};
+      state.bookmarks = [];
+      state.overallPercent = 0;
+      state.loading = false;
+      state.error = null;
     });
   },
 });
