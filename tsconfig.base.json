@@ -10,10 +10,8 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "ignoreDeprecations": "6.0",
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
       "@vidya/*": ["./packages/*/src"]
     }

@@ -37,7 +37,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   rightAction,
 }) => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<any>();
+  let navigation: any = null;
+  try {
+    navigation = useNavigation<any>();
+  } catch {
+    // Fallback if rendered outside navigation context
+  }
   const { profile } = useLearningProgress();
   // insets.top adapts across notches/islands and edge-to-edge status bars without double-padding.
   const topInset = insets.top;
@@ -59,7 +64,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     if (onNotificationPress) {
       onNotificationPress();
     } else {
-      navigation.navigate('Notifications');
+      navigation?.navigate('Notifications');
     }
   };
 
@@ -67,12 +72,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     if (onProfilePress) {
       onProfilePress();
     } else {
-      navigation.navigate('Profile');
+      navigation?.navigate('Profile');
     }
   };
 
   const handleHomePress = () => {
-    navigation.navigate('Home');
+    navigation?.navigate('Home');
   };
 
   return (

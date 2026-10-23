@@ -21,6 +21,8 @@ import { useLearningProgress } from '../hooks/useLearningProgress';
 import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
+import { useAppDispatch } from '../store';
+import { uploadAvatarThunk, removeAvatarThunk } from '../store/slices/studentSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
@@ -65,6 +67,7 @@ const ensureMediaPermission = async (kind: keyof typeof MEDIA_COPY): Promise<boo
 };
 
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const dispatch = useAppDispatch();
   const { user, logout } = useAuth();
   const { profile, bookmarks, progressMap, saveProfile } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
@@ -89,6 +92,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         setShowAvatarModal(false);
         const selectedUri = result.assets[0].uri;
         await saveProfile({ avatarUrl: selectedUri });
+        dispatch(uploadAvatarThunk(selectedUri));
         Alert.alert('Profile Photo Updated', 'Your profile picture has been updated from your device.');
       }
     } catch (err) {
@@ -111,6 +115,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         setShowAvatarModal(false);
         const selectedUri = result.assets[0].uri;
         await saveProfile({ avatarUrl: selectedUri });
+        dispatch(uploadAvatarThunk(selectedUri));
         Alert.alert('Profile Photo Updated', 'Your new photo has been saved as your profile picture.');
       }
     } catch (err) {
@@ -123,6 +128,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setShowAvatarModal(false);
       await saveProfile({ avatarUrl: '' });
+      dispatch(removeAvatarThunk());
       Alert.alert('Default Restored', 'Profile picture reset to default student icon.');
     } catch {
       Alert.alert('Error', 'Failed to reset profile picture.');

@@ -1,17 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { AuthUser } from '@vidya/auth';
+import { useAppDispatch, useAppSelector } from '../store';
 import {
-  getStoredToken,
-  loginStudent,
-  logoutStudent,
-  validateSession,
-} from '../services/authService';
+  loginUserThunk,
+  checkSessionThunk,
+  logoutUserThunk,
+} from '../store/slices/authSlice';
 
 interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
+  isOnboarded: boolean;
   loading: boolean;
+  error: string | null;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -20,53 +22,28 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const dispatch = useAppDispatch();
+  const { user, token, isAuthenticated, isOnboarded, loading, error } = useAppSelector(
+    (state) => state.auth
+  );
 
   const initSession = useCallback(async () => {
-    setLoading(true);
-    try {
-      const storedToken = await getStoredToken();
-      if (storedToken) {
-        const sessionUser = await validateSession();
-        if (sessionUser) {
-          setUser(sessionUser);
-          setToken(storedToken);
-        } else {
-          setUser(null);
-          setToken(null);
-        }
-      } else {
-        setUser(null);
-        setToken(null);
-      }
-    } catch (err) {
-      console.warn('Session validation failed on startup:', err);
-      setUser(null);
-      setToken(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    await dispatch(checkSessionThunk());
+  }, [dispatch]);
 
   useEffect(() => {
     initSession();
   }, [initSession]);
 
   const login = async (email: string, pass: string) => {
-    const { token: nextToken, user: nextUser } = await loginStudent(email, pass);
-    setToken(nextToken);
-    setUser(nextUser);
+    const result = await dispatch(loginUserThunk({ email, pass }));
+    if (loginUserThunk.rejected.match(result)) {
+      throw new Error((result.payload as string) || 'Login failed');
+    }
   };
 
   const logout = async () => {
-    try {
-      await logoutStudent();
-    } finally {
-      setToken(null);
-      setUser(null);
-    }
+    await dispatch(logoutUserThunk());
   };
 
   const refreshSession = async () => {
@@ -74,10 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const value: AuthContextType = {
-    user,
+    user: user as AuthUser | null,
     token,
-    isAuthenticated: !!token && !!user,
+    isAuthenticated,
+    isOnboarded,
     loading,
+    error,
     login,
     logout,
     refreshSession,

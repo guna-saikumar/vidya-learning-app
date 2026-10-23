@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
@@ -27,11 +26,11 @@ import { useLearningProgress } from '../hooks/useLearningProgress';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, isOnboarded, loading: authLoading } = useAuth();
+  // Only hydrate learning state after auth — avoids 401 spam on the login screen.
   const { profile, loading: profileLoading } = useLearningProgress();
 
-  // Session & profile validation in progress: show loading state without redirecting
-  if (authLoading || profileLoading) {
+  if (authLoading || (isAuthenticated && profileLoading)) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -39,17 +38,17 @@ export const RootNavigator: React.FC = () => {
     );
   }
 
-  const needsOnboarding = isAuthenticated && !profile?.isOnboarded;
+  const needsOnboarding =
+    isAuthenticated && !(profile?.isOnboarded ?? isOnboarded);
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.surface },
-          animation: 'slide_from_right',
-        }}
-      >
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: Colors.surface },
+        animation: 'slide_from_right',
+      }}
+    >
         {!isAuthenticated ? (
           // Unauthenticated Stack: Protected routes are inaccessible
           <Stack.Group>
@@ -98,6 +97,5 @@ export const RootNavigator: React.FC = () => {
           </Stack.Group>
         )}
       </Stack.Navigator>
-    </NavigationContainer>
   );
 };

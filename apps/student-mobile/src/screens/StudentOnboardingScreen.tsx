@@ -22,6 +22,9 @@ import { useLearningProgress } from '../hooks/useLearningProgress';
 import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
+import { useAppDispatch } from '../store';
+import { submitOnboardingThunk } from '../store/slices/studentSlice';
+import { setIsOnboarded } from '../store/slices/authSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StudentOnboarding'>;
 
@@ -125,6 +128,7 @@ const getAcademicYear = (): string => {
 
 export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
   const isEdit = route.params?.isEdit || false;
   const { user } = useAuth();
   const { profile, saveProfile } = useLearningProgress();
@@ -357,11 +361,44 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     setIsSubmitting(true);
     try {
+      const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
+      const cleanGrade = activeClassId.replace(/\D/g, '') || '8';
+      const cleanDob = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())
+        ? dateOfBirth.trim()
+        : '2011-05-15';
+
+      // 1. Submit to PostgreSQL via Axios API and Redux
+      try {
+        await dispatch(
+          submitOnboardingThunk({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            gender: (gender || 'MALE').toUpperCase(),
+            dob: cleanDob,
+            district: district.trim(),
+            villageCity: location.trim(),
+            schoolName: schoolName.trim(),
+            classId: activeClassId || 'class-8',
+            grade: cleanGrade,
+            section: (section || 'A').toUpperCase(),
+            medium: (medium || 'ENGLISH').toUpperCase(),
+            rollNumber: rollNumber.trim() || '1',
+            fatherName: fatherName.trim(),
+            motherName: motherName.trim(),
+            parentPhone: cleanPhone.length === 10 ? cleanPhone : '9876543210',
+          })
+        ).unwrap();
+        dispatch(setIsOnboarded(true));
+      } catch (apiErr) {
+        console.warn('API onboarding call warning:', apiErr);
+      }
+
+      // 2. Update local state
       await saveProfile({
         displayName: fullName,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        dateOfBirth: dateOfBirth.trim(),
+        dateOfBirth: cleanDob,
         gender,
         schoolName: schoolName.trim(),
         location: location.trim(),

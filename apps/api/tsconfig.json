@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ESNext",
     "target": "ES2021",
     "noEmit": true,
     "experimentalDecorators": true,
