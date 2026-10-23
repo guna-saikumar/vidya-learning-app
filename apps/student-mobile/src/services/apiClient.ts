@@ -1,11 +1,20 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { resolveApiBaseUrl, hostFromExpoUri } from '@vidya/api-client';
 
 export const AUTH_TOKEN_KEY = '@vidya_student_auth_token';
 export const AUTH_REFRESH_TOKEN_KEY = '@vidya_student_refresh_token';
 export const AUTH_USER_KEY = '@vidya_student_user';
+
+const getPlatformOS = (): string => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const rn = require('react-native');
+    return rn?.Platform?.OS || 'web';
+  } catch {
+    return 'web';
+  }
+};
 
 const getDevHost = (): string | null => {
   try {
@@ -23,7 +32,7 @@ const getDevHost = (): string | null => {
 export const getApiBaseUrl = (): string => {
   return resolveApiBaseUrl({
     envUrl: process.env.EXPO_PUBLIC_API_URL,
-    platformOS: Platform.OS,
+    platformOS: getPlatformOS(),
     expoDevHost: getDevHost(),
   });
 };
@@ -170,15 +179,34 @@ export const studentsApi = {
   },
   uploadAvatar: async (uri: string, name = 'avatar.jpg', type = 'image/jpeg') => {
     const formData = new FormData();
-    formData.append('file', {
-      uri,
-      name,
-      type,
-    } as any);
+    const isWeb = getPlatformOS() === 'web';
+    if (isWeb) {
+      let fileBlob: Blob;
+      if (uri.startsWith('data:')) {
+        const parts = uri.split(',');
+        const mime = /data:(.*?);base64/.exec(parts[0])?.[1] || type;
+        const binary = atob(parts[1]);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        fileBlob = new Blob([bytes], { type: mime });
+      } else {
+        const fetchRes = await fetch(uri);
+        fileBlob = await fetchRes.blob();
+      }
+      formData.append('file', fileBlob, name);
+    } else {
+      formData.append('file', {
+        uri,
+        name,
+        type,
+      } as any);
+    }
 
     const res = await axiosInstance.post('/api/v1/students/me/avatar', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': isWeb ? undefined : 'multipart/form-data',
       },
     });
     return res.data;

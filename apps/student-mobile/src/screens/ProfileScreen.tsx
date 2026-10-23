@@ -22,7 +22,11 @@ import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
 import { useAppDispatch } from '../store';
-import { uploadAvatarThunk, removeAvatarThunk } from '../store/slices/studentSlice';
+import {
+  uploadAvatarThunk,
+  removeAvatarThunk,
+  setProfileAvatar,
+} from '../store/slices/studentSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
@@ -92,9 +96,16 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setShowAvatarModal(false);
         const selectedUri = result.assets[0].uri;
-        await saveProfile({ avatarUrl: selectedUri });
-        dispatch(uploadAvatarThunk(selectedUri));
-        Alert.alert('Profile Photo Updated', 'Your profile picture has been updated from your device.');
+        const previousAvatar = profile?.avatarUrl || '';
+        dispatch(setProfileAvatar(selectedUri));
+
+        try {
+          await dispatch(uploadAvatarThunk(selectedUri)).unwrap();
+          Alert.alert('Profile Photo Updated', 'Your profile picture has been updated from your device.');
+        } catch (uploadErr: any) {
+          dispatch(setProfileAvatar(previousAvatar));
+          Alert.alert('Upload Failed', uploadErr || 'Could not upload profile picture. Please try again.');
+        }
       }
     } catch (err) {
       console.error('Error picking image from device:', err);
@@ -115,9 +126,16 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setShowAvatarModal(false);
         const selectedUri = result.assets[0].uri;
-        await saveProfile({ avatarUrl: selectedUri });
-        dispatch(uploadAvatarThunk(selectedUri));
-        Alert.alert('Profile Photo Updated', 'Your new photo has been saved as your profile picture.');
+        const previousAvatar = profile?.avatarUrl || '';
+        dispatch(setProfileAvatar(selectedUri));
+
+        try {
+          await dispatch(uploadAvatarThunk(selectedUri)).unwrap();
+          Alert.alert('Profile Photo Updated', 'Your new photo has been saved as your profile picture.');
+        } catch (uploadErr: any) {
+          dispatch(setProfileAvatar(previousAvatar));
+          Alert.alert('Upload Failed', uploadErr || 'Could not upload photo. Please try again.');
+        }
       }
     } catch (err) {
       console.error('Error taking photo with camera:', err);
@@ -126,13 +144,15 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleResetToDefault = async () => {
+    const previousAvatar = profile?.avatarUrl || '';
     try {
       setShowAvatarModal(false);
-      await saveProfile({ avatarUrl: '' });
-      dispatch(removeAvatarThunk());
+      dispatch(setProfileAvatar(''));
+      await dispatch(removeAvatarThunk()).unwrap();
       Alert.alert('Default Restored', 'Profile picture reset to default student icon.');
-    } catch {
-      Alert.alert('Error', 'Failed to reset profile picture.');
+    } catch (err: any) {
+      dispatch(setProfileAvatar(previousAvatar));
+      Alert.alert('Error', err || 'Failed to reset profile picture.');
     }
   };
 

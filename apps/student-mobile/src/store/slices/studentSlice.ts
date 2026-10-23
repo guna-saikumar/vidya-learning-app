@@ -4,6 +4,7 @@ import { studentsApi, schoolsApi } from '../../services/apiClient';
 import {
   normalizeProfile,
   toApiProfilePatch,
+  resolveAvatarUrl,
 } from '../../services/profileMapper';
 import { UserProfile } from '../../types/curriculum';
 import { logoutUserThunk, forceLogout } from './authSlice';
@@ -91,28 +92,85 @@ export const updateProfileThunk = createAsyncThunk(
 
 export const uploadAvatarThunk = createAsyncThunk(
   'student/uploadAvatar',
-  async (imageUri: string, { rejectWithValue }) => {
+  async (imageUri: string, { getState, rejectWithValue }) => {
     try {
-      const filename = imageUri.split('/').pop() || 'profile.jpg';
+      const cleanUri = imageUri.split('?')[0];
+      const filename = cleanUri.split('/').pop() || 'avatar.jpg';
       const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      const rawExt = match ? match[1].toLowerCase() : 'jpg';
 
-      const res = await studentsApi.uploadAvatar(imageUri, filename, type);
-      return res.avatarUrl;
+      // Fastify backend only allows: image/jpeg, image/png, image/webp, image/gif
+      let mimeType = 'image/jpeg';
+      let normalizedExt = 'jpg';
+      if (rawExt === 'png') {
+        mimeType = 'image/png';
+        normalizedExt = 'png';
+      } else if (rawExt === 'webp') {
+        mimeType = 'image/webp';
+        normalizedExt = 'webp';
+      } else if (rawExt === 'gif') {
+        mimeType = 'image/gif';
+        normalizedExt = 'gif';
+      } else {
+        mimeType = 'image/jpeg';
+        normalizedExt = 'jpg';
+      }
+
+      const safeFilename = filename.includes('.') ? filename : `avatar.${normalizedExt}`;
+
+      const res = await studentsApi.uploadAvatar(imageUri, safeFilename, mimeType);
+      const resolvedUrl = resolveAvatarUrl(res.avatarUrl);
+
+      try {
+        const state = getState() as { student: StudentState };
+        if (state.student?.profile) {
+          const updatedProfile = {
+            ...state.student.profile,
+            avatarUrl: resolvedUrl,
+          };
+          await AsyncStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(updatedProfile));
+        }
+      } catch {
+        // ignore cache write error
+      }
+
+      return resolvedUrl;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message || 'Upload failed');
+      return rejectWithValue(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Upload failed'
+      );
     }
   }
 );
 
 export const removeAvatarThunk = createAsyncThunk(
   'student/removeAvatar',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
       await studentsApi.deleteAvatar();
+      try {
+        const state = getState() as { student: StudentState };
+        if (state.student?.profile) {
+          const updatedProfile = {
+            ...state.student.profile,
+            avatarUrl: '',
+          };
+          await AsyncStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(updatedProfile));
+        }
+      } catch {
+        // ignore cache write error
+      }
       return null;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message || 'Delete failed');
+      return rejectWithValue(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Delete failed'
+      );
     }
   }
 );
@@ -135,6 +193,11 @@ const studentSlice = createSlice({
   reducers: {
     setProfileLocal: (state, action: PayloadAction<UserProfile>) => {
       state.profile = action.payload;
+    },
+    setProfileAvatar: (state, action: PayloadAction<string>) => {
+      if (state.profile) {
+        state.profile.avatarUrl = action.payload;
+      }
     },
     clearStudentError: (state) => {
       state.error = null;
@@ -228,5 +291,5 @@ const studentSlice = createSlice({
   },
 });
 
-export const { setProfileLocal, clearStudentError } = studentSlice.actions;
+export const { setProfileLocal, setProfileAvatar, clearStudentError } = studentSlice.actions;
 export default studentSlice.reducer;

@@ -1,4 +1,30 @@
 import { BookmarkItem, UserProfile } from '../types/curriculum';
+import { getApiBaseUrl } from './apiClient';
+
+/**
+ * Ensures an avatar URL is an absolute, loadable URI.
+ * Fastify backend stores avatar paths as relative URLs (e.g. `/uploads/avatars/user.jpg?v=...`),
+ * which React Native <Image> cannot resolve natively without an absolute origin.
+ */
+export function resolveAvatarUrl(url?: string | null): string {
+  if (!url) return '';
+  const trimmed = String(url).trim();
+  if (!trimmed) return '';
+
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('file://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
+  }
+
+  const base = getApiBaseUrl().replace(/\/+$/, '');
+  const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${base}${path}`;
+}
 
 /** Defaults used when API/cache omit fields. */
 export const DEFAULT_USER_PROFILE: UserProfile = {
@@ -57,7 +83,7 @@ export function normalizeProfile(api: Record<string, unknown> | null | undefined
     motherName: a.motherName != null ? String(a.motherName) : undefined,
     parentPhone: a.parentPhone != null ? String(a.parentPhone) : undefined,
     guardianPhone: a.guardianPhone != null ? String(a.guardianPhone) : undefined,
-    avatarUrl: a.avatarUrl != null ? String(a.avatarUrl) : '',
+    avatarUrl: a.avatarUrl ? resolveAvatarUrl(String(a.avatarUrl)) : '',
     streakDays: Number(a.streakDays ?? 0) || 0,
     isOnboarded: Boolean(a.isOnboarded),
     gender: a.gender != null ? String(a.gender) : undefined,
