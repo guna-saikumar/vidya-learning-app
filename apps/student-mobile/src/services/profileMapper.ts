@@ -104,12 +104,19 @@ export function toApiProfilePatch(
     delete body.activeClassId;
   }
   if (updates.dateOfBirth !== undefined) {
-    body.dob = updates.dateOfBirth;
+    body.dob = toIsoDateOfBirth(String(updates.dateOfBirth)) || updates.dateOfBirth;
     delete body.dateOfBirth;
   }
   if (updates.location !== undefined) {
     body.villageCity = updates.location;
     delete body.location;
+  }
+  if (typeof updates.medium === 'string') {
+    const u = updates.medium.toUpperCase();
+    body.medium = u.includes('TELUGU') ? 'TELUGU' : u.includes('URDU') ? 'URDU' : 'ENGLISH';
+  }
+  if (typeof updates.gender === 'string') {
+    body.gender = updates.gender.toUpperCase();
   }
   // Not part of the student profile API schema
   delete body.displayName;
@@ -123,25 +130,39 @@ export function toApiProfilePatch(
   return body;
 }
 
-/** Convert UI DOB (`DD/MM/YYYY` or `YYYY-MM-DD`) to API `YYYY-MM-DD`, or null if invalid. */
-export function toIsoDateOfBirth(raw: string): string | null {
-  const value = raw.trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const d = new Date(`${value}T00:00:00Z`);
-    if (!Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value) {
-      return value;
+/** Convert UI DOB (`DD/MM/YYYY` or `YYYY-MM-DD` or ISO timestamp) to API `YYYY-MM-DD`, or null if invalid. */
+export function toIsoDateOfBirth(raw?: string | null): string | null {
+  if (!raw) return null;
+  const value = String(raw).trim();
+  const isoMatch = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+  if (isoMatch) {
+    const iso = isoMatch[1];
+    const d = new Date(`${iso}T00:00:00Z`);
+    if (!Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso) {
+      return iso;
     }
-    return null;
   }
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
-  if (!match) return null;
-  const [, dd, mm, yyyy] = match;
-  const iso = `${yyyy}-${mm}-${dd}`;
-  const d = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== iso) {
-    return null;
+  const match = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(value);
+  if (match) {
+    const [, dd, mm, yyyy] = match;
+    const iso = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    const d = new Date(`${iso}T00:00:00Z`);
+    if (!Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso) {
+      return iso;
+    }
   }
-  return iso;
+  return null;
+}
+
+/** Convert any valid DOB string to DD/MM/YYYY for UI display. */
+export function formatUiDateOfBirth(raw?: string | null): string {
+  if (!raw) return '';
+  const iso = toIsoDateOfBirth(raw);
+  if (iso) {
+    const [yyyy, mm, dd] = iso.split('-');
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  return String(raw);
 }
 
 export interface DobValidationResult {

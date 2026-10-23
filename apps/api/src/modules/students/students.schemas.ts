@@ -16,20 +16,43 @@ const upperEnum = <const T extends readonly [string, ...string[]]>(values: T) =>
 const isoDate = z
   .string()
   .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD")
-  .refine((v) => {
-    const d = new Date(`${v}T00:00:00Z`);
-    return (
-      !Number.isNaN(d.getTime()) &&
-      d.toISOString().slice(0, 10) === v &&
-      d.getTime() <= Date.now()
-    );
-  }, "Invalid date of birth");
+  .transform((v) => (v.includes("T") ? v.slice(0, 10) : v))
+  .pipe(
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD")
+      .refine((v) => {
+        const d = new Date(`${v}T00:00:00Z`);
+        return (
+          !Number.isNaN(d.getTime()) &&
+          d.toISOString().slice(0, 10) === v &&
+          d.getTime() <= Date.now()
+        );
+      }, "Invalid date of birth")
+  );
 
 const mobile10 = z
+  .union([z.string(), z.number()])
+  .nullish()
+  .transform((v) => {
+    if (v === null || v === undefined) return null;
+    const s = String(v).replace(/\D/g, "");
+    return s.length === 10 ? s : s.length === 0 ? null : String(v);
+  })
+  .pipe(z.string().regex(/^\d{10}$/, "Must be a 10-digit mobile number").nullable());
+
+const mediumEnum = z
   .string()
   .trim()
-  .regex(/^\d{10}$/, "Must be a 10-digit mobile number");
+  .toUpperCase()
+  .transform((v) => {
+    if (v.includes("TELUGU")) return "TELUGU";
+    if (v.includes("URDU")) return "URDU";
+    if (v.includes("ENGLISH")) return "ENGLISH";
+    return v;
+  })
+  .pipe(z.enum(["ENGLISH", "TELUGU", "URDU"]))
+  .nullish();
 
 /** Grade 6–10 (string or number on the wire). */
 const grade = z
@@ -62,13 +85,13 @@ const onboardingShape = {
   classId: id.nullish(),
   grade,
   section: upperEnum(["A", "B", "C", "D"]).nullish(),
-  medium: upperEnum(["ENGLISH", "TELUGU", "URDU"]).nullish(),
+  medium: mediumEnum,
   rollNumber: optText(40),
 
   // Step 4 — Parent Details
   fatherName: optText(120),
   motherName: optText(120),
-  parentPhone: mobile10.nullish(),
+  parentPhone: mobile10,
 } as const;
 
 export const updateOnboardingSchema = z.object(onboardingShape);

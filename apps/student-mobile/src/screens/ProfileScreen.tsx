@@ -289,9 +289,19 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Academic Details Card (Collected from Student Form) */}
         <View className="gap-2.5">
-          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">
-            Academic Information
-          </Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">
+              Academic Information
+            </Text>
+            <TouchableOpacity
+              className="flex-row items-center gap-1 bg-palePeach px-3 py-1.5 rounded-full border border-border"
+              onPress={() => navigation.navigate('StudentOnboarding', { isEdit: true, step: 2 })}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="edit" size={14} color={Colors.primary} />
+              <Text className="font-manrope-bold text-xs text-primary">Edit Details</Text>
+            </TouchableOpacity>
+          </View>
 
           <View className="bg-white rounded-[22px] p-5 border border-border shadow-sm gap-3.5">
             <View className="flex-row items-center justify-between pb-3 border-b border-border">

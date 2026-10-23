@@ -151,6 +151,14 @@ const BOOKMARK_SELECT = `
 const clean = (v: unknown): unknown =>
   typeof v === "string" && v.trim() === "" ? null : (v ?? null);
 
+const toIsoDateOnly = (d: unknown): string | null => {
+  if (!d) return null;
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  const s = String(d).trim();
+  if (s.includes("T")) return s.slice(0, 10);
+  return s.length >= 10 ? s.slice(0, 10) : s;
+};
+
 const toProfileDto = (p: ProfileRow) => ({
   id: p.userId,
   email: p.email,
@@ -158,8 +166,8 @@ const toProfileDto = (p: ProfileRow) => ({
   firstName: p.firstName,
   lastName: p.lastName,
   gender: p.gender,
-  dob: p.dob,
-  dateOfBirth: p.dob,
+  dob: toIsoDateOnly(p.dob),
+  dateOfBirth: toIsoDateOnly(p.dob),
   district: p.district,
   location: p.villageCity,
   villageCity: p.villageCity,

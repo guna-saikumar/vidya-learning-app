@@ -1,7 +1,7 @@
 export type RootStackParamList = {
   Loading?: undefined;
   Login: undefined;
-  StudentOnboarding: { isEdit?: boolean } | undefined;
+  StudentOnboarding: { isEdit?: boolean; step?: number } | undefined;
   Home: undefined;
   Learn: undefined;
   Profile: undefined;

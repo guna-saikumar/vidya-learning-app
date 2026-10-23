@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,11 @@ import { RootStackParamList } from '../types/navigation';
 import { useAppDispatch } from '../store';
 import { submitOnboardingThunk } from '../store/slices/studentSlice';
 import { setIsOnboarded } from '../store/slices/authSlice';
-import { toIsoDateOfBirth, validateDateOfBirth } from '../services/profileMapper';
+import {
+  toIsoDateOfBirth,
+  validateDateOfBirth,
+  formatUiDateOfBirth,
+} from '../services/profileMapper';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StudentOnboarding'>;
 
@@ -127,6 +131,41 @@ const getAcademicYear = (): string => {
   return `${start}–${start + 1}`;
 };
 
+const normalizeGenderUi = (g?: string | null): string => {
+  if (!g) return 'Male';
+  const s = g.trim().toLowerCase();
+  if (s === 'female') return 'Female';
+  if (s === 'other') return 'Other';
+  return 'Male';
+};
+
+const normalizeGenderApi = (g?: string | null): 'MALE' | 'FEMALE' | 'OTHER' => {
+  const s = (g || '').trim().toUpperCase();
+  if (s === 'FEMALE') return 'FEMALE';
+  if (s === 'OTHER') return 'OTHER';
+  return 'MALE';
+};
+
+const normalizeMediumUi = (m?: string | null): string => {
+  const s = (m || '').trim().toUpperCase();
+  if (s.includes('TELUGU')) return 'Telugu Medium';
+  return 'English Medium';
+};
+
+const normalizeMediumApi = (m?: string | null): 'ENGLISH' | 'TELUGU' | 'URDU' => {
+  const s = (m || '').trim().toUpperCase();
+  if (s.includes('TELUGU')) return 'TELUGU';
+  if (s.includes('URDU')) return 'URDU';
+  return 'ENGLISH';
+};
+
+const normalizeClassId = (cid?: string | null): string => {
+  if (!cid) return 'class-8';
+  if (cid.startsWith('class-')) return cid;
+  const num = cid.replace(/\D/g, '');
+  return num ? `class-${num}` : 'class-8';
+};
+
 export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
@@ -136,7 +175,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   const classes = getClasses();
 
   // Multi-step state: 1: Student, 2: School & Location, 3: Class & Medium, 4: Parents
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [currentStep, setCurrentStep] = useState<number>(route.params?.step || 1);
 
   // Step 1: Student Details (First Name & Last Name)
   const initialNames = (profile?.displayName || user?.name || '').split(' ');
@@ -147,9 +186,9 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     profile?.lastName || initialNames.slice(1).join(' ') || ''
   );
   const [dateOfBirth, setDateOfBirth] = useState(
-    profile?.dateOfBirth || ''
+    formatUiDateOfBirth(profile?.dateOfBirth)
   );
-  const [gender, setGender] = useState(profile?.gender || '');
+  const [gender, setGender] = useState(normalizeGenderUi(profile?.gender));
 
   // Step 2: Location & School
   const [district, setDistrict] = useState(
@@ -162,13 +201,13 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     profile?.schoolName || ''
   );
 
-  // Step 3: Class, Medium & Roll Number (moved here as requested)
+  // Step 3: Class, Medium & Roll Number
   const [activeClassId, setActiveClassId] = useState(
-    profile?.activeClassId || ''
+    normalizeClassId(profile?.activeClassId)
   );
-  const [section, setSection] = useState(profile?.section || '');
+  const [section, setSection] = useState(profile?.section ? profile.section.toUpperCase() : 'A');
   const [medium, setMedium] = useState(
-    profile?.medium || ''
+    normalizeMediumUi(profile?.medium)
   );
   const [rollNumber, setRollNumber] = useState(profile?.rollNumber || '');
 
@@ -182,6 +221,28 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   const [parentPhone, setParentPhone] = useState(
     profile?.parentPhone || profile?.guardianPhone || ''
   );
+
+  // Sync state if profile loads asynchronously
+  useEffect(() => {
+    if (profile) {
+      if (profile.firstName) setFirstName(profile.firstName);
+      if (profile.lastName) setLastName(profile.lastName);
+      if (profile.dateOfBirth) setDateOfBirth(formatUiDateOfBirth(profile.dateOfBirth));
+      if (profile.gender) setGender(normalizeGenderUi(profile.gender));
+      if (profile.district) setDistrict(profile.district);
+      if (profile.location) setLocation(profile.location);
+      if (profile.schoolName) setSchoolName(profile.schoolName);
+      if (profile.activeClassId) setActiveClassId(normalizeClassId(profile.activeClassId));
+      if (profile.section) setSection(profile.section.toUpperCase());
+      if (profile.medium) setMedium(normalizeMediumUi(profile.medium));
+      if (profile.rollNumber) setRollNumber(profile.rollNumber);
+      if (profile.fatherName) setFatherName(profile.fatherName);
+      if (profile.motherName) setMotherName(profile.motherName);
+      if (profile.parentPhone || profile.guardianPhone) {
+        setParentPhone(profile.parentPhone || profile.guardianPhone || '');
+      }
+    }
+  }, [profile]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -340,8 +401,9 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         Alert.alert('Required Field', "Please enter mother's name.");
         return false;
       }
-      if (!parentPhone.trim() || parentPhone.trim().length < 8) {
-        Alert.alert('Required Field', 'Please enter a valid parent contact number.');
+      const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
+      if (cleanPhone.length !== 10) {
+        Alert.alert('Required Field', 'Please enter a 10-digit parent contact number.');
         return false;
       }
     }
@@ -363,29 +425,29 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) return;
+    // Validate all steps before submitting
+    for (let s = 1; s <= 4; s++) {
+      if (!validateStep(s)) {
+        setCurrentStep(s);
+        return;
+      }
+    }
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
-    const cleanGrade = activeClassId.replace(/\D/g, '') || '8';
     const dobResult = validateDateOfBirth(dateOfBirth);
 
     if (!dobResult.valid) {
+      setCurrentStep(1);
       Alert.alert('Invalid Date of Birth', dobResult.error);
       return;
     }
     const cleanDob = dobResult.iso!;
-    if (cleanPhone.length !== 10) {
-      Alert.alert(
-        'Invalid phone',
-        'Parent phone must be a 10-digit mobile number.'
-      );
-      return;
-    }
-    if (!activeClassId) {
-      Alert.alert('Missing class', 'Please select your class before continuing.');
-      return;
-    }
+    const cleanClassId = normalizeClassId(activeClassId);
+    const cleanGrade = cleanClassId.replace(/\D/g, '') || '8';
+    const apiMedium = normalizeMediumApi(medium);
+    const apiGender = normalizeGenderApi(gender);
+    const apiSection = (section || 'A').toUpperCase();
 
     setIsSubmitting(true);
     try {
@@ -393,15 +455,15 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         submitOnboardingThunk({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          gender: (gender || 'MALE').toUpperCase(),
+          gender: apiGender,
           dob: cleanDob,
           district: district.trim(),
           villageCity: location.trim(),
           schoolName: schoolName.trim(),
-          classId: activeClassId,
+          classId: cleanClassId,
           grade: cleanGrade,
-          section: (section || 'A').toUpperCase(),
-          medium: (medium || 'ENGLISH').toUpperCase(),
+          section: apiSection,
+          medium: apiMedium,
           rollNumber: rollNumber.trim() || '1',
           fatherName: fatherName.trim(),
           motherName: motherName.trim(),
@@ -416,14 +478,14 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         dateOfBirth: cleanDob,
-        gender,
+        gender: normalizeGenderUi(gender),
         schoolName: schoolName.trim(),
         location: location.trim(),
         district: district.trim(),
-        activeClassId,
-        section,
-        rollNumber: rollNumber.trim(),
-        medium,
+        activeClassId: cleanClassId,
+        section: apiSection,
+        rollNumber: rollNumber.trim() || '1',
+        medium: normalizeMediumUi(medium),
         fatherName: fatherName.trim(),
         motherName: motherName.trim(),
         guardianName: fatherName.trim() || motherName.trim(),
@@ -443,10 +505,11 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         navigation.navigate('Home');
       }
     } catch (err: any) {
-      Alert.alert(
-        'Could not save',
-        err?.message || 'Failed to save student details. Please try again.'
-      );
+      const msg =
+        typeof err === 'string'
+          ? err
+          : err?.message || 'Failed to save student details. Please try again.';
+      Alert.alert('Could not save', msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -495,7 +558,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       {isEdit ? (
         <HeaderBar
           showBack
-          onBackPress={() => navigation.goBack()}
+          onBackPress={handleBack}
           title="Edit Student Profile"
           subtitle="Update student, school, and parent details"
         />
@@ -541,17 +604,17 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         )}
 
         {/* Step Indicator Header */}
-        <View className="bg-sand/30 rounded-2xl p-3.5 border border-sand/60">
+        <View className="bg-palePeach/40 rounded-2xl p-3.5 border border-border">
           <View className="flex-row items-center justify-between mb-2">
             <Text className="font-manrope-bold text-xs text-primaryDark uppercase tracking-wider">
-              Step {currentStep} of 4: {
+              {`Step ${currentStep} of 4: ${
                 currentStep === 1 ? 'Student Details' :
                 currentStep === 2 ? 'School & Location' :
                 currentStep === 3 ? 'Class & Medium' : 'Parent & Contact'
-              }
+              }`}
             </Text>
             <Text className="font-manrope-bold text-xs text-textSecondary">
-              {Math.round((currentStep / 4) * 100)}%
+              {`${Math.round((currentStep / 4) * 100)}%`}
             </Text>
           </View>
 
@@ -577,8 +640,12 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                 <TouchableOpacity
                   key={st.num}
                   className="items-center flex-1"
-                  disabled={st.num > currentStep}
-                  onPress={() => setCurrentStep(st.num)}
+                  disabled={!isEdit && st.num > currentStep}
+                  onPress={() => {
+                    if (isEdit || st.num < currentStep || validateStep(currentStep)) {
+                      setCurrentStep(st.num);
+                    }
+                  }}
                 >
                   <View
                     className={`w-7 h-7 rounded-full items-center justify-center mb-1 ${
@@ -1057,15 +1124,17 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
             </View>
 
             {/* Summary Confirmation Note */}
-            <View className="bg-sand/25 p-3.5 rounded-xl border border-sand/60 gap-1 mt-1">
+            <View className="bg-palePeach/40 p-3.5 rounded-xl border border-border gap-1 mt-1">
               <View className="flex-row items-center gap-1.5">
                 <MaterialIcons name="verified" size={16} color={Colors.primary} />
                 <Text className="font-manrope-bold text-xs text-primaryDark">
-                  Ready to Complete Registration
+                  {isEdit ? 'Save Academic & Profile Updates' : 'Ready to Complete Registration'}
                 </Text>
               </View>
               <Text className="font-manrope-medium text-[11px] text-textSecondary leading-relaxed">
-                Clicking &quot;Complete Registration&quot; will personalize your subject curriculum to your enrolled grade.
+                {isEdit
+                  ? 'Clicking "Save Academic Details" will immediately update your class, school, and student records.'
+                  : 'Clicking "Complete & Continue" will personalize your subject curriculum to your enrolled grade.'}
               </Text>
             </View>
           </View>
@@ -1093,10 +1162,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
               activeOpacity={0.85}
             >
               <Text className="font-manrope-bold text-sm text-white">
-                Next: {
+                {`Next: ${
                   currentStep === 1 ? 'School & Location' :
                   currentStep === 2 ? 'Class & Medium' : 'Parent Details'
-                }
+                }`}
               </Text>
               <MaterialIcons name="chevron-right" size={20} color="#fff" />
             </TouchableOpacity>
@@ -1301,7 +1370,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
               <View>
                 <Text className="font-manrope-extrabold text-lg text-textPrimary">
                   {modalType === 'district' ? 'Select District' :
-                   modalType === 'location' ? `Select Location in ${district}` :
+                   modalType === 'location' ? `Select Location in ${district || 'District'}` :
                    'Select School'}
                 </Text>
                 <Text className="font-manrope-medium text-xs text-textSecondary mt-0.5">
@@ -1374,7 +1443,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                 {filteredItems.length === 0 && (
                   <View className="py-6 items-center">
                     <Text className="font-manrope-medium text-xs text-textMuted">
-                      No matching {modalType} found.
+                      {`No matching ${modalType || 'options'} found.`}
                     </Text>
                   </View>
                 )}
@@ -1391,7 +1460,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                   >
                     <MaterialIcons name="add" size={16} color={Colors.primary} />
                     <Text className="font-manrope-bold text-xs text-primary">
-                      Enter Custom {modalType === 'location' ? 'Location' : 'School'}
+                      {`Enter Custom ${modalType === 'location' ? 'Location' : 'School'}`}
                     </Text>
                   </TouchableOpacity>
                 ) : (
@@ -1401,7 +1470,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                         className="flex-1 font-manrope-bold text-xs text-textPrimary"
                         value={customInputText}
                         onChangeText={setCustomInputText}
-                        placeholder={`Type custom ${modalType} name`}
+                        placeholder={`Type custom ${modalType || 'name'}`}
                         placeholderTextColor={Colors.textMuted}
                         autoFocus
                       />
