@@ -28,8 +28,10 @@ Run lint and typecheck before declaring any task done.
 - Mobile apps use Expo + React Native with Expo Router.
 - Approved React Native styling/UI options are NativeWind, React Native Paper, Tamagui, UI Kitten, Restyle, Gluestack UI, Dripsy, and Unistyles.
 - Backend uses **NestJS v11** with `@nestjs/platform-fastify` and `fastify` v5.
-- Backend data/auth/docs stack is PostgreSQL, Prisma, Zod, JWT, CORS, Swagger/OpenAPI, bcrypt, and Docker for local development.
-- Do not replace Prisma with another ORM, and do not build new backend services as plain Fastify unless the architecture is intentionally changed.
+- Backend data/auth/docs stack is PostgreSQL with **raw `pg` SQL** (no ORM), Zod, JWT, CORS, Swagger/OpenAPI, and bcrypt.
+- Student-only product surface (no admin app / admin API routes).
+- Local default: `npm start` (Postgres LAN + migrate/seed + **pgweb** + API + student Expo). CLI: `npm run db:psql`.
+- Do not reintroduce Prisma, Prisma Studio, or another ORM unless the architecture is intentionally changed.
 - See `docs/tech-stack.md` for the full project stack.
 
 ## Navigation & Routing
@@ -38,10 +40,11 @@ Run lint and typecheck before declaring any task done.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
 - Docs: https://docs.expo.dev/router/introduction.md
 
-## Docker Local Development
+## Local Development
 
-- Use Docker Compose as the default local development path: `pnpm docker:up`.
-- Keep API, PostgreSQL, web apps, and Expo web services runnable from `docker-compose.yml`.
+- Default: `npm start` — Postgres (LAN), SQL migrate/seed, pgweb `:8083`, Nest API `:4000`, student Expo `--lan`.
+- Database CLI: `npm run db:psql`. DB web UI: pgweb (not Prisma Studio).
+- Docker Compose remains available under `pnpm docker:up` but is not the default.
 - Do not add deployment scripts or deployment platform config until deployment is explicitly reintroduced.
 
 ## Rules

@@ -15,42 +15,6 @@ export type CurriculumOverview = {
   }>;
 };
 
-export type UsersOverview = {
-  total: number;
-  students: number;
-  admins: number;
-  superAdmins: number;
-  verifiedStudents: number;
-  unverifiedStudents: number;
-  byDepartment: Array<{ department: string; count: number }>;
-};
-
-export type MaterialsOverview = {
-  /** Counts come from the persisted `Material` table. */
-  persisted: true;
-  total: number;
-  published: number;
-  drafts: number;
-  archived: number;
-};
-
-export type RecentUserActivity = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string | null;
-  createdAt: string;
-};
-
-export type AdminDashboardResponse = {
-  generatedAt: string;
-  curriculum: CurriculumOverview;
-  users: UsersOverview;
-  materials: MaterialsOverview;
-  recentUsers: RecentUserActivity[];
-};
-
 export type StudentDashboardResponse = {
   generatedAt: string;
   user: {

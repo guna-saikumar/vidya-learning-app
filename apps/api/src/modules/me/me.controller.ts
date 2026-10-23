@@ -21,6 +21,7 @@ import {
 } from "@nestjs/swagger";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
+import { ApiZodBody } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   completeSectionSchema,
@@ -50,6 +51,7 @@ export class MeController {
 
   @Patch("profile")
   @ApiOperation({ summary: "Update current student profile" })
+  @ApiZodBody(updateProfileSchema)
   updateProfile(
     @Req() req: AuthedRequest,
     @Body(new ZodValidationPipe(updateProfileSchema)) body: UpdateProfileInput
@@ -65,6 +67,7 @@ export class MeController {
 
   @Put("progress/chapters/:chapterId")
   @ApiOperation({ summary: "Upsert progress for a chapter" })
+  @ApiZodBody(updateChapterProgressSchema)
   upsertChapterProgress(
     @Req() req: AuthedRequest,
     @Param("chapterId") chapterId: string,
@@ -77,6 +80,7 @@ export class MeController {
   @Post("progress/sections/:sectionId/complete")
   @HttpCode(200)
   @ApiOperation({ summary: "Mark a section as completed" })
+  @ApiZodBody(completeSectionSchema, { required: false })
   completeSection(
     @Req() req: AuthedRequest,
     @Param("sectionId") sectionId: string,
@@ -94,6 +98,7 @@ export class MeController {
 
   @Post("bookmarks")
   @ApiOperation({ summary: "Create a bookmark (idempotent per chapter/section/type)" })
+  @ApiZodBody(createBookmarkSchema)
   createBookmark(
     @Req() req: AuthedRequest,
     @Body(new ZodValidationPipe(createBookmarkSchema)) body: CreateBookmarkInput

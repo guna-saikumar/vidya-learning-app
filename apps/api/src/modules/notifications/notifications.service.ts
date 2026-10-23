@@ -1,12 +1,22 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { PrismaService } from "../../prisma/prisma.service";
-import type {
-  CreateNotificationInput,
-  NotificationListQuery,
-} from "./notifications.schemas";
+import { DbService, SQL_NOW_UTC } from "../../db/db.service";
+import type { NotificationListQuery } from "./notifications.schemas";
 
-type NotificationRow = Prisma.NotificationGetPayload<object>;
+type NotificationRow = {
+  id: string;
+  title: string;
+  message: string;
+  detailedBody: string;
+  type: string;
+  icon: string;
+  readAt: Date | null;
+  actionRoute: string | null;
+  actionLabel: string | null;
+  createdAt: Date;
+};
+
+const NOTIFICATION_COLUMNS = `"id", "title", "message", "detailedBody", "type", "icon",
+  "readAt", "actionRoute", "actionLabel", "createdAt"`;
 
 export const toNotificationDto = (n: NotificationRow) => ({
   id: n.id,
@@ -24,98 +34,61 @@ export const toNotificationDto = (n: NotificationRow) => ({
 
 @Injectable()
 export class NotificationsService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(@Inject(DbService) private readonly db: DbService) {}
 
   async listMine(userId: string, query: NotificationListQuery) {
-    const [rows, unreadCount] = await Promise.all([
-      this.prisma.notification.findMany({
-        where: {
-          userId,
-          ...(query.unread === undefined
-            ? {}
-            : query.unread
-              ? { readAt: null }
-              : { readAt: { not: null } }),
-        },
-        orderBy: { createdAt: "desc" },
-      }),
-      this.prisma.notification.count({ where: { userId, readAt: null } }),
+    const readClause =
+      query.unread === undefined
+        ? ""
+        : query.unread
+          ? `AND "readAt" IS NULL`
+          : `AND "readAt" IS NOT NULL`;
+
+    const [rows, unread] = await Promise.all([
+      this.db.query<NotificationRow>(
+        `SELECT ${NOTIFICATION_COLUMNS} FROM "Notification"
+          WHERE "userId" = $1 ${readClause}
+          ORDER BY "createdAt" DESC`,
+        [userId]
+      ),
+      this.db.queryOne<{ count: number }>(
+        `SELECT COUNT(*)::int AS "count" FROM "Notification"
+          WHERE "userId" = $1 AND "readAt" IS NULL`,
+        [userId]
+      ),
     ]);
-    return { items: rows.map(toNotificationDto), unreadCount };
+    return {
+      items: rows.rows.map(toNotificationDto),
+      unreadCount: unread?.count ?? 0,
+    };
   }
 
   async markRead(userId: string, id: string) {
-    const existing = await this.prisma.notification.findFirst({
-      where: { id, userId },
-    });
+    const existing = await this.db.queryOne<NotificationRow>(
+      `SELECT ${NOTIFICATION_COLUMNS} FROM "Notification"
+        WHERE "id" = $1 AND "userId" = $2`,
+      [id, userId]
+    );
     if (!existing) {
       throw new NotFoundException({ error: "Notification not found" });
     }
-    const row = existing.readAt
-      ? existing
-      : await this.prisma.notification.update({
-          where: { id },
-          data: { readAt: new Date() },
-        });
-    return toNotificationDto(row);
+    if (existing.readAt) return toNotificationDto(existing);
+
+    const row = await this.db.queryOne<NotificationRow>(
+      `UPDATE "Notification" SET "readAt" = ${SQL_NOW_UTC}
+        WHERE "id" = $1
+        RETURNING ${NOTIFICATION_COLUMNS}`,
+      [id]
+    );
+    return toNotificationDto(row ?? existing);
   }
 
   async markAllRead(userId: string) {
-    const result = await this.prisma.notification.updateMany({
-      where: { userId, readAt: null },
-      data: { readAt: new Date() },
-    });
-    return { updated: result.count };
-  }
-
-  /** `userId` → one student; `classId` → students in/assigned to the class; else all students. */
-  async createAdmin(input: CreateNotificationInput) {
-    let recipientIds: string[];
-
-    if (input.userId) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: input.userId },
-        select: { id: true },
-      });
-      if (!user) throw new NotFoundException({ error: "User not found" });
-      recipientIds = [user.id];
-    } else if (input.classId) {
-      const cls = await this.prisma.schoolClass.findUnique({
-        where: { id: input.classId },
-        select: { id: true },
-      });
-      if (!cls) throw new NotFoundException({ error: "Class not found" });
-      const students = await this.prisma.user.findMany({
-        where: {
-          role: "STUDENT",
-          OR: [
-            { studentProfile: { activeClassId: input.classId } },
-            { tasks: { some: { classId: input.classId } } },
-          ],
-        },
-        select: { id: true },
-      });
-      recipientIds = students.map((s) => s.id);
-    } else {
-      const students = await this.prisma.user.findMany({
-        where: { role: "STUDENT" },
-        select: { id: true },
-      });
-      recipientIds = students.map((s) => s.id);
-    }
-
-    const result = await this.prisma.notification.createMany({
-      data: recipientIds.map((userId) => ({
-        userId,
-        title: input.title,
-        message: input.message,
-        detailedBody: input.detailedBody,
-        type: input.type,
-        icon: input.icon,
-        actionRoute: input.actionRoute,
-        actionLabel: input.actionLabel,
-      })),
-    });
-    return { created: result.count };
+    const { rowCount } = await this.db.query(
+      `UPDATE "Notification" SET "readAt" = ${SQL_NOW_UTC}
+        WHERE "userId" = $1 AND "readAt" IS NULL`,
+      [userId]
+    );
+    return { updated: rowCount };
   }
 }

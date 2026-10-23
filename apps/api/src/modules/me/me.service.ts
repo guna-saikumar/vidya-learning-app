@@ -1,15 +1,54 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { PrismaService } from "../../prisma/prisma.service";
+import { newId } from "../../common/ids";
+import { clientQuery, DbService, SQL_NOW_UTC } from "../../db/db.service";
 import type {
   CreateBookmarkInput,
   UpdateChapterProgressInput,
   UpdateProfileInput,
 } from "./me.schemas";
 
-type ProgressRow = Prisma.ChapterProgressGetPayload<object>;
-type BookmarkRow = Prisma.BookmarkGetPayload<object>;
+type ProgressRow = {
+  chapterId: string;
+  subjectId: string;
+  classId: string;
+  completed: boolean;
+  completedSections: string[] | null;
+  progressPercent: number;
+  lastAccessed: Date;
+};
 
+type BookmarkRow = {
+  id: string;
+  classId: string;
+  subjectId: string;
+  chapterId: string;
+  sectionId: string | null;
+  title: string;
+  subtitle: string;
+  type: string;
+  previewText: string | null;
+  dateAdded: Date;
+};
+
+type UserRow = { id: string; name: string; email: string };
+
+type ProfileRow = {
+  activeClassId: string | null;
+  streakDays: number;
+  avatarUrl: string;
+  studyGoalMinutes: number;
+};
+
+type ChapterContext = {
+  id: string;
+  subjectId: string;
+  classId: string;
+  sectionIds: string[];
+};
+
+const PROGRESS_COLUMNS = `"chapterId", "subjectId", "classId", "completed", "completedSections", "progressPercent", "lastAccessed"`;
+const BOOKMARK_COLUMNS = `"id", "classId", "subjectId", "chapterId", "sectionId", "title", "subtitle", "type", "previewText", "dateAdded"`;
+const PROFILE_COLUMNS = `"activeClassId", "streakDays", "avatarUrl", "studyGoalMinutes"`;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** UTC midnight for the given instant. */
@@ -22,7 +61,7 @@ const toProgressDto = (p: ProgressRow) => ({
   subjectId: p.subjectId,
   classId: p.classId,
   completed: p.completed,
-  completedSections: p.completedSections,
+  completedSections: p.completedSections ?? [],
   progressPercent: p.progressPercent,
   lastAccessed: p.lastAccessed.getTime(),
 });
@@ -42,26 +81,38 @@ const toBookmarkDto = (b: BookmarkRow) => ({
 
 @Injectable()
 export class MeService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(@Inject(DbService) private readonly db: DbService) {}
 
   // -------------------------------------------------------------- profile --
 
   private async loadProfile(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { studentProfile: true },
-    });
+    const user = await this.db.queryOne<UserRow>(
+      `SELECT "id", "name", "email" FROM "User" WHERE "id" = $1`,
+      [userId]
+    );
     if (!user) throw new NotFoundException({ error: "User not found" });
-    const profile =
-      user.studentProfile ??
-      (await this.prisma.studentProfile.create({ data: { userId } }));
+
+    let profile = await this.db.queryOne<ProfileRow>(
+      `SELECT ${PROFILE_COLUMNS} FROM "StudentProfile" WHERE "userId" = $1`,
+      [userId]
+    );
+    if (!profile) {
+      // ON CONFLICT covers a concurrent first-load creating the row.
+      await this.db.query(
+        `INSERT INTO "StudentProfile" ("id", "userId", "updatedAt")
+         VALUES ($1, $2, ${SQL_NOW_UTC})
+         ON CONFLICT ("userId") DO NOTHING`,
+        [newId(), userId]
+      );
+      profile = (await this.db.queryOne<ProfileRow>(
+        `SELECT ${PROFILE_COLUMNS} FROM "StudentProfile" WHERE "userId" = $1`,
+        [userId]
+      ))!;
+    }
     return { user, profile };
   }
 
-  private profileDto(
-    user: { id: string; name: string; email: string },
-    profile: Prisma.StudentProfileGetPayload<object>
-  ) {
+  private profileDto(user: UserRow, profile: ProfileRow) {
     return {
       id: user.id,
       email: user.email,
@@ -81,53 +132,126 @@ export class MeService {
   async updateProfile(userId: string, input: UpdateProfileInput) {
     await this.loadProfile(userId);
     if (input.activeClassId) {
-      const cls = await this.prisma.schoolClass.findUnique({
-        where: { id: input.activeClassId },
-      });
+      const cls = await this.db.queryOne(
+        `SELECT "id" FROM "SchoolClass" WHERE "id" = $1`,
+        [input.activeClassId]
+      );
       if (!cls) throw new NotFoundException({ error: "Class not found" });
     }
 
-    const [updatedUser, profile] = await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: userId },
-        data: input.displayName ? { name: input.displayName } : {},
-      }),
-      this.prisma.studentProfile.update({
-        where: { userId },
-        data: {
-          ...(input.activeClassId === undefined
-            ? {}
-            : { activeClassId: input.activeClassId || null }),
-          ...(input.avatarUrl === undefined ? {} : { avatarUrl: input.avatarUrl }),
-          ...(input.studyGoalMinutes === undefined
-            ? {}
-            : { studyGoalMinutes: input.studyGoalMinutes }),
-        },
-      }),
-    ]);
-    return this.profileDto(updatedUser, profile);
+    const sets: string[] = [`"updatedAt" = ${SQL_NOW_UTC}`];
+    const params: unknown[] = [];
+    const add = (column: string, value: unknown) => {
+      params.push(value);
+      sets.push(`"${column}" = $${params.length}`);
+    };
+    if (input.activeClassId !== undefined) {
+      add("activeClassId", input.activeClassId || null);
+    }
+    if (input.avatarUrl !== undefined) add("avatarUrl", input.avatarUrl);
+    if (input.studyGoalMinutes !== undefined) {
+      add("studyGoalMinutes", input.studyGoalMinutes);
+    }
+    params.push(userId);
+
+    const { user, profile } = await this.db.tx(async (client) => {
+      const userRes = input.displayName
+        ? await clientQuery<UserRow>(
+            client,
+            `UPDATE "User" SET "name" = $1 WHERE "id" = $2
+             RETURNING "id", "name", "email"`,
+            [input.displayName, userId]
+          )
+        : await clientQuery<UserRow>(
+            client,
+            `SELECT "id", "name", "email" FROM "User" WHERE "id" = $1`,
+            [userId]
+          );
+      const profileRes = await clientQuery<ProfileRow>(
+        client,
+        `UPDATE "StudentProfile" SET ${sets.join(", ")}
+          WHERE "userId" = $${params.length}
+        RETURNING ${PROFILE_COLUMNS}`,
+        params
+      );
+      return { user: userRes.rows[0]!, profile: profileRes.rows[0]! };
+    });
+    return this.profileDto(user, profile);
   }
 
   // ------------------------------------------------------------- progress --
 
   async listProgress(userId: string) {
-    const rows = await this.prisma.chapterProgress.findMany({
-      where: { userId },
-      orderBy: { lastAccessed: "desc" },
-    });
+    const { rows } = await this.db.query<ProgressRow>(
+      `SELECT ${PROGRESS_COLUMNS} FROM "ChapterProgress"
+        WHERE "userId" = $1
+        ORDER BY "lastAccessed" DESC`,
+      [userId]
+    );
     return { items: rows.map(toProgressDto) };
   }
 
-  private async chapterContext(chapterId: string) {
-    const chapter = await this.prisma.chapter.findUnique({
-      where: { id: chapterId },
-      include: {
-        subject: { select: { id: true, classId: true } },
-        sections: { select: { id: true } },
-      },
-    });
+  private async chapterContext(chapterId: string): Promise<ChapterContext> {
+    const chapter = await this.db.queryOne<{
+      id: string;
+      subjectId: string;
+      classId: string;
+    }>(
+      `SELECT c."id", c."subjectId", s."classId"
+         FROM "Chapter" c
+         JOIN "Subject" s ON s."id" = c."subjectId"
+        WHERE c."id" = $1`,
+      [chapterId]
+    );
     if (!chapter) throw new NotFoundException({ error: "Chapter not found" });
-    return chapter;
+    const { rows } = await this.db.query<{ id: string }>(
+      `SELECT "id" FROM "Section" WHERE "chapterId" = $1`,
+      [chapterId]
+    );
+    return { ...chapter, sectionIds: rows.map((r) => r.id) };
+  }
+
+  private getProgress(userId: string, chapterId: string) {
+    return this.db.queryOne<ProgressRow>(
+      `SELECT ${PROGRESS_COLUMNS} FROM "ChapterProgress"
+        WHERE "userId" = $1 AND "chapterId" = $2`,
+      [userId, chapterId]
+    );
+  }
+
+  private async saveProgress(
+    userId: string,
+    chapter: ChapterContext,
+    state: {
+      completed: boolean;
+      completedSections: string[];
+      progressPercent: number;
+    }
+  ) {
+    const { rows } = await this.db.query<ProgressRow>(
+      `INSERT INTO "ChapterProgress"
+         ("id", "userId", "chapterId", "subjectId", "classId", "completed",
+          "completedSections", "progressPercent", "lastAccessed", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8, ${SQL_NOW_UTC}, ${SQL_NOW_UTC})
+       ON CONFLICT ("userId", "chapterId") DO UPDATE SET
+         "completed" = EXCLUDED."completed",
+         "completedSections" = EXCLUDED."completedSections",
+         "progressPercent" = EXCLUDED."progressPercent",
+         "lastAccessed" = EXCLUDED."lastAccessed",
+         "updatedAt" = EXCLUDED."updatedAt"
+       RETURNING ${PROGRESS_COLUMNS}`,
+      [
+        newId(),
+        userId,
+        chapter.id,
+        chapter.subjectId,
+        chapter.classId,
+        state.completed,
+        state.completedSections,
+        state.progressPercent,
+      ]
+    );
+    return rows[0]!;
   }
 
   async upsertChapterProgress(
@@ -137,11 +261,9 @@ export class MeService {
   ) {
     await this.loadProfile(userId);
     const chapter = await this.chapterContext(chapterId);
-    const validSectionIds = new Set(chapter.sections.map((s) => s.id));
+    const validSectionIds = new Set(chapter.sectionIds);
 
-    const existing = await this.prisma.chapterProgress.findUnique({
-      where: { userId_chapterId: { userId, chapterId } },
-    });
+    const existing = await this.getProgress(userId, chapterId);
 
     const completedSections = input.completedSections
       ? [...new Set(input.completedSections.filter((s) => validSectionIds.has(s)))]
@@ -156,24 +278,10 @@ export class MeService {
     if (input.completed === true) progressPercent = 100;
     if (input.completed === undefined && progressPercent >= 100) completed = true;
 
-    const row = await this.prisma.chapterProgress.upsert({
-      where: { userId_chapterId: { userId, chapterId } },
-      create: {
-        userId,
-        chapterId,
-        subjectId: chapter.subjectId,
-        classId: chapter.subject.classId,
-        completed,
-        completedSections,
-        progressPercent,
-        lastAccessed: new Date(),
-      },
-      update: {
-        completed,
-        completedSections,
-        progressPercent,
-        lastAccessed: new Date(),
-      },
+    const row = await this.saveProgress(userId, chapter, {
+      completed,
+      completedSections,
+      progressPercent,
     });
 
     if (input.studyMinutes) await this.addStudyMinutes(userId, input.studyMinutes);
@@ -182,43 +290,28 @@ export class MeService {
 
   async completeSection(userId: string, sectionId: string, minutes?: number) {
     await this.loadProfile(userId);
-    const section = await this.prisma.section.findUnique({
-      where: { id: sectionId },
-      select: { id: true, chapterId: true },
-    });
+    const section = await this.db.queryOne<{ id: string; chapterId: string }>(
+      `SELECT "id", "chapterId" FROM "Section" WHERE "id" = $1`,
+      [sectionId]
+    );
     if (!section) throw new NotFoundException({ error: "Section not found" });
 
     const chapter = await this.chapterContext(section.chapterId);
-    const existing = await this.prisma.chapterProgress.findUnique({
-      where: { userId_chapterId: { userId, chapterId: chapter.id } },
-    });
+    const existing = await this.getProgress(userId, chapter.id);
     const completedSections = [
       ...new Set([...(existing?.completedSections ?? []), sectionId]),
     ];
-    const total = chapter.sections.length || 1;
+    const total = chapter.sectionIds.length || 1;
     const progressPercent = Math.min(
       100,
       Math.round((completedSections.length / total) * 100)
     );
     const completed = progressPercent >= 100;
 
-    const row = await this.prisma.chapterProgress.upsert({
-      where: { userId_chapterId: { userId, chapterId: chapter.id } },
-      create: {
-        userId,
-        chapterId: chapter.id,
-        subjectId: chapter.subjectId,
-        classId: chapter.subject.classId,
-        completed,
-        completedSections,
-        progressPercent,
-      },
-      update: {
-        completed,
-        completedSections,
-        progressPercent,
-        lastAccessed: new Date(),
-      },
+    const row = await this.saveProgress(userId, chapter, {
+      completed,
+      completedSections,
+      progressPercent,
     });
 
     if (minutes) await this.addStudyMinutes(userId, minutes);
@@ -228,10 +321,12 @@ export class MeService {
   // ------------------------------------------------------------ bookmarks --
 
   async listBookmarks(userId: string) {
-    const rows = await this.prisma.bookmark.findMany({
-      where: { userId },
-      orderBy: { dateAdded: "desc" },
-    });
+    const { rows } = await this.db.query<BookmarkRow>(
+      `SELECT ${BOOKMARK_COLUMNS} FROM "Bookmark"
+        WHERE "userId" = $1
+        ORDER BY "dateAdded" DESC`,
+      [userId]
+    );
     return { items: rows.map(toBookmarkDto) };
   }
 
@@ -239,73 +334,89 @@ export class MeService {
     await this.loadProfile(userId);
     const chapter = await this.chapterContext(input.chapterId);
     if (input.sectionId) {
-      const section = await this.prisma.section.findUnique({
-        where: { id: input.sectionId },
-      });
+      const section = await this.db.queryOne<{ id: string; chapterId: string }>(
+        `SELECT "id", "chapterId" FROM "Section" WHERE "id" = $1`,
+        [input.sectionId]
+      );
       if (!section || section.chapterId !== chapter.id) {
         throw new NotFoundException({ error: "Section not found" });
       }
     }
 
     const type = input.type ?? (input.sectionId ? "section" : "chapter");
-    const existing = await this.prisma.bookmark.findFirst({
-      where: {
-        userId,
-        chapterId: chapter.id,
-        sectionId: input.sectionId ?? null,
-        type,
-      },
-    });
+    const existing = await this.db.queryOne<BookmarkRow>(
+      `SELECT ${BOOKMARK_COLUMNS} FROM "Bookmark"
+        WHERE "userId" = $1 AND "chapterId" = $2
+          AND "sectionId" IS NOT DISTINCT FROM $3
+          AND "type" = $4
+        LIMIT 1`,
+      [userId, chapter.id, input.sectionId ?? null, type]
+    );
     if (existing) return toBookmarkDto(existing);
 
-    const row = await this.prisma.bookmark.create({
-      data: {
+    const row = await this.db.queryOne<BookmarkRow>(
+      `INSERT INTO "Bookmark"
+         ("id", "userId", "classId", "subjectId", "chapterId", "sectionId",
+          "title", "subtitle", "type", "previewText")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING ${BOOKMARK_COLUMNS}`,
+      [
+        newId(),
         userId,
-        classId: chapter.subject.classId,
-        subjectId: chapter.subjectId,
-        chapterId: chapter.id,
-        sectionId: input.sectionId ?? null,
-        title: input.title,
-        subtitle: input.subtitle,
+        chapter.classId,
+        chapter.subjectId,
+        chapter.id,
+        input.sectionId ?? null,
+        input.title,
+        input.subtitle ?? "",
         type,
-        previewText: input.previewText,
-      },
-    });
-    return toBookmarkDto(row);
+        input.previewText ?? null,
+      ]
+    );
+    return toBookmarkDto(row!);
   }
 
   async deleteBookmark(userId: string, id: string) {
-    const row = await this.prisma.bookmark.findFirst({ where: { id, userId } });
-    if (!row) throw new NotFoundException({ error: "Bookmark not found" });
-    await this.prisma.bookmark.delete({ where: { id } });
+    const { rowCount } = await this.db.query(
+      `DELETE FROM "Bookmark" WHERE "id" = $1 AND "userId" = $2`,
+      [id, userId]
+    );
+    if (rowCount === 0) {
+      throw new NotFoundException({ error: "Bookmark not found" });
+    }
     return { deleted: true, id };
   }
 
   // ---------------------------------------------------------- study stats --
 
   private async addStudyMinutes(userId: string, minutes: number) {
-    const day = startOfUtcDay(new Date());
-    await this.prisma.studySession.upsert({
-      where: { userId_day: { userId, day } },
-      create: { userId, day, minutes },
-      update: { minutes: { increment: minutes } },
-    });
+    const day = isoDay(startOfUtcDay(new Date()));
+    await this.db.query(
+      `INSERT INTO "StudySession" ("id", "userId", "day", "minutes")
+       VALUES ($1, $2, $3::date, $4)
+       ON CONFLICT ("userId", "day") DO UPDATE SET
+         "minutes" = "StudySession"."minutes" + EXCLUDED."minutes"`,
+      [newId(), userId, day, minutes]
+    );
     const streakDays = await this.computeStreak(userId);
-    await this.prisma.studentProfile.update({
-      where: { userId },
-      data: { streakDays },
-    });
+    await this.db.query(
+      `UPDATE "StudentProfile"
+          SET "streakDays" = $1, "updatedAt" = ${SQL_NOW_UTC}
+        WHERE "userId" = $2`,
+      [streakDays, userId]
+    );
   }
 
   /** Consecutive days with study minutes, ending today (or yesterday). */
   private async computeStreak(userId: string): Promise<number> {
-    const sessions = await this.prisma.studySession.findMany({
-      where: { userId, minutes: { gt: 0 } },
-      orderBy: { day: "desc" },
-      take: 400,
-      select: { day: true },
-    });
-    const days = new Set(sessions.map((s) => isoDay(s.day)));
+    const { rows } = await this.db.query<{ day: string }>(
+      `SELECT "day"::text AS "day" FROM "StudySession"
+        WHERE "userId" = $1 AND "minutes" > 0
+        ORDER BY "day" DESC
+        LIMIT 400`,
+      [userId]
+    );
+    const days = new Set(rows.map((r) => r.day));
     let cursor = startOfUtcDay(new Date());
     if (!days.has(isoDay(cursor))) cursor = new Date(cursor.getTime() - DAY_MS);
     let streak = 0;
@@ -322,10 +433,15 @@ export class MeService {
     const today = startOfUtcDay(new Date());
     const from = new Date(today.getTime() - (days - 1) * DAY_MS);
 
-    const sessions = await this.prisma.studySession.findMany({
-      where: { userId, day: { gte: from, lte: today } },
-    });
-    const byDay = new Map(sessions.map((s) => [isoDay(s.day), s.minutes]));
+    const { rows: sessions } = await this.db.query<{
+      day: string;
+      minutes: number;
+    }>(
+      `SELECT "day"::text AS "day", "minutes" FROM "StudySession"
+        WHERE "userId" = $1 AND "day" >= $2::date AND "day" <= $3::date`,
+      [userId, isoDay(from), isoDay(today)]
+    );
+    const byDay = new Map(sessions.map((s) => [s.day, s.minutes]));
 
     const daily = Array.from({ length: days }, (_, i) => {
       const date = isoDay(new Date(from.getTime() + i * DAY_MS));

@@ -13,6 +13,7 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { ApiZodBody } from "../common/zod-openapi";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard, type AuthedRequest } from "./jwt.guard";
@@ -38,6 +39,7 @@ export class AuthController {
       "No public registration. Credentials are issued by the school/admin. " +
       "Forgot password → contact admin (not handled by this API).",
   })
+  @ApiZodBody(loginBodySchema)
   async login(
     @Body(new ZodValidationPipe(loginBodySchema))
     body: { email: string; password: string }

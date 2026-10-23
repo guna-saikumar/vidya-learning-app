@@ -1,12 +1,34 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { PrismaService } from "../../prisma/prisma.service";
-import type {
-  CreateExamResultInput,
-  CreateExamScheduleInput,
-} from "./exams.schemas";
+import { Inject, Injectable } from "@nestjs/common";
+import { DbService } from "../../db/db.service";
 
-const toScheduleDto = (e: Prisma.ExamScheduleItemGetPayload<object>) => ({
+type ScheduleRow = {
+  id: string;
+  classId: string | null;
+  subjectName: string;
+  title: string;
+  examDate: Date;
+  startTime: string | null;
+  endTime: string | null;
+  venue: string | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ResultRow = {
+  id: string;
+  userId: string;
+  subjectName: string;
+  examTitle: string;
+  marksObtained: number;
+  marksMax: number;
+  grade: string | null;
+  remarks: string | null;
+  publishedAt: Date;
+  createdAt: Date;
+};
+
+const toScheduleDto = (e: ScheduleRow) => ({
   id: e.id,
   classId: e.classId,
   subjectName: e.subjectName,
@@ -20,7 +42,7 @@ const toScheduleDto = (e: Prisma.ExamScheduleItemGetPayload<object>) => ({
   updatedAt: e.updatedAt.toISOString(),
 });
 
-const toResultDto = (r: Prisma.ExamResultGetPayload<object>) => ({
+const toResultDto = (r: ResultRow) => ({
   id: r.id,
   userId: r.userId,
   subjectName: r.subjectName,
@@ -36,55 +58,31 @@ const toResultDto = (r: Prisma.ExamResultGetPayload<object>) => ({
 
 @Injectable()
 export class ExamsService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(@Inject(DbService) private readonly db: DbService) {}
 
   /** Exams for the student's active class plus school-wide (classId null) exams. */
   async scheduleForStudent(userId: string) {
-    const profile = await this.prisma.studentProfile.findUnique({
-      where: { userId },
-      select: { activeClassId: true },
-    });
-    const rows = await this.prisma.examScheduleItem.findMany({
-      where: {
-        OR: [
-          { classId: null },
-          ...(profile?.activeClassId ? [{ classId: profile.activeClassId }] : []),
-        ],
-      },
-      orderBy: { examDate: "asc" },
-    });
+    const { rows } = await this.db.query<ScheduleRow>(
+      `SELECT "id", "classId", "subjectName", "title", "examDate", "startTime", "endTime",
+              "venue", "notes", "createdAt", "updatedAt"
+         FROM "ExamScheduleItem"
+        WHERE "classId" IS NULL
+           OR "classId" = (SELECT "activeClassId" FROM "StudentProfile" WHERE "userId" = $1)
+        ORDER BY "examDate" ASC`,
+      [userId]
+    );
     return { items: rows.map(toScheduleDto) };
   }
 
   async resultsForStudent(userId: string) {
-    const rows = await this.prisma.examResult.findMany({
-      where: { userId },
-      orderBy: { publishedAt: "desc" },
-    });
+    const { rows } = await this.db.query<ResultRow>(
+      `SELECT "id", "userId", "subjectName", "examTitle", "marksObtained", "marksMax",
+              "grade", "remarks", "publishedAt", "createdAt"
+         FROM "ExamResult"
+        WHERE "userId" = $1
+        ORDER BY "publishedAt" DESC`,
+      [userId]
+    );
     return { items: rows.map(toResultDto) };
-  }
-
-  async createSchedule(input: CreateExamScheduleInput) {
-    if (input.classId) {
-      const cls = await this.prisma.schoolClass.findUnique({
-        where: { id: input.classId },
-      });
-      if (!cls) throw new NotFoundException({ error: "Class not found" });
-    }
-    const row = await this.prisma.examScheduleItem.create({
-      data: { ...input, classId: input.classId ?? null },
-    });
-    return toScheduleDto(row);
-  }
-
-  async createResult(input: CreateExamResultInput) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: input.userId },
-    });
-    if (!user || user.role !== "STUDENT") {
-      throw new NotFoundException({ error: "Student not found" });
-    }
-    const row = await this.prisma.examResult.create({ data: input });
-    return toResultDto(row);
   }
 }

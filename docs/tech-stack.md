@@ -6,44 +6,35 @@ This document is the source of truth for implementation tasks across the Vidya m
 
 ### Mobile Apps
 
-- **Expo + React Native** for student and admin mobile applications.
-- **Expo Router** for mobile navigation and routing.
-- **NativeWind** for Tailwind CSS-style utility classes.
-- **React Native Paper** for ready-made mobile UI components.
-- **Tamagui** for theming and reusable design elements.
-- **UI Kitten** for themed forms, buttons, layouts, and application screens.
-- **Restyle** for type-safe design tokens and themes.
-- **Gluestack UI** for customizable Expo and React Native components.
-- **Dripsy** for responsive styling and theming.
-- **Unistyles** for themes, breakpoints, and responsive styling.
+- **Expo + React Native** for the student mobile application.
+- **Expo Router / React Navigation** for student screens (Home, Learn, Profile, Notifications, and nested learning flows).
+- Approved styling options: NativeWind, React Native Paper, Tamagui, UI Kitten, Restyle, Gluestack UI, Dripsy, Unistyles.
 
 ## Backend
 
-- **NestJS v11** as the backend application framework.
-- **Fastify adapter** via `@nestjs/platform-fastify` with `fastify` v5.
-- **PostgreSQL** as the primary relational database.
-- **Prisma** for ORM access, schema modeling, and migrations.
-- **Zod** for schema validation where explicit runtime validation is needed.
-- **JWT** for authentication and protected API routes.
-- **CORS** for controlled cross-origin access.
-- **Swagger / OpenAPI** for API documentation.
-- **bcrypt** for password hashing.
-- **Docker Compose** for local development across PostgreSQL, API, and Expo app services.
-
-## Official Docs
-
-- Fastify: https://fastify.dev/
-- NestJS: https://nestjs.com/
-- PostgreSQL: https://www.postgresql.org/
-- Prisma: https://www.prisma.io/
-- Swagger: https://swagger.io/specification/
+- **NestJS v11** with `@nestjs/platform-fastify` / `fastify` v5.
+- **PostgreSQL** with **raw `pg` SQL** (no ORM).
+- **Zod**, **JWT**, **Swagger/OpenAPI**, **bcrypt**.
+- Student-only API surface (admin app and admin routes removed).
 
 ## Local Runtime
 
-Use Docker Compose for local development:
+One command after clone (macOS Homebrew Postgres + LAN share):
 
 ```bash
-pnpm docker:up
+npm start
 ```
 
-Deployment scripts and deployment platform config are intentionally out of scope for now.
+Starts:
+
+1. Postgres (listens on `0.0.0.0` so others on the same Wi‑Fi can connect)
+2. SQL migrate + seed
+3. **pgweb** DB UI on `:8083` (Prisma Studio alternative)
+4. Nest API on `:4000` (bound `0.0.0.0`)
+5. Student Expo with `--lan` on `:8081`
+
+```bash
+npm run db:psql     # CLI against local DB
+```
+
+Teammates on the same Wi‑Fi use the LAN URLs printed by `npm start` (API, Postgres, pgweb, Expo).

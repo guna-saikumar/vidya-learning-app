@@ -1,59 +1,55 @@
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { makeId } from "../../common/ids";
-import { PrismaService } from "../../prisma/prisma.service";
-import type {
-  CreateChapterInput,
-  CreateClassInput,
-  CreateSectionInput,
-  CreateSubjectInput,
-  UpdateChapterInput,
-  UpdateClassInput,
-  UpdateSectionInput,
-  UpdateSubjectInput,
-} from "./curriculum.schemas";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { DbService } from "../../db/db.service";
 
-type SectionRow = Prisma.SectionGetPayload<object>;
-type ChapterRow = Prisma.ChapterGetPayload<{
-  include: {
-    sections: true;
-    quizzes: { include: { questions: true } };
-  };
-}>;
-type SubjectRow = Prisma.SubjectGetPayload<{
-  include: {
-    chapters: {
-      include: { sections: true; quizzes: { include: { questions: true } } };
-    };
-  };
-}>;
+type ClassRow = {
+  id: string;
+  grade: number;
+  title: string;
+  subtitle: string;
+  badge: string;
+};
 
-const byOrder = <T extends { order: number }>(a: T, b: T) => a.order - b.order;
+type SubjectRow = {
+  id: string;
+  classId: string;
+  name: string;
+  description: string | null;
+  category: string;
+  icon: string;
+  bannerUrl: string | null;
+  order: number;
+};
 
-const chapterInclude = {
-  sections: { orderBy: { order: "asc" } },
-  quizzes: {
-    orderBy: { createdAt: "asc" },
-    take: 1,
-    include: { questions: { orderBy: { order: "asc" }, take: 1 } },
-  },
-} satisfies Prisma.ChapterInclude;
+type ChapterRow = {
+  id: string;
+  subjectId: string;
+  title: string;
+  description: string | null;
+  order: number;
+  unitName: string | null;
+  durationMinutes: number | null;
+  learningGoals: string[] | null;
+  bannerUrl: string | null;
+};
 
-const subjectInclude = {
-  chapters: {
-    orderBy: { order: "asc" },
-    include: chapterInclude,
-  },
-} satisfies Prisma.SubjectInclude;
+type SectionRow = {
+  id: string;
+  chapterId: string;
+  title: string;
+  content: string;
+  order: number;
+  durationMinutes: number | null;
+  summaryPoint: string | null;
+  keyAxiom: string | null;
+};
 
-const classInclude = {
-  subjects: { orderBy: { order: "asc" }, include: subjectInclude },
-} satisfies Prisma.SchoolClassInclude;
+type QuizPreviewRow = {
+  chapterId: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+};
 
 const nullToUndef = <T>(v: T | null): T | undefined => v ?? undefined;
 
@@ -67,68 +63,191 @@ export const toSectionDto = (s: SectionRow) => ({
   keyAxiom: nullToUndef(s.keyAxiom),
 });
 
-export const toChapterDto = (c: ChapterRow) => {
-  const q = c.quizzes[0]?.questions[0];
-  return {
-    id: c.id,
-    title: c.title,
-    description: nullToUndef(c.description),
-    order: c.order,
-    unitName: nullToUndef(c.unitName),
-    durationMinutes: nullToUndef(c.durationMinutes),
-    learningGoals: c.learningGoals,
-    bannerUrl: nullToUndef(c.bannerUrl),
-    sections: [...c.sections].sort(byOrder).map(toSectionDto),
-    quiz: q
-      ? {
-          question: q.question,
-          options: q.options,
-          correctIndex: q.correctIndex,
-          explanation: q.explanation,
-        }
-      : undefined,
-  };
+export const toChapterDto = (
+  c: ChapterRow,
+  sections: SectionRow[],
+  quiz: QuizPreviewRow | undefined
+) => ({
+  id: c.id,
+  title: c.title,
+  description: nullToUndef(c.description),
+  order: c.order,
+  unitName: nullToUndef(c.unitName),
+  durationMinutes: nullToUndef(c.durationMinutes),
+  learningGoals: c.learningGoals ?? [],
+  bannerUrl: nullToUndef(c.bannerUrl),
+  sections: sections.map(toSectionDto),
+  quiz: quiz
+    ? {
+        question: quiz.question,
+        options: quiz.options,
+        correctIndex: quiz.correctIndex,
+        explanation: quiz.explanation,
+      }
+    : undefined,
+});
+
+type ChapterDto = ReturnType<typeof toChapterDto>;
+
+type SubjectDto = {
+  id: string;
+  name: string;
+  description: string | undefined;
+  category: string;
+  icon: string;
+  bannerUrl: string | undefined;
+  chapters: ChapterDto[];
 };
 
-export const toSubjectDto = (s: SubjectRow) => ({
-  id: s.id,
-  name: s.name,
-  description: nullToUndef(s.description),
-  category: s.category,
-  icon: s.icon,
-  bannerUrl: nullToUndef(s.bannerUrl),
-  chapters: [...s.chapters].sort(byOrder).map(toChapterDto),
-});
+const groupBy = <T>(items: T[], key: (item: T) => string): Map<string, T[]> => {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const k = key(item);
+    const bucket = map.get(k);
+    if (bucket) bucket.push(item);
+    else map.set(k, [item]);
+  }
+  return map;
+};
 
 @Injectable()
 export class CurriculumService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(@Inject(DbService) private readonly db: DbService) {}
 
-  private async assertUnused(
-    exists: Promise<unknown>,
-    label: string,
-    id: string
-  ) {
-    if (await exists) {
-      throw new ConflictException({ error: `${label} "${id}" already exists` });
+  // ------------------------------------------------------------- loaders --
+
+  private async loadChapters(chapterRows: ChapterRow[]) {
+    if (chapterRows.length === 0) {
+      return new Map<string, ChapterDto>();
     }
+    const chapterIds = chapterRows.map((c) => c.id);
+
+    const [sections, previews] = await Promise.all([
+      this.db.query<SectionRow>(
+        `SELECT "id", "chapterId", "title", "content", "order", "durationMinutes",
+                "summaryPoint", "keyAxiom"
+           FROM "Section"
+          WHERE "chapterId" = ANY($1::text[])
+          ORDER BY "order" ASC`,
+        [chapterIds]
+      ),
+      // First quiz (by createdAt) per chapter, and that quiz's first question.
+      this.db.query<QuizPreviewRow>(
+        `SELECT q."chapterId", qq."question", qq."options", qq."correctIndex", qq."explanation"
+           FROM (
+             SELECT DISTINCT ON ("chapterId") "id", "chapterId"
+               FROM "Quiz"
+              WHERE "chapterId" = ANY($1::text[])
+              ORDER BY "chapterId", "createdAt" ASC
+           ) q
+           JOIN LATERAL (
+             SELECT "question", "options", "correctIndex", "explanation"
+               FROM "QuizQuestion"
+              WHERE "quizId" = q."id"
+              ORDER BY "order" ASC
+              LIMIT 1
+           ) qq ON true`,
+        [chapterIds]
+      ),
+    ]);
+
+    const sectionsByChapter = groupBy(sections.rows, (s) => s.chapterId);
+    const previewByChapter = new Map(
+      previews.rows.map((p) => [p.chapterId, p])
+    );
+
+    return new Map(
+      chapterRows.map((c) => [
+        c.id,
+        toChapterDto(
+          c,
+          sectionsByChapter.get(c.id) ?? [],
+          previewByChapter.get(c.id)
+        ),
+      ])
+    );
   }
 
-  // ---------------------------------------------------------------- reads --
+  private async loadSubjectDtos(subjectRows: SubjectRow[]) {
+    if (subjectRows.length === 0) {
+      return new Map<string, SubjectDto>();
+    }
+    const { rows: chapterRows } = await this.db.query<ChapterRow>(
+      `SELECT "id", "subjectId", "title", "description", "order", "unitName",
+              "durationMinutes", "learningGoals", "bannerUrl"
+         FROM "Chapter"
+        WHERE "subjectId" = ANY($1::text[])
+        ORDER BY "order" ASC`,
+      [subjectRows.map((s) => s.id)]
+    );
+    const chapterDtos = await this.loadChapters(chapterRows);
+    const chaptersBySubject = groupBy(chapterRows, (c) => c.subjectId);
 
-  async listClasses() {
-    const rows = await this.prisma.schoolClass.findMany({
-      orderBy: [{ grade: "asc" }, { id: "asc" }],
-      include: classInclude,
-    });
-    const classes = rows.map((c) => ({
+    return new Map(
+      subjectRows.map((s) => [
+        s.id,
+        this.toSubjectDto(
+          s,
+          (chaptersBySubject.get(s.id) ?? []).map(
+            (c) => chapterDtos.get(c.id)!
+          )
+        ),
+      ])
+    );
+  }
+
+  private toSubjectDto(s: SubjectRow, chapters: ChapterDto[]): SubjectDto {
+    return {
+      id: s.id,
+      name: s.name,
+      description: nullToUndef(s.description),
+      category: s.category,
+      icon: s.icon,
+      bannerUrl: nullToUndef(s.bannerUrl),
+      chapters,
+    };
+  }
+
+  private async subjectsForClasses(classIds: string[]) {
+    if (classIds.length === 0) return new Map<string, SubjectRow[]>();
+    const { rows } = await this.db.query<SubjectRow>(
+      `SELECT "id", "classId", "name", "description", "category", "icon", "bannerUrl", "order"
+         FROM "Subject"
+        WHERE "classId" = ANY($1::text[])
+        ORDER BY "order" ASC`,
+      [classIds]
+    );
+    return groupBy(rows, (s) => s.classId);
+  }
+
+  private async classTree(classRows: ClassRow[]) {
+    const subjectsByClass = await this.subjectsForClasses(
+      classRows.map((c) => c.id)
+    );
+    const allSubjects = [...subjectsByClass.values()].flat();
+    const subjectDtos = await this.loadSubjectDtos(allSubjects);
+
+    return classRows.map((c) => ({
       id: c.id,
       grade: c.grade,
       title: c.title,
       subtitle: c.subtitle,
       badge: c.badge,
-      subjects: c.subjects.map(toSubjectDto),
+      subjects: (subjectsByClass.get(c.id) ?? []).map(
+        (s) => subjectDtos.get(s.id)!
+      ),
     }));
+  }
+
+  // ---------------------------------------------------------------- reads --
+
+  async listClasses() {
+    const { rows } = await this.db.query<ClassRow>(
+      `SELECT "id", "grade", "title", "subtitle", "badge"
+         FROM "SchoolClass"
+        ORDER BY "grade" ASC, "id" ASC`
+    );
+    const classes = await this.classTree(rows);
 
     const stats = {
       totalClasses: classes.length,
@@ -147,204 +266,64 @@ export class CurriculumService {
   }
 
   async getClass(classId: string) {
-    const c = await this.prisma.schoolClass.findUnique({
-      where: { id: classId },
-      include: classInclude,
-    });
-    if (!c) throw new NotFoundException({ error: "Class not found" });
-    return {
-      id: c.id,
-      grade: c.grade,
-      title: c.title,
-      subtitle: c.subtitle,
-      badge: c.badge,
-      subjects: c.subjects.map(toSubjectDto),
-    };
+    const row = await this.db.queryOne<ClassRow>(
+      `SELECT "id", "grade", "title", "subtitle", "badge"
+         FROM "SchoolClass" WHERE "id" = $1`,
+      [classId]
+    );
+    if (!row) throw new NotFoundException({ error: "Class not found" });
+    const [tree] = await this.classTree([row]);
+    return tree!;
   }
 
   async getSubject(subjectId: string) {
-    const s = await this.prisma.subject.findUnique({
-      where: { id: subjectId },
-      include: subjectInclude,
-    });
-    if (!s) throw new NotFoundException({ error: "Subject not found" });
-    return { ...toSubjectDto(s), classId: s.classId };
+    const row = await this.db.queryOne<SubjectRow>(
+      `SELECT "id", "classId", "name", "description", "category", "icon", "bannerUrl", "order"
+         FROM "Subject" WHERE "id" = $1`,
+      [subjectId]
+    );
+    if (!row) throw new NotFoundException({ error: "Subject not found" });
+    const dtos = await this.loadSubjectDtos([row]);
+    return { ...dtos.get(row.id)!, classId: row.classId };
   }
 
   async getChapter(chapterId: string) {
-    const c = await this.prisma.chapter.findUnique({
-      where: { id: chapterId },
-      include: { ...chapterInclude, subject: { select: { classId: true } } },
-    });
-    if (!c) throw new NotFoundException({ error: "Chapter not found" });
+    const row = await this.db.queryOne<ChapterRow & { classId: string }>(
+      `SELECT c."id", c."subjectId", c."title", c."description", c."order", c."unitName",
+              c."durationMinutes", c."learningGoals", c."bannerUrl", s."classId"
+         FROM "Chapter" c
+         JOIN "Subject" s ON s."id" = c."subjectId"
+        WHERE c."id" = $1`,
+      [chapterId]
+    );
+    if (!row) throw new NotFoundException({ error: "Chapter not found" });
+    const dtos = await this.loadChapters([row]);
     return {
-      ...toChapterDto(c),
-      subjectId: c.subjectId,
-      classId: c.subject.classId,
+      ...dtos.get(row.id)!,
+      subjectId: row.subjectId,
+      classId: row.classId,
     };
   }
 
   async getSection(sectionId: string) {
-    const s = await this.prisma.section.findUnique({
-      where: { id: sectionId },
-      include: {
-        chapter: { select: { id: true, subjectId: true, subject: { select: { classId: true } } } },
-      },
-    });
-    if (!s) throw new NotFoundException({ error: "Section not found" });
-    return {
-      ...toSectionDto(s),
-      chapterId: s.chapterId,
-      subjectId: s.chapter.subjectId,
-      classId: s.chapter.subject.classId,
-    };
-  }
-
-  // ---------------------------------------------------------------- admin --
-
-  async createClass(input: CreateClassInput) {
-    const id = input.id ?? makeId("class", `${input.grade}`);
-    await this.assertUnused(
-      this.prisma.schoolClass.findUnique({ where: { id } }),
-      "Class",
-      id
+    const row = await this.db.queryOne<
+      SectionRow & { subjectId: string; classId: string }
+    >(
+      `SELECT se."id", se."chapterId", se."title", se."content", se."order",
+              se."durationMinutes", se."summaryPoint", se."keyAxiom",
+              ch."subjectId", s."classId"
+         FROM "Section" se
+         JOIN "Chapter" ch ON ch."id" = se."chapterId"
+         JOIN "Subject" s ON s."id" = ch."subjectId"
+        WHERE se."id" = $1`,
+      [sectionId]
     );
-    return this.prisma.schoolClass.create({
-      data: {
-        id,
-        grade: input.grade,
-        title: input.title,
-        subtitle: input.subtitle,
-        badge: input.badge,
-      },
-    });
-  }
-
-  async updateClass(id: string, input: UpdateClassInput) {
-    await this.requireClass(id);
-    return this.prisma.schoolClass.update({ where: { id }, data: input });
-  }
-
-  async deleteClass(id: string) {
-    await this.requireClass(id);
-    await this.prisma.schoolClass.delete({ where: { id } });
-    return { deleted: true, id };
-  }
-
-  async createSubject(input: CreateSubjectInput) {
-    await this.requireClass(input.classId);
-    const id = input.id ?? makeId("subject", input.name);
-    await this.assertUnused(
-      this.prisma.subject.findUnique({ where: { id } }),
-      "Subject",
-      id
-    );
-    const { id: _id, ...rest } = input;
-    return this.prisma.subject.create({ data: { ...rest, id } });
-  }
-
-  async updateSubject(id: string, input: UpdateSubjectInput) {
-    await this.requireSubject(id);
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.subject.update({ where: { id }, data: input });
-      if (input.name !== undefined) {
-        await tx.material.updateMany({
-          where: { subjectId: id },
-          data: { subjectName: input.name },
-        });
-      }
-      return updated;
-    });
-  }
-
-  async deleteSubject(id: string) {
-    await this.requireSubject(id);
-    await this.prisma.subject.delete({ where: { id } });
-    return { deleted: true, id };
-  }
-
-  async createChapter(input: CreateChapterInput) {
-    await this.requireSubject(input.subjectId);
-    const id = input.id ?? makeId("chapter", input.title);
-    await this.assertUnused(
-      this.prisma.chapter.findUnique({ where: { id } }),
-      "Chapter",
-      id
-    );
-    const { id: _id, ...rest } = input;
-    return this.prisma.chapter.create({ data: { ...rest, id } });
-  }
-
-  async updateChapter(id: string, input: UpdateChapterInput) {
-    await this.requireChapter(id);
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.chapter.update({ where: { id }, data: input });
-      if (input.title !== undefined) {
-        await tx.material.updateMany({
-          where: { chapterId: id },
-          data: { chapterTitle: input.title },
-        });
-      }
-      return updated;
-    });
-  }
-
-  async deleteChapter(id: string) {
-    await this.requireChapter(id);
-    await this.prisma.chapter.delete({ where: { id } });
-    return { deleted: true, id };
-  }
-
-  async createSection(input: CreateSectionInput) {
-    await this.requireChapter(input.chapterId);
-    const id = input.id ?? makeId("section", input.title);
-    await this.assertUnused(
-      this.prisma.section.findUnique({ where: { id } }),
-      "Section",
-      id
-    );
-    const { id: _id, ...rest } = input;
-    return this.prisma.section.create({ data: { ...rest, id } });
-  }
-
-  async updateSection(id: string, input: UpdateSectionInput) {
-    await this.requireSection(id);
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.section.update({ where: { id }, data: input });
-      if (input.title !== undefined) {
-        await tx.material.updateMany({
-          where: { sectionId: id },
-          data: { sectionTitle: input.title },
-        });
-      }
-      return updated;
-    });
-  }
-
-  async deleteSection(id: string) {
-    await this.requireSection(id);
-    await this.prisma.section.delete({ where: { id } });
-    return { deleted: true, id };
-  }
-
-  private async requireClass(id: string) {
-    const row = await this.prisma.schoolClass.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException({ error: "Class not found" });
-    return row;
-  }
-  private async requireSubject(id: string) {
-    const row = await this.prisma.subject.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException({ error: "Subject not found" });
-    return row;
-  }
-  private async requireChapter(id: string) {
-    const row = await this.prisma.chapter.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException({ error: "Chapter not found" });
-    return row;
-  }
-  private async requireSection(id: string) {
-    const row = await this.prisma.section.findUnique({ where: { id } });
     if (!row) throw new NotFoundException({ error: "Section not found" });
-    return row;
+    return {
+      ...toSectionDto(row),
+      chapterId: row.chapterId,
+      subjectId: row.subjectId,
+      classId: row.classId,
+    };
   }
 }

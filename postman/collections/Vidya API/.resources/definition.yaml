@@ -1,31 +1,23 @@
 $kind: collection
 description: |-
-  # Vidya API
+  # Vidya API (student)
 
-  Production: `https://vidya-api-kohl.vercel.app`
-  Local: `http://localhost:4000`
+  Local: `http://localhost:4000` or your LAN IP from `npm start`
+  Same Wi‑Fi teammates: use the printed LAN API URL.
 
   ## Setup
-  1. Set collection vars `adminPassword` / `studentPassword` from seed (`packages/db/prisma/seed.ts`) — **do not commit secrets**.
-  2. Run **Admin Auth → login** (or Student login) — tokens auto-save.
-  3. Use folders 01–11 (Health → Exams) — same domains as `apps/api/src/modules/*`.
-  4. After editing YAML, run `npm run postman:export` to refresh `postman/Vidya-API.postman_collection.json`.
+  1. Set `studentPassword` from seed (`StudentDemo1!`) — **do not commit secrets**.
+  2. Run **Student Auth → login** — token auto-saves.
+  3. Student domains: Health, Auth, Curriculum, Materials, Dashboard, Learning, Quizzes, Tasks, Notifications, Exams.
+  4. After editing YAML, run `npm run postman:export`.
 
   ## Docs
   - Swagger UI: `{{baseUrl}}/docs`
   - OpenAPI JSON: `{{baseUrl}}/docs-json`
 variables:
-  baseUrl: https://vidya-api-kohl.vercel.app
+  baseUrl: http://localhost:4000
   studentEmail: student@vidya.test
   studentPassword: ""
-  adminEmail: admin@vidya.edu.in
-  adminPassword: ""
-  superAdminEmail: superadmin@vidya.edu.in
-  superAdminPassword: ""
-  adminName: Dr. Ramesh Sharma
-  adminDepartment: Academic Director · AP SCERT Division
-  otp: "123456"
   studentToken: ""
-  adminToken: ""
   studentUserId: ""
   bookmarkId: ""

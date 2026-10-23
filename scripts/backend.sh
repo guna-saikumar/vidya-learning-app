@@ -84,8 +84,6 @@ ensure_deps() {
     echo "Installing workspace dependencies..."
     pnpm install
   fi
-  echo "Generating Prisma client..."
-  pnpm --dir packages/db exec prisma generate
 }
 
 wait_for_url() {

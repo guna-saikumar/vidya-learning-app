@@ -16,13 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    container_name: vidya-mailhog
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-
   api:
     image: vidya-learning-app:dev
     build:
@@ -30,18 +23,12 @@ services:
       target: dev
     container_name: vidya-api
     restart: unless-stopped
-    command: sh -c "pnpm --dir packages/db exec prisma generate && pnpm --dir packages/db exec prisma migrate deploy && pnpm --dir packages/db seed && pnpm dev:api"
+    command: sh -c "pnpm --dir packages/db migrate && pnpm --dir packages/db seed && pnpm dev:api"
     environment:
       NODE_ENV: development
       PORT: 4000
-      DATABASE_URL: postgresql://vidya:vidya@postgres:5432/vidya?schema=public
-      DIRECT_URL: postgresql://vidya:vidya@postgres:5432/vidya?schema=public
+      DATABASE_URL: postgresql://vidya:vidya@postgres:5432/vidya
       JWT_SECRET: dev-only-jwt-secret-change-me
-      SMTP_HOST: mailhog
-      SMTP_PORT: "1025"
-      SMTP_USER: ""
-      SMTP_PASS: ""
-      SMTP_FROM: "Vidya <noreply@vidya.local>"
     ports:
       - "4000:4000"
     volumes:
@@ -64,8 +51,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      mailhog:
-        condition: service_started
 
   student-mobile-web:
     image: vidya-learning-app:dev
@@ -86,27 +71,6 @@ services:
       - .:/app
       - /app/node_modules
       - /app/apps/student-mobile/node_modules
-    depends_on:
-      api:
-        condition: service_healthy
-
-  admin-mobile-web:
-    image: vidya-learning-app:dev
-    build:
-      context: .
-      target: dev
-    container_name: vidya-admin-mobile-web
-    command: pnpm --dir apps/admin-mobile exec expo start --web --host lan --port 8082
-    environment:
-      EXPO_NO_TELEMETRY: "1"
-      EXPO_PUBLIC_API_URL: http://${VIDYA_DEV_HOST:-127.0.0.1}:4000
-      REACT_NATIVE_PACKAGER_HOSTNAME: ${VIDYA_DEV_HOST:-127.0.0.1}
-    ports:
-      - "8082:8082"
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/apps/admin-mobile/node_modules
     depends_on:
       api:
         condition: service_healthy

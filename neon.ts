@@ -1,13 +1,8 @@
 import { defineConfig } from "@neon/config/v1";
 
 /**
- * Neon policy for Vidya.
- * Postgres is always on every branch. NestJS + Prisma use:
- *   DATABASE_URL           → pooled (app runtime / Vercel)
- *   DATABASE_URL_UNPOOLED  → direct (prisma migrate; aliased to DIRECT_URL)
- *
- * Local Postgres stays in `.env` (see .env.example); use `npm run pg-admin` (Homebrew) or Docker.
- * Production/preview use Neon via Vercel env or `neon env pull` → `.env.local`.
+ * Neon policy for Vidya (unused for local Homebrew Postgres).
+ * Local: `npm start` / `.env` DATABASE_URL → postgresql://vidya:vidya@localhost:5432/vidya
  */
 export default defineConfig({
   auth: false,

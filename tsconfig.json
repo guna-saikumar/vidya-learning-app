@@ -8,9 +8,8 @@
   },
   "include": [
     "apps/student-mobile/**/*",
-    "apps/admin-mobile/**/*",
     "apps/api/**/*",
     "packages/**/*"
   ],
-  "exclude": ["packages/db/prisma/seed.ts"]
+  "exclude": ["packages/db/sql/seed.ts", "packages/db/sql/migrate.ts"]
 }

@@ -13,18 +13,15 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import { AdminRoleGuard } from "../../auth/admin-role.guard";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
+import { ApiZodBody, ApiZodQueries } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
-  createQuizSchema,
   quizListQuerySchema,
   submitAttemptSchema,
-  type CreateQuizInput,
   type QuizListQuery,
   type SubmitAttemptInput,
 } from "./quizzes.schemas";
@@ -39,7 +36,7 @@ export class QuizzesController {
   @Get("quizzes")
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "List quizzes (optionally by chapter)" })
-  @ApiQuery({ name: "chapterId", required: false })
+  @ApiZodQueries(quizListQuerySchema)
   list(
     @Query(new ZodValidationPipe(quizListQuerySchema)) query: QuizListQuery
   ) {
@@ -59,6 +56,7 @@ export class QuizzesController {
   @HttpCode(201)
   @UseGuards(JwtAuthGuard, StudentRoleGuard)
   @ApiOperation({ summary: "Submit a quiz attempt (student)" })
+  @ApiZodBody(submitAttemptSchema)
   submitAttempt(
     @Req() req: AuthedRequest,
     @Param("id") id: string,
@@ -72,21 +70,5 @@ export class QuizzesController {
   @ApiOperation({ summary: "List my quiz attempts" })
   listAttempts(@Req() req: AuthedRequest) {
     return this.quizzes.listAttempts(req.user!.sub);
-  }
-}
-
-@ApiTags("admin-quizzes")
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, AdminRoleGuard)
-@Controller("api/admin/quizzes")
-export class AdminQuizzesController {
-  constructor(@Inject(QuizzesService) private readonly quizzes: QuizzesService) {}
-
-  @Post()
-  @ApiOperation({ summary: "Create a quiz with questions" })
-  create(
-    @Body(new ZodValidationPipe(createQuizSchema)) body: CreateQuizInput
-  ) {
-    return this.quizzes.create(body);
   }
 }
