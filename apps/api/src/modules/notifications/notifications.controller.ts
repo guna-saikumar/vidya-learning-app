@@ -17,7 +17,7 @@ import {
 } from "@nestjs/swagger";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
-import { ApiZodQueries } from "../../common/zod-openapi";
+import { ApiPathParam, ApiZodQueries } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   notificationListQuerySchema,
@@ -46,12 +46,7 @@ export class NotificationsController {
     return this.notifications.listMine(req.user!.sub, query);
   }
 
-  @Get(":id")
-  @ApiOperation({ summary: "Get one of my notifications" })
-  getOne(@Req() req: AuthedRequest, @Param("id") id: string) {
-    return this.notifications.getMine(req.user!.sub, id);
-  }
-
+  // Static path before `:id` so it is never captured as a notification id.
   @Post("read-all")
   @HttpCode(200)
   @ApiOperation({ summary: "Mark all my notifications as read" })
@@ -59,8 +54,16 @@ export class NotificationsController {
     return this.notifications.markAllRead(req.user!.sub);
   }
 
+  @Get(":id")
+  @ApiOperation({ summary: "Get one of my notifications" })
+  @ApiPathParam("id", { description: "Notification id" })
+  getOne(@Req() req: AuthedRequest, @Param("id") id: string) {
+    return this.notifications.getMine(req.user!.sub, id);
+  }
+
   @Patch(":id/read")
   @ApiOperation({ summary: "Mark a notification as read" })
+  @ApiPathParam("id", { description: "Notification id" })
   markRead(@Req() req: AuthedRequest, @Param("id") id: string) {
     return this.notifications.markRead(req.user!.sub, id);
   }

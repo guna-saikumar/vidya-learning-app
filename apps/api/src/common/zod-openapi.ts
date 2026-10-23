@@ -1,5 +1,5 @@
 import { applyDecorators } from "@nestjs/common";
-import { ApiBody, ApiQuery } from "@nestjs/swagger";
+import { ApiBody, ApiParam, ApiQuery } from "@nestjs/swagger";
 import { z } from "zod";
 
 type JsonSchema = Record<string, unknown>;
@@ -87,6 +87,24 @@ export function ApiZodBody(
       schema: zodToOpenApiSchema(schema),
     })
   );
+}
+
+/**
+ * Document a path parameter. Nest Swagger does not infer `@Param()` names
+ * without the CLI plugin, so every `:param` route must declare this or
+ * Swagger UI shows "No parameters" / broken Try it out.
+ */
+export function ApiPathParam(
+  name: string,
+  options?: { description?: string; example?: string }
+): MethodDecorator {
+  return ApiParam({
+    name,
+    required: true,
+    description: options?.description,
+    example: options?.example,
+    schema: { type: "string", minLength: 1, maxLength: 120 },
+  });
 }
 
 /**

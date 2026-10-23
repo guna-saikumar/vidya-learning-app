@@ -9,7 +9,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
-import { ApiZodQueries } from "../../common/zod-openapi";
+import { ApiPathParam, ApiZodQueries } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   schoolListQuerySchema,
@@ -35,6 +35,7 @@ export class SchoolsController {
 
   @Get(":id")
   @ApiOperation({ summary: "Get a school" })
+  @ApiPathParam("id", { description: "School id" })
   get(@Param("id") id: string) {
     return this.schools.getById(id);
   }

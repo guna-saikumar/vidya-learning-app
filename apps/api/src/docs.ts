@@ -48,6 +48,8 @@ export function setupApiDocs(app: NestFastifyApplication): void {
       dom_id: '#swagger-ui',
       deepLinking: true,
       persistAuthorization: true,
+      tryItOutEnabled: true,
+      displayRequestDuration: true,
       presets: [SwaggerUIBundle.presets.apis],
       layout: 'BaseLayout',
     });

@@ -22,7 +22,7 @@ import {
 } from "@nestjs/swagger";
 import { JwtAuthGuard, type AuthedRequest } from "../../auth/jwt.guard";
 import { StudentRoleGuard } from "../../auth/student-role.guard";
-import { ApiZodBody } from "../../common/zod-openapi";
+import { ApiPathParam, ApiZodBody } from "../../common/zod-openapi";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
 import {
   createBookmarkSchema,
@@ -135,6 +135,7 @@ export class StudentsController {
 
   @Put("me/progress/:chapterId")
   @ApiOperation({ summary: "Update chapter reading % or mark completed" })
+  @ApiPathParam("chapterId", { description: "Chapter id" })
   @ApiZodBody(upsertProgressSchema)
   upsertProgress(
     @Req() req: AuthedRequest,
@@ -165,6 +166,7 @@ export class StudentsController {
   // Declared before `:bookmarkId` for readability; paths differ in depth anyway.
   @Delete("me/bookmarks/by-section/:sectionId")
   @ApiOperation({ summary: "Remove bookmark(s) by section id" })
+  @ApiPathParam("sectionId", { description: "Section id" })
   deleteBySection(
     @Req() req: AuthedRequest,
     @Param("sectionId") sectionId: string
@@ -174,6 +176,7 @@ export class StudentsController {
 
   @Delete("me/bookmarks/:bookmarkId")
   @ApiOperation({ summary: "Remove bookmark by id" })
+  @ApiPathParam("bookmarkId", { description: "Bookmark id" })
   deleteBookmark(
     @Req() req: AuthedRequest,
     @Param("bookmarkId") bookmarkId: string
