@@ -25,6 +25,7 @@ import { RootStackParamList } from '../types/navigation';
 import { useAppDispatch } from '../store';
 import { submitOnboardingThunk } from '../store/slices/studentSlice';
 import { setIsOnboarded } from '../store/slices/authSlice';
+import { toIsoDateOfBirth } from '../services/profileMapper';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StudentOnboarding'>;
 
@@ -199,16 +200,12 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
 
   // Parse existing date into calendar state when opening calendar
   const handleOpenCalendar = () => {
-    if (dateOfBirth && dateOfBirth.includes('/')) {
-      const parts = dateOfBirth.split('/');
-      if (parts.length === 3) {
-        const d = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10) - 1;
-        const y = parseInt(parts[2], 10);
-        if (!isNaN(d)) setCalDay(d);
-        if (!isNaN(m) && m >= 0 && m < 12) setCalMonth(m);
-        if (!isNaN(y) && y >= MIN_YEAR && y <= CURRENT_YEAR) setCalYear(y);
-      }
+    const iso = toIsoDateOfBirth(dateOfBirth);
+    if (iso) {
+      const [y, m, d] = iso.split('-').map((part) => parseInt(part, 10));
+      if (!Number.isNaN(d)) setCalDay(d);
+      if (!Number.isNaN(m) && m >= 1 && m <= 12) setCalMonth(m - 1);
+      if (!Number.isNaN(y) && y >= MIN_YEAR && y <= CURRENT_YEAR) setCalYear(y);
     }
     setShowYearGrid(false);
     setShowCalendar(true);
@@ -359,41 +356,50 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     if (!validateStep(4)) return;
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
+    const cleanGrade = activeClassId.replace(/\D/g, '') || '8';
+    const cleanDob = toIsoDateOfBirth(dateOfBirth);
+
+    if (!cleanDob) {
+      Alert.alert('Invalid date', 'Please choose a valid date of birth.');
+      return;
+    }
+    if (cleanPhone.length !== 10) {
+      Alert.alert(
+        'Invalid phone',
+        'Parent phone must be a 10-digit mobile number.'
+      );
+      return;
+    }
+    if (!activeClassId) {
+      Alert.alert('Missing class', 'Please select your class before continuing.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
-      const cleanGrade = activeClassId.replace(/\D/g, '') || '8';
-      const cleanDob = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())
-        ? dateOfBirth.trim()
-        : '2011-05-15';
+      await dispatch(
+        submitOnboardingThunk({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          gender: (gender || 'MALE').toUpperCase(),
+          dob: cleanDob,
+          district: district.trim(),
+          villageCity: location.trim(),
+          schoolName: schoolName.trim(),
+          classId: activeClassId,
+          grade: cleanGrade,
+          section: (section || 'A').toUpperCase(),
+          medium: (medium || 'ENGLISH').toUpperCase(),
+          rollNumber: rollNumber.trim() || '1',
+          fatherName: fatherName.trim(),
+          motherName: motherName.trim(),
+          parentPhone: cleanPhone,
+        })
+      ).unwrap();
+      dispatch(setIsOnboarded(true));
 
-      // 1. Submit to PostgreSQL via Axios API and Redux
-      try {
-        await dispatch(
-          submitOnboardingThunk({
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            gender: (gender || 'MALE').toUpperCase(),
-            dob: cleanDob,
-            district: district.trim(),
-            villageCity: location.trim(),
-            schoolName: schoolName.trim(),
-            classId: activeClassId || 'class-8',
-            grade: cleanGrade,
-            section: (section || 'A').toUpperCase(),
-            medium: (medium || 'ENGLISH').toUpperCase(),
-            rollNumber: rollNumber.trim() || '1',
-            fatherName: fatherName.trim(),
-            motherName: motherName.trim(),
-            parentPhone: cleanPhone.length === 10 ? cleanPhone : '9876543210',
-          })
-        ).unwrap();
-        dispatch(setIsOnboarded(true));
-      } catch (apiErr) {
-        console.warn('API onboarding call warning:', apiErr);
-      }
-
-      // 2. Update local state
+      // Keep local cache in sync (API is source of truth after unwrap).
       await saveProfile({
         displayName: fullName,
         firstName: firstName.trim(),
@@ -410,8 +416,8 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         fatherName: fatherName.trim(),
         motherName: motherName.trim(),
         guardianName: fatherName.trim() || motherName.trim(),
-        guardianPhone: parentPhone.trim(),
-        parentPhone: parentPhone.trim(),
+        guardianPhone: cleanPhone,
+        parentPhone: cleanPhone,
         academicYear: getAcademicYear(),
         isOnboarded: true,
       });
@@ -426,7 +432,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         navigation.navigate('Home');
       }
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to save student details.');
+      Alert.alert(
+        'Could not save',
+        err?.message || 'Failed to save student details. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
