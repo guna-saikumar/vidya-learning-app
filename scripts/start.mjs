@@ -4,8 +4,8 @@
  *
  *   npm start
  *
- * macOS / Linux / Windows: native Postgres + migrate/seed + pgweb (if installed)
- * + Nest API + student Expo (LAN). Auto-detects LAN IP (no typing).
+ * Native Postgres + migrate/seed (with status) + pgweb + Nest API + student Expo.
+ * Prints clean LAN URLs (IP + host). Expo keeps an interactive TTY for QR / keys.
  */
 import { spawn, execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
@@ -31,6 +31,18 @@ const EXPO_PORT = Number(process.env.VIDYA_EXPO_PORT || 8081);
 /** @type {import('node:child_process').ChildProcess[]} */
 const children = [];
 let shuttingDown = false;
+
+function step(n, total, title) {
+  console.log(`\n[${n}/${total}] ${title}`);
+}
+
+function ok(msg) {
+  console.log(`  ✓ ${msg}`);
+}
+
+function warn(msg) {
+  console.warn(`  ! ${msg}`);
+}
 
 function have(cmd) {
   try {
@@ -151,16 +163,16 @@ function ensurePsqlOnPath() {
 
 async function startPostgresService() {
   if (pgIsReady()) {
-    console.log(`Postgres already accepting connections on :${PG_PORT}.`);
+    ok(`Postgres already on :${PG_PORT}`);
     return;
   }
 
-  console.log("Starting Postgres...");
+  console.log("  Starting Postgres…");
   if (IS_MAC && have("brew")) {
     try {
       sh("brew", ["list", `postgresql@${PG_VERSION}`], { stdio: "ignore" });
     } catch {
-      console.log(`Installing postgresql@${PG_VERSION} via Homebrew...`);
+      console.log(`  Installing postgresql@${PG_VERSION} via Homebrew…`);
       sh("brew", ["install", `postgresql@${PG_VERSION}`], { stdio: "inherit" });
     }
     sh("brew", ["services", "start", `postgresql@${PG_VERSION}`], {
@@ -173,7 +185,7 @@ async function startPostgresService() {
       try {
         sh("sudo", ["systemctl", "start", "postgresql"], { stdio: "inherit" });
       } catch {
-        console.warn("Could not start postgresql via systemctl.");
+        warn("Could not start postgresql via systemctl.");
       }
     }
   } else if (IS_WIN) {
@@ -194,7 +206,7 @@ async function startPostgresService() {
 
   for (let i = 0; i < 45; i++) {
     if (pgIsReady()) {
-      console.log("Postgres is ready.");
+      ok("Postgres is ready");
       return;
     }
     await sleep(1000);
@@ -226,8 +238,6 @@ function psqlAs(user, db, sql, password = "") {
 }
 
 function ensureRoleAndDb() {
-  console.log(`Ensuring role '${PG_USER}' and database '${PG_DB}'...`);
-
   try {
     sh(
       "psql",
@@ -245,23 +255,36 @@ function ensureRoleAndDb() {
       ],
       { stdio: "ignore", env: { PGPASSWORD: PG_PASSWORD } }
     );
-    console.log(`Database ${PG_DB} is reachable as ${PG_USER}.`);
+    ok(`Database "${PG_DB}" reachable as ${PG_USER}`);
     return;
   } catch {
     /* need bootstrap */
   }
 
+  console.log(`  Creating role/database "${PG_USER}" / "${PG_DB}"…`);
   const superCandidates = IS_WIN
     ? ["postgres"]
     : [process.env.USER, "postgres"].filter(Boolean);
-  const superPass = process.env.VIDYA_PG_SUPER_PASSWORD || process.env.PGPASSWORD || "";
+  const superPass =
+    process.env.VIDYA_PG_SUPER_PASSWORD || process.env.PGPASSWORD || "";
 
   let superUser = null;
   for (const u of superCandidates) {
     try {
       sh(
         "psql",
-        ["-h", "127.0.0.1", "-p", String(PG_PORT), "-U", u, "-d", "postgres", "-Atc", "SELECT 1"],
+        [
+          "-h",
+          "127.0.0.1",
+          "-p",
+          String(PG_PORT),
+          "-U",
+          u,
+          "-d",
+          "postgres",
+          "-Atc",
+          "SELECT 1",
+        ],
         { stdio: "ignore", env: { PGPASSWORD: superPass } }
       );
       superUser = u;
@@ -311,17 +334,38 @@ function ensureRoleAndDb() {
     superPass
   );
   if (dbExists !== "1") {
-    psqlAs(superUser, "postgres", `CREATE DATABASE ${PG_DB} OWNER ${PG_USER};`, superPass);
+    psqlAs(
+      superUser,
+      "postgres",
+      `CREATE DATABASE ${PG_DB} OWNER ${PG_USER};`,
+      superPass
+    );
   } else {
-    psqlAs(superUser, "postgres", `ALTER DATABASE ${PG_DB} OWNER TO ${PG_USER};`, superPass);
+    psqlAs(
+      superUser,
+      "postgres",
+      `ALTER DATABASE ${PG_DB} OWNER TO ${PG_USER};`,
+      superPass
+    );
   }
 
   sh(
     "psql",
-    ["-h", "127.0.0.1", "-p", String(PG_PORT), "-U", PG_USER, "-d", PG_DB, "-c", "SELECT 1;"],
+    [
+      "-h",
+      "127.0.0.1",
+      "-p",
+      String(PG_PORT),
+      "-U",
+      PG_USER,
+      "-d",
+      PG_DB,
+      "-c",
+      "SELECT 1;",
+    ],
     { stdio: "ignore", env: { PGPASSWORD: PG_PASSWORD } }
   );
-  console.log(`Database ${PG_DB} is reachable as ${PG_USER}.`);
+  ok(`Database "${PG_DB}" ready`);
 }
 
 function configurePostgresLan() {
@@ -330,7 +374,10 @@ function configurePostgresLan() {
     if (!conf || !existsSync(conf)) return;
     let text = readFileSync(conf, "utf8");
     if (/^\s*listen_addresses\s*=/m.test(text)) {
-      text = text.replace(/^\s*listen_addresses\s*=.*/m, "listen_addresses = '*'");
+      text = text.replace(
+        /^\s*listen_addresses\s*=.*/m,
+        "listen_addresses = '*'"
+      );
     } else {
       text += "\nlisten_addresses = '*'\n";
     }
@@ -344,7 +391,7 @@ function configurePostgresLan() {
     } catch {
       /* ignore */
     }
-    console.log("Postgres config updated for LAN (listen_addresses=*).");
+    ok("Postgres listening on all interfaces (LAN)");
   } catch {
     /* optional */
   }
@@ -397,6 +444,7 @@ function writeEnv(lanIp, lanHost) {
   process.env.REACT_NATIVE_PACKAGER_HOSTNAME = lanIp;
   process.env.EXPO_NO_TELEMETRY = "1";
   delete process.env.SMTP_HOST;
+  ok("Wrote .env + apps/student-mobile/.env(.local)");
 }
 
 function ensureDeps() {
@@ -406,28 +454,34 @@ function ensureDeps() {
     );
   }
   if (!existsSync(join(ROOT, "node_modules"))) {
-    console.log("Installing dependencies...");
+    console.log("  Installing dependencies…");
     sh("pnpm", ["install"], { stdio: "inherit", shell: IS_WIN });
+    ok("Dependencies installed");
+  } else {
+    ok("Dependencies present");
   }
 }
 
 function migrateAndSeed() {
-  console.log("Running SQL migrations...");
+  console.log("  Migrating…");
   sh("pnpm", ["--dir", "packages/db", "migrate"], {
     stdio: "inherit",
     shell: IS_WIN,
   });
-  console.log("Seeding demo data...");
+  ok("Migrations applied");
+
+  console.log("  Seeding demo data…");
   sh("pnpm", ["--dir", "packages/db", "seed"], {
     stdio: "inherit",
     shell: IS_WIN,
   });
+  ok("Seed complete");
 }
 
 function ensurePgweb() {
   if (have("pgweb")) return true;
   if (IS_MAC && have("brew")) {
-    console.log("Installing pgweb via Homebrew...");
+    console.log("  Installing pgweb via Homebrew…");
     try {
       sh("brew", ["install", "pgweb"], { stdio: "inherit" });
     } catch {
@@ -437,14 +491,27 @@ function ensurePgweb() {
   return have("pgweb");
 }
 
-function spawnProc(label, cmd, args) {
+function pipeLabeled(child, label) {
+  const tag = (chunk, stream) => {
+    const text = chunk.toString();
+    for (const line of text.split(/\r?\n/)) {
+      if (!line) continue;
+      stream.write(`[${label}] ${line}\n`);
+    }
+  };
+  child.stdout?.on("data", (c) => tag(c, process.stdout));
+  child.stderr?.on("data", (c) => tag(c, process.stderr));
+}
+
+function spawnProc(label, cmd, args, { inheritStdio = false } = {}) {
   const child = spawn(cmd, args, {
     cwd: ROOT,
     env: process.env,
-    stdio: "inherit",
+    stdio: inheritStdio ? "inherit" : ["ignore", "pipe", "pipe"],
     shell: IS_WIN,
     windowsHide: true,
   });
+  if (!inheritStdio) pipeLabeled(child, label);
   child.on("exit", (code, signal) => {
     if (!shuttingDown && code && code !== 0) {
       console.error(`[${label}] exited (${signal || code})`);
@@ -476,22 +543,84 @@ function killTree(child) {
 function cleanup() {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log("\nStopping API / Expo / pgweb...");
+  console.log("\nStopping API / Expo / pgweb…");
   for (const child of children) killTree(child);
 }
 
-function startServices(lanIp, lanHost) {
-  const localDb = `postgresql://${PG_USER}:${PG_PASSWORD}@127.0.0.1:${PG_PORT}/${PG_DB}`;
-  const shareDb = `postgresql://${PG_USER}:${PG_PASSWORD}@${lanHost}:${PG_PORT}/${PG_DB}`;
-  const shareApi = `http://${lanHost}:${API_PORT}`;
-  const pgwebUrl = `http://${lanHost}:${PGWEB_PORT}`;
-  const expoUrl = `http://${lanIp}:${EXPO_PORT}`;
+function urls(lanIp, lanHost) {
+  return {
+    lanIp,
+    lanHost,
+    apiLan: `http://${lanIp}:${API_PORT}`,
+    apiHost: `http://${lanHost}:${API_PORT}`,
+    apiLocal: `http://127.0.0.1:${API_PORT}`,
+    docsLan: `http://${lanIp}:${API_PORT}/docs`,
+    docsLocal: `http://127.0.0.1:${API_PORT}/docs`,
+    appLan: `http://${lanIp}:${EXPO_PORT}`,
+    appLocal: `http://127.0.0.1:${EXPO_PORT}`,
+    dbLan: `postgresql://${PG_USER}:${PG_PASSWORD}@${lanIp}:${PG_PORT}/${PG_DB}`,
+    dbHost: `postgresql://${PG_USER}:${PG_PASSWORD}@${lanHost}:${PG_PORT}/${PG_DB}`,
+    dbLocal: `postgresql://${PG_USER}:${PG_PASSWORD}@127.0.0.1:${PG_PORT}/${PG_DB}`,
+    pgwebLan: `http://${lanIp}:${PGWEB_PORT}`,
+    pgwebHost: `http://${lanHost}:${PGWEB_PORT}`,
+    pgwebLocal: `http://127.0.0.1:${PGWEB_PORT}`,
+  };
+}
 
-  console.log(`Starting API on 0.0.0.0:${API_PORT}...`);
+function printBoard(u, { pgweb = true, ready = false } = {}) {
+  const line = (label, value) =>
+    `  ${label.padEnd(12)} ${value}`;
+  console.log(`
+┌─────────────────────────────────────────────────────────────
+│  Vidya local stack${ready ? "  ·  READY" : ""}
+├─────────────────────────────────────────────────────────────
+${line("LAN IP", u.lanIp)}
+${line("Share host", u.lanHost)}
+│
+${line("App", u.appLan)}
+${line("App (local)", u.appLocal)}
+│
+${line("API", u.apiLan)}
+${line("API (local)", u.apiLocal)}
+${line("Docs", u.docsLan)}
+│
+${line("Database", u.dbLan)}
+${line("DB (local)", u.dbLocal)}
+${pgweb ? `${line("DB UI", u.pgwebLan)}\n${line("DB UI local", u.pgwebLocal)}` : line("DB UI", "(pgweb not installed)")}
+│
+${line("Login", "student@vidya.test / StudentDemo1!")}
+${line("psql", "npm run db:psql")}
+└─────────────────────────────────────────────────────────────
+`);
+}
+
+async function waitForHttp(url, label, attempts = 45) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok || res.status < 500) {
+        ok(`${label} responding (${res.status})`);
+        return true;
+      }
+    } catch {
+      /* retry */
+    }
+    await sleep(1000);
+  }
+  warn(`${label} not ready yet — check logs above`);
+  return false;
+}
+
+async function startServices(lanIp, lanHost) {
+  const localDb = `postgresql://${PG_USER}:${PG_PASSWORD}@127.0.0.1:${PG_PORT}/${PG_DB}`;
+  const u = urls(lanIp, lanHost);
+  const hasPgweb = ensurePgweb();
+
+  console.log("  Starting API…");
   spawnProc("api", "pnpm", ["--dir", "apps/api", "dev"]);
 
-  if (ensurePgweb()) {
-    console.log(`Starting pgweb on 0.0.0.0:${PGWEB_PORT}...`);
+  if (hasPgweb) {
+    console.log("  Starting pgweb…");
     spawnProc("pgweb", "pgweb", [
       "--bind=0.0.0.0",
       `--listen=${PGWEB_PORT}`,
@@ -501,47 +630,46 @@ function startServices(lanIp, lanHost) {
       "--lock-session",
     ]);
   } else {
-    console.warn(
-      "pgweb not found — DB UI skipped. Releases: https://github.com/sosedoff/pgweb/releases"
-    );
+    warn("pgweb not found — DB UI skipped");
   }
 
-  console.log(`Starting student Expo (LAN) on :${EXPO_PORT}...`);
-  spawnProc("expo", "pnpm", [
-    "--dir",
-    "apps/student-mobile",
-    "exec",
-    "expo",
-    "start",
-    "--lan",
-    "--port",
-    String(EXPO_PORT),
-  ]);
+  await waitForHttp(u.apiLocal + "/health", "API");
+  if (hasPgweb) await waitForHttp(u.pgwebLocal + "/", "pgweb");
 
-  console.log(`
-==> Vidya local stack (${platform()} — native, no Docker)
-  Detected IP:   ${lanIp}
-  Share host:    ${lanHost}
-
-  API:           ${shareApi}     (docs: ${shareApi}/docs)
-  Postgres:      ${shareDb}
-  psql:          npm run db:psql
-  DB UI:         ${pgwebUrl}     (pgweb)
-  Student Expo:  ${expoUrl}
-
-  Login:         student@vidya.test / StudentDemo1!
-  Ctrl+C stops API, pgweb, and Expo.
+  printBoard(u, { pgweb: hasPgweb, ready: true });
+  console.log(`Interactive Expo terminal:
+  • Scan the QR code below (same Wi‑Fi)
+  • Keys: i (iOS) · a (Android) · w (web) · r (reload) · ? (help)
+  • Ctrl+C stops API, Expo, and pgweb
 `);
+
+  console.log("  Starting Expo…\n");
+  // Expo owns stdin/stdout so Metro stays interactive (QR + keys).
+  spawnProc(
+    "expo",
+    "pnpm",
+    [
+      "--dir",
+      "apps/student-mobile",
+      "exec",
+      "expo",
+      "start",
+      "--lan",
+      "--port",
+      String(EXPO_PORT),
+    ],
+    { inheritStdio: true }
+  );
 }
 
 async function main() {
-  console.log(
-    "==> Vidya: Postgres + API + student app + pgweb (cross-platform, no Docker)"
-  );
+  const TOTAL = 6;
+  console.log("==> npm start — Vidya (Postgres + migrate/seed + API + Expo + pgweb)");
+
   const lanIp = detectLanIp();
   const lanHost = detectLanHost(lanIp);
-  console.log(`Auto-detected LAN IP: ${lanIp}`);
-  if (lanHost !== lanIp) console.log(`Share hostname:     ${lanHost}`);
+  console.log(`  Detected LAN IP: ${lanIp}`);
+  if (lanHost !== lanIp) console.log(`  Share host:     ${lanHost}`);
 
   process.on("SIGINT", () => {
     cleanup();
@@ -552,15 +680,25 @@ async function main() {
     process.exit(0);
   });
 
+  step(1, TOTAL, "Postgres");
   ensurePsqlOnPath();
   await startPostgresService();
   ensureRoleAndDb();
   configurePostgresLan();
-  writeEnv(lanIp, lanHost);
-  ensureDeps();
-  migrateAndSeed();
-  startServices(lanIp, lanHost);
 
+  step(2, TOTAL, "Env files");
+  writeEnv(lanIp, lanHost);
+
+  step(3, TOTAL, "Dependencies");
+  ensureDeps();
+
+  step(4, TOTAL, "Migrate + seed");
+  migrateAndSeed();
+
+  step(5, TOTAL, "Start services");
+  await startServices(lanIp, lanHost);
+
+  step(6, TOTAL, "Running — Ctrl+C to stop");
   await new Promise(() => {});
 }
 
