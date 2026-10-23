@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Single entrypoint: start Colima/Docker if needed, then the full local stack.
+# Optional Docker path (default local stack is `npm start` / scripts/local.sh).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -9,10 +9,9 @@ ensure_docker
 ensure_dev_host
 
 cd "${ROOT}"
-echo "Starting Vidya stack (postgres, mailhog, api, student, admin)..."
+echo "Starting Vidya Docker stack (postgres, api, student)..."
 echo "  API:     http://localhost:4000  (phone: http://${VIDYA_DEV_HOST}:4000)"
-echo "  Student: http://localhost:8081  — scan Expo Go QR from this service's logs"
-echo "  Admin:   http://localhost:8082"
-echo "  Mailhog: http://localhost:8025"
+echo "  Student: http://localhost:8081"
 echo "  Tip: phone and Mac must be on the same Wi‑Fi."
+echo "  Prefer: npm start  (Homebrew Postgres + pgweb + LAN, no Docker)"
 exec docker compose up --build "$@"

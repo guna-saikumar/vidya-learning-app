@@ -8,7 +8,6 @@
   },
   "include": [
     "apps/student-mobile/**/*",
-    "apps/admin-mobile/**/*",
     "apps/api/**/*",
     "packages/**/*"
   ],

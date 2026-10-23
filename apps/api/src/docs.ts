@@ -12,7 +12,7 @@ export function setupApiDocs(app: NestFastifyApplication): void {
     .setTitle("Vidya API")
     .setDescription(
       "Student learning API. Auth is login-only (no student self-registration); " +
-        "password resets go through admin. Includes curriculum, admin/student dashboards, and health."
+        "accounts are provisioned by the school. Includes curriculum, student dashboard, and health."
     )
     .setVersion("0.1.0")
     .addBearerAuth()

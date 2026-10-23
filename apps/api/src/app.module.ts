@@ -4,7 +4,6 @@ import { AuthModule } from "./auth/auth.module";
 import { DbModule } from "./db/db.module";
 import { loadRootEnv, rootEnvFilePaths } from "./env";
 import { MailerModule } from "./mailer/mailer.module";
-import { AdminModule } from "./modules/admin/admin.module";
 import { CurriculumModule } from "./modules/curriculum/curriculum.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { ExamsModule } from "./modules/exams/exams.module";
@@ -32,7 +31,6 @@ loadRootEnv();
     AuthModule,
     HealthModule,
     CurriculumModule,
-    AdminModule,
     DashboardModule,
     MaterialsModule,
     MeModule,

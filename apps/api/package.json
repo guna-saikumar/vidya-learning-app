@@ -7,7 +7,7 @@
     "dev": "tsx watch --import reflect-metadata src/main.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node --import reflect-metadata dist/apps/api/src/main.js",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

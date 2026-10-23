@@ -24,14 +24,6 @@ export const materialFiltersSchema = z.object({
   chapterId: id.optional(),
 });
 
-export const adminMaterialFiltersSchema = materialFiltersSchema.extend({
-  status: publicationStatusSchema.optional(),
-  materialType: materialTypeSchema.optional(),
-  q: z.string().trim().max(200).optional(),
-  limit: z.coerce.number().int().min(1).max(200).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
-});
-
 export const createMaterialSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(4000).nullish(),
@@ -59,6 +51,5 @@ export const updateMaterialStatusSchema = z.object({
 });
 
 export type MaterialFilters = z.infer<typeof materialFiltersSchema>;
-export type AdminMaterialFilters = z.infer<typeof adminMaterialFiltersSchema>;
 export type CreateMaterialInput = z.infer<typeof createMaterialSchema>;
 export type UpdateMaterialInput = z.infer<typeof updateMaterialSchema>;

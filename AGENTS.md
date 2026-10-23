@@ -29,8 +29,9 @@ Run lint and typecheck before declaring any task done.
 - Approved React Native styling/UI options are NativeWind, React Native Paper, Tamagui, UI Kitten, Restyle, Gluestack UI, Dripsy, and Unistyles.
 - Backend uses **NestJS v11** with `@nestjs/platform-fastify` and `fastify` v5.
 - Backend data/auth/docs stack is PostgreSQL with **raw `pg` SQL** (no ORM), Zod, JWT, CORS, Swagger/OpenAPI, and bcrypt.
-- Local default is Homebrew Postgres + `psql` via `npm start` / `npm run db:psql` (no pgAdmin GUI).
-- Do not reintroduce Prisma or another ORM unless the architecture is intentionally changed.
+- Student-only product surface (no admin app / admin API routes).
+- Local default: `npm start` (Postgres LAN + migrate/seed + **pgweb** + API + student Expo). CLI: `npm run db:psql`.
+- Do not reintroduce Prisma, Prisma Studio, or another ORM unless the architecture is intentionally changed.
 - See `docs/tech-stack.md` for the full project stack.
 
 ## Navigation & Routing
@@ -41,8 +42,8 @@ Run lint and typecheck before declaring any task done.
 
 ## Local Development
 
-- Default: `npm start` (Homebrew Postgres, SQL migrate/seed, Nest API).
-- Database CLI: `npm run db:psql`.
+- Default: `npm start` — Postgres (LAN), SQL migrate/seed, pgweb `:8083`, Nest API `:4000`, student Expo `--lan`.
+- Database CLI: `npm run db:psql`. DB web UI: pgweb (not Prisma Studio).
 - Docker Compose remains available under `pnpm docker:up` but is not the default.
 - Do not add deployment scripts or deployment platform config until deployment is explicitly reintroduced.
 

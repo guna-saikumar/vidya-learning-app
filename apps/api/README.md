@@ -1,6 +1,6 @@
 # @vidya/api
 
-NestJS + Fastify API for Vidya (students + admins).
+NestJS + Fastify API for Vidya (student-only).
 
 ## Structure
 
@@ -11,15 +11,14 @@ src/
   docs.ts                 # CDN Swagger UI at /docs + /docs-json
   env.ts                  # root .env loading
   common/                 # pipes, filters, ids
-  auth/                   # JWT, RBAC, student auth + static admin login
+  auth/                   # JWT, student auth, StudentRoleGuard
   db/                     # DbService (pg.Pool, raw SQL)
   mailer/                 # SMTP or console fallback
   modules/                # feature domains (match app / Postman)
     health/               # /health, /health/db
-    admin/                # /api/admin/ping + static fixtures
     curriculum/           # public curriculum GETs
-    materials/            # published materials + static admin GETs
-    dashboard/            # student dashboard + static admin dashboard
+    materials/            # published materials (GET)
+    dashboard/            # student dashboard
     me/                   # profile, progress, bookmarks, study-stats
     quizzes/              # quizzes + attempts
     tasks/                # student tasks
@@ -35,17 +34,13 @@ src/
 | GET | `/docs`, `/docs-json` | public |
 | GET | `/api/classes` (+ nested curriculum) | public / JWT |
 | GET | `/api/materials` | JWT |
-| GET | `/api/admin/materials`, `/api/admin/materials/:id` | admin JWT (static) |
 | * | `/api/me/*` | student JWT |
 | * | `/api/quizzes`, `/api/me/quiz-attempts` | JWT |
 | POST | `/api/auth/login` | public |
 | GET | `/api/auth/me` | student JWT |
-| GET | `/api/dashboard` | any JWT |
-| POST | `/api/admin/auth/login` | public (static demo) |
-| GET | `/api/admin/auth/me` | admin JWT (static) |
-| GET | `/api/admin/ping`, `/api/admin/dashboard` | admin JWT (static) |
+| GET | `/api/dashboard` | student JWT |
 
-Admin mutations (curriculum CMS, materials writes, OTP flows, etc.) are removed.
+There is no admin API surface. Student accounts are provisioned (no self-registration).
 
 ## Local
 

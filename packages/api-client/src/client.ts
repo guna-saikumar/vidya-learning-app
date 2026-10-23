@@ -29,7 +29,7 @@ export class ApiClient {
     this.accessToken = token ?? undefined;
   }
 
-  /** Alias used by admin-mobile. */
+  /** Alias for Authorization bearer token. */
   setAuthToken(token: string | undefined | null) {
     this.setAccessToken(token);
   }

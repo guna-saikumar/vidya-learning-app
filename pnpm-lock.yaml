@@ -28,94 +28,6 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
-  apps/admin-mobile:
-    dependencies:
-      '@expo-google-fonts/inter':
-        specifier: ^0.4.2
-        version: 0.4.2
-      '@expo-google-fonts/manrope':
-        specifier: ^0.4.2
-        version: 0.4.2
-      '@expo/metro-runtime':
-        specifier: ~57.0.16
-        version: 57.0.16(@expo/log-box@57.0.4)(expo@57.0.28)(react-dom@19.2.3)(react-native@0.86.3)(react@19.2.3)
-      '@expo/vector-icons':
-        specifier: ^15.0.2
-        version: 15.1.1(expo-font@57.0.4)(react-native@0.86.3)(react@19.2.3)
-      '@react-native-async-storage/async-storage':
-        specifier: 2.2.0
-        version: 2.2.0(react-native@0.86.3)
-      '@react-navigation/bottom-tabs':
-        specifier: ^7.20.0
-        version: 7.20.0(@react-navigation/native@7.5.0)(react-native-safe-area-context@5.7.0)(react-native-screens@4.26.2)(react-native@0.86.3)(react@19.2.3)
-      '@react-navigation/native':
-        specifier: ^7.5.0
-        version: 7.5.0(react-native@0.86.3)(react@19.2.3)
-      '@react-navigation/native-stack':
-        specifier: ^7.20.0
-        version: 7.20.0(@react-navigation/native@7.5.0)(react-native-safe-area-context@5.7.0)(react-native-screens@4.26.2)(react-native@0.86.3)(react@19.2.3)
-      '@vidya/api-client':
-        specifier: workspace:*
-        version: link:../../packages/api-client
-      '@vidya/auth':
-        specifier: workspace:*
-        version: link:../../packages/auth
-      expo:
-        specifier: ~57.0.27
-        version: 57.0.28(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.16)(react-dom@19.2.3)(react-native-web@0.21.4)(react-native-worklets@0.10.4)(react-native@0.86.3)(react@19.2.3)(typescript@6.0.3)
-      expo-document-picker:
-        specifier: ~14.0.5
-        version: 14.0.8(expo@57.0.28)
-      expo-font:
-        specifier: ~57.0.4
-        version: 57.0.4(expo@57.0.28)(react-native@0.86.3)(react@19.2.3)
-      expo-status-bar:
-        specifier: ~57.0.1
-        version: 57.0.1(expo@57.0.28)(react-native@0.86.3)(react@19.2.3)
-      lucide-react-native:
-        specifier: ^0.477.0
-        version: 0.477.0(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)
-      nativewind:
-        specifier: ^4.2.7
-        version: 4.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
-      react:
-        specifier: 19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: 19.2.3
-        version: 19.2.3(react@19.2.3)
-      react-native:
-        specifier: 0.86.3
-        version: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
-      react-native-css-interop:
-        specifier: 0.2.7
-        version: 0.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
-      react-native-reanimated:
-        specifier: 4.5.1
-        version: 4.5.1(react-native-worklets@0.10.4)(react-native@0.86.3)(react@19.2.3)
-      react-native-safe-area-context:
-        specifier: ~5.7.0
-        version: 5.7.0(react-native@0.86.3)(react@19.2.3)
-      react-native-screens:
-        specifier: ~4.26.0
-        version: 4.26.2(react-native@0.86.3)(react@19.2.3)
-      react-native-web:
-        specifier: ^0.21.2
-        version: 0.21.4(react-dom@19.2.3)(react@19.2.3)
-      tailwindcss:
-        specifier: ^3.3.2
-        version: 3.4.19(tsx@4.23.15)
-    devDependencies:
-      '@types/react':
-        specifier: ~19.2.2
-        version: 19.2.18
-      babel-preset-expo:
-        specifier: ~57.0.0
-        version: 57.0.15(@babel/core@7.29.7)(@babel/runtime@7.29.10)(expo@57.0.28)(react-refresh@0.14.2)
-      typescript:
-        specifier: ~6.0.3
-        version: 6.0.3
-
   apps/api:
     dependencies:
       '@fastify/static':
@@ -232,7 +144,7 @@ importers:
         version: 57.0.1(expo@57.0.28)(react-native@0.86.3)(react@19.2.3)
       nativewind:
         specifier: ^4.2.7
-        version: 4.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
+        version: 4.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
       react:
         specifier: 19.2.3
         version: 19.2.3
@@ -244,7 +156,7 @@ importers:
         version: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
       react-native-css-interop:
         specifier: 0.2.7
-        version: 0.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
+        version: 0.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
       react-native-reanimated:
         specifier: 4.5.1
         version: 4.5.1(react-native-worklets@0.10.4)(react-native@0.86.3)(react@19.2.3)
@@ -3185,10 +3097,6 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /boolbase@1.0.0:
-    resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
-    dev: false
-
   /bplist-creator@0.1.0:
     resolution: {integrity: sha512-sXaHZicyEEmY86WyueLTQesbeoH/mquvarJaQNbjuOQO+7gbFcDEWqKmcWA4cOTLzFlfgvkiVxolk1k5bBIpmg==}
     dependencies:
@@ -3489,29 +3397,6 @@ packages:
     dependencies:
       hyphenate-style-name: 1.1.0
 
-  /css-select@5.2.2:
-    resolution: {integrity: sha512-TizTzUddG/xYLA3NXodFM0fSbNizXjOKhqiQQwvhlspadZokn1KDy0NZFS0wuEubIYAV5/c1/lAr0TaaFXEXzw==}
-    dependencies:
-      boolbase: 1.0.0
-      css-what: 6.2.2
-      domhandler: 5.0.3
-      domutils: 3.2.2
-      nth-check: 2.1.1
-    dev: false
-
-  /css-tree@1.1.3:
-    resolution: {integrity: sha512-tRpdppF7TRazZrjJ6v3stzv93qxRcSsFmW6cX0Zm2NVKpxE1WV1HblnghVv9TreireHkqI/VDEsfolRF1p6y7Q==}
-    engines: {node: '>=8.0.0'}
-    dependencies:
-      mdn-data: 2.0.14
-      source-map: 0.6.1
-    dev: false
-
-  /css-what@6.2.2:
-    resolution: {integrity: sha512-u/O3vwbptzhMs3L1fQE82ZSLHQQfto5gyZzwteVIEyeaY5Fc7R4dapF/BvRoSYFeqfBk4m0V1Vafq5Pjv25wvA==}
-    engines: {node: '>= 6'}
-    dev: false
-
   /cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
     engines: {node: '>=4'}
@@ -3596,33 +3481,6 @@ packages:
   /dnssd-advertise@1.1.6:
     resolution: {integrity: sha512-Ndrrf6BMPalkQPd/zubL+4YghH2J9NspapQ09uDXwYbvOPkP0oaqf5CkcwJ0b50kS2O3ul6yVu+jz+RY62Cejg==}
 
-  /dom-serializer@2.0.0:
-    resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
-    dependencies:
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
-      entities: 4.5.0
-    dev: false
-
-  /domelementtype@2.3.0:
-    resolution: {integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==}
-    dev: false
-
-  /domhandler@5.0.3:
-    resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
-    engines: {node: '>= 4'}
-    dependencies:
-      domelementtype: 2.3.0
-    dev: false
-
-  /domutils@3.2.2:
-    resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-    dependencies:
-      dom-serializer: 2.0.0
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
-    dev: false
-
   /dotenv-expand@12.0.3:
     resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
     engines: {node: '>=12'}
@@ -3666,11 +3524,6 @@ packages:
   /encodeurl@2.0.0:
     resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
     engines: {node: '>= 0.8'}
-
-  /entities@4.5.0:
-    resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
-    engines: {node: '>=0.12'}
-    dev: false
 
   /error-stack-parser@2.1.4:
     resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
@@ -3785,14 +3638,6 @@ packages:
       react-native: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
     transitivePeerDependencies:
       - supports-color
-
-  /expo-document-picker@14.0.8(expo@57.0.28):
-    resolution: {integrity: sha512-3tyQKpPqWWFlI8p9RiMX1+T1Zge5mEKeBuXWp1h8PEItFMUDSiOJbQ112sfdC6Hxt8wSxreV9bCRl/NgBdt+fA==}
-    peerDependencies:
-      expo: '*'
-    dependencies:
-      expo: 57.0.28(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.16)(react-dom@19.2.3)(react-native-web@0.21.4)(react-native-worklets@0.10.4)(react-native@0.86.3)(react@19.2.3)(typescript@6.0.3)
-    dev: false
 
   /expo-file-system@57.0.7(expo@57.0.28)(react-native@0.86.3):
     resolution: {integrity: sha512-1vkZRadOsIputFDBcclqBa1pO3iXOO6iIsdqJipQWw4V5TSnWgmRTuOF7ro8IzrVue+PHbum++KCG3Tawem4cg==}
@@ -4801,18 +4646,6 @@ packages:
     dependencies:
       yallist: 3.1.1
 
-  /lucide-react-native@0.477.0(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3):
-    resolution: {integrity: sha512-x5rcac54DbHgSRJleWpY4S7E68zTbC8hF6CqGtRWVZhrq9+cpOIonRF8oWhRFAv/CohDUvrdUlP0ieJAyDvD4Q==}
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0
-      react-native: '*'
-      react-native-svg: ^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0
-    dependencies:
-      react: 19.2.3
-      react-native: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
-      react-native-svg: 15.15.5(react-native@0.86.3)(react@19.2.3)
-    dev: false
-
   /magic-string@1.4.3:
     resolution: {integrity: sha512-z12OxmaPGE0F4xlpGdjuAUckipLpQlTAuAmyGhNoD7ODpYUzvDfvtxUbjM/jwznyP178oju/KDdyi220wNJ0RQ==}
     dependencies:
@@ -4826,10 +4659,6 @@ packages:
 
   /marky@1.3.0:
     resolution: {integrity: sha512-ocnPZQLNpvbedwTy9kNrQEsknEfgvcLMvOtz3sFeWApDq1MXH1TqkCIx58xlpESsfwQOnuBO9beyQuNGzVvuhQ==}
-
-  /mdn-data@2.0.14:
-    resolution: {integrity: sha512-dn6wd0uw5GsdswPFfsgMp5NSB0/aDe6fK94YJV/AJDYXL6HVLWBsxeq7js7Ad+mU2K9LAlwpk6kN2D5mwCPVow==}
-    dev: false
 
   /memoize-one@5.2.1:
     resolution: {integrity: sha512-zYiwtZUcYyXKo/np96AGZAckk+FWWsUdJ3cHGGmld7+AhvcWmQyGCYUh1hc4Q/pkOhb65dQR/pqCyK0cOaHz4Q==}
@@ -5537,7 +5366,7 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  /nativewind@4.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19):
+  /nativewind@4.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19):
     resolution: {integrity: sha512-h/tdccn3FCotFxZtpBSGCQOK9DcfMrD2YdVnw2PiDhTzE6VGdAw+aDMruaxCXjJq5W/lfCZuBSdhS0enl8BN+w==}
     engines: {node: '>=16'}
     peerDependencies:
@@ -5545,7 +5374,7 @@ packages:
     dependencies:
       comment-json: 4.6.2
       debug: 4.4.3
-      react-native-css-interop: 0.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
+      react-native-css-interop: 0.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19)
       tailwindcss: 3.4.19(tsx@4.23.15)
     transitivePeerDependencies:
       - react
@@ -5620,12 +5449,6 @@ packages:
       proc-log: 4.2.0
       semver: 7.8.5
       validate-npm-package-name: 5.0.1
-
-  /nth-check@2.1.1:
-    resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
-    dependencies:
-      boolbase: 1.0.0
-    dev: false
 
   /nullthrows@1.1.1:
     resolution: {integrity: sha512-2vPPEi+Z7WqML2jZYddDIfy5Dqb0r2fze2zTxNNknZaFpVHU3mFB3R+DWeJWGVx0ecvttSGlJTI+WG+8Z4cDWw==}
@@ -6027,7 +5850,7 @@ packages:
     resolution: {integrity: sha512-UpMYezM4v5/18F28aC66AEsjXIgE02kyEMH6yLdgLXu/UTfa1Ntwck/nNLrbqJsEXW7gPb0coNO9FQse9WTovA==}
     dev: false
 
-  /react-native-css-interop@0.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native-svg@15.15.5)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19):
+  /react-native-css-interop@0.2.7(react-native-reanimated@4.5.1)(react-native-safe-area-context@5.7.0)(react-native@0.86.3)(react@19.2.3)(tailwindcss@3.4.19):
     resolution: {integrity: sha512-8ztp+gkiUE6tJGLFsnLGGAG1cxxkMDxwtoDx2oe18GMl6QRC1lmZ0b2QcE+Ha0fAdG3VmTJggjDitj8FLeIKTA==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -6052,7 +5875,6 @@ packages:
       react-native: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
       react-native-reanimated: 4.5.1(react-native-worklets@0.10.4)(react-native@0.86.3)(react@19.2.3)
       react-native-safe-area-context: 5.7.0(react-native@0.86.3)(react@19.2.3)
-      react-native-svg: 15.15.5(react-native@0.86.3)(react@19.2.3)
       semver: 7.8.5
       tailwindcss: 3.4.19(tsx@4.23.15)
     transitivePeerDependencies:
@@ -6103,18 +5925,6 @@ packages:
       react-freeze: 1.0.4(react@19.2.3)
       react-native: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
       warn-once: 0.1.1
-    dev: false
-
-  /react-native-svg@15.15.5(react-native@0.86.3)(react@19.2.3):
-    resolution: {integrity: sha512-L4go5jA+GWutdJ/JucuN20cjAbMg1HmMtAP+wZ+3JLCf6Jd0bhXQHxciRP/AQm/FlrIEZwkMcHNZP+FXAiic0w==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-    dependencies:
-      css-select: 5.2.2
-      css-tree: 1.1.3
-      react: 19.2.3
-      react-native: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
     dev: false
 
   /react-native-web@0.21.4(react-dom@19.2.3)(react@19.2.3):
