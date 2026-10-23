@@ -28,4 +28,10 @@ jobs:
       - name: Apply SQL migrations
         run: pnpm --dir packages/db migrate
         env:
+          # Prefer discrete fields when set; DATABASE_URL remains a Neon-friendly fallback.
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

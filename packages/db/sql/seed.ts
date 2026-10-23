@@ -2,6 +2,8 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcrypt";
 import { Pool, type PoolClient } from "pg";
 import { getClasses } from "../../curriculum/src/curriculum.service";
+import { getPoolConfig } from "../src/connection";
+import { loadRootEnv } from "../src/load-env";
 
 /**
  * Student-only seed using plain `pg` (no ORM).
@@ -14,12 +16,8 @@ import { getClasses } from "../../curriculum/src/curriculum.service";
  */
 const STUDENT_PASSWORD = "StudentDemo1!";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
-}
-
-const pool = new Pool({ connectionString });
+loadRootEnv();
+const pool = new Pool(getPoolConfig());
 
 /** Minimal cuid-like id: "c" + time (base36) + counter + random. */
 let idCounter = 0;
