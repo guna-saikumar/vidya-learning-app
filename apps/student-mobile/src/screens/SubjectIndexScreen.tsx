@@ -22,7 +22,7 @@ type FilterStatus = 'all' | 'in-progress' | 'completed' | 'unread';
 
 export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
   const { classId, subjectId } = route.params;
-  const { progressMap } = useLearningProgress();
+  const { progressMap, bookmarks, handleToggleBookmark } = useLearningProgress();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
 
@@ -242,12 +242,25 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
           {filteredChapters.length > 0 ? (
             filteredChapters.map((chapter) => {
               const p = progressMap[chapter.id];
+              const isBookmarked = bookmarks.some((b) => b.chapterId === chapter.id);
               return (
                 <ChapterListItem
                   key={chapter.id}
                   chapter={chapter}
                   isCompleted={p?.completed || false}
                   progressPercent={p?.progressPercent || 0}
+                  isBookmarked={isBookmarked}
+                  onBookmarkPress={() =>
+                    handleToggleBookmark({
+                      classId,
+                      subjectId,
+                      chapterId: chapter.id,
+                      title: `${chapter.title} Notes`,
+                      subtitle: `${schoolClass.title} • ${subject.name}`,
+                      type: 'chapter',
+                      previewText: chapter.description || chapter.title,
+                    })
+                  }
                   onPress={() =>
                     navigation.navigate('ChapterDetails', {
                       classId,

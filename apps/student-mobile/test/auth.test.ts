@@ -286,7 +286,7 @@ describe('Student Authentication & Session Gate', () => {
 
     // In Unauthenticated state: Login screen is active, protected screens blocked
     const accessibleRoutesUnauthenticated = ['Login'];
-    const protectedRoutes = ['Home', 'Learn', 'Tasks', 'Progress', 'Profile', 'Notifications'];
+    const protectedRoutes = ['Home', 'Learn', 'Profile', 'Notifications'];
     for (const r of protectedRoutes) {
       assert.strictEqual(accessibleRoutesUnauthenticated.includes(r), false);
     }

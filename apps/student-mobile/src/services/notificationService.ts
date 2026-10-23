@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Notification } from '../types/quiz';
+import { Notification } from '../types/curriculum';
 import { MOCK_NOTIFICATIONS } from '../data/notifications';
 
 const STORAGE_KEY = '@vidya_notifications';

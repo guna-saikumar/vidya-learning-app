@@ -81,6 +81,26 @@ export const getCurriculumStats = () => {
   };
 };
 
+export const getEnrolledClassStats = (classId?: string) => {
+  const schoolClass = (classId ? getClassById(classId) : undefined) || CURRICULUM_DATA[2];
+  const totalSubjects = schoolClass.subjects.length;
+  let totalChapters = 0;
+
+  for (const subject of schoolClass.subjects) {
+    totalChapters += subject.chapters.length;
+  }
+
+  return {
+    classId: schoolClass.id,
+    grade: schoolClass.grade,
+    title: schoolClass.title,
+    totalSubjects,
+    totalChapters,
+    schoolClass,
+  };
+};
+
+
 export const searchCurriculum = (query: string, classId?: string) => {
   if (!query || query.trim() === '') return [];
   const lowerQuery = query.toLowerCase().trim();

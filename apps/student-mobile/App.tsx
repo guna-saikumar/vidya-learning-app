@@ -1,5 +1,5 @@
 import './global.css';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -18,7 +18,6 @@ import {
 } from '@expo-google-fonts/inter';
 import { AuthProvider } from './src/hooks/useAuth';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { seedInitialDataIfNeeded } from './src/services/progressService';
 import Colors from './src/constants/colors';
 
 export default function App() {
@@ -32,10 +31,6 @@ export default function App() {
     Inter_500Medium,
     Inter_600SemiBold,
   });
-
-  useEffect(() => {
-    seedInitialDataIfNeeded();
-  }, []);
 
   if (!fontsLoaded) {
     return (

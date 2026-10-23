@@ -5,107 +5,31 @@ const STORAGE_KEYS = {
   BOOKMARKS: '@vidya_bookmarks',
   PROGRESS: '@vidya_chapter_progress',
   USER_PROFILE: '@vidya_user_profile',
-  INITIALIZED: '@vidya_seeded_v1',
 };
 
 const DEFAULT_PROFILE: UserProfile = {
-  displayName: 'Aarav Sharma',
-  activeClassId: 'class-8',
-  streakDays: 5,
-  avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDwylJurXETzm0O1bhmUGXVZdrY4NZVe9bRVUKtWzV1pB3NMIS5iXL8yOYRJmYNOqbnFDfG9V0rOQVa0dhBzEIffjXwwNVgcTerM-rX9HvUfPs9WQ1Q_s81-mctf8krdw9dTXms5dUDGlQ_8o4Nj1Mr7mMG6mTSXA0jFoTw-bVtaKfHTWGdXQLFgHKt5TwMawFgBjZ-MozBABBOpECp8ro6P4lQCv-5YrbgDcLvz353lW4IGnhlqR9t',
-  studyGoalMinutes: 45,
-};
-
-// Seed initial demo data matching the Stitch design if empty
-export const seedInitialDataIfNeeded = async (): Promise<void> => {
-  try {
-    const isSeeded = await AsyncStorage.getItem(STORAGE_KEYS.INITIALIZED);
-    if (!isSeeded) {
-      const initialProgress: Record<string, ChapterProgress> = {
-        'c8-m-ch1': {
-          chapterId: 'c8-m-ch1',
-          subjectId: 'c8-maths',
-          classId: 'class-8',
-          completed: false,
-          completedSections: ['c8-m-ch1-s1', 'c8-m-ch1-s2'],
-          progressPercent: 75,
-          lastAccessed: Date.now() - 3600 * 1000 * 2, // 2 hours ago
-        },
-        'c8-sci-ch2': {
-          chapterId: 'c8-sci-ch2',
-          subjectId: 'c8-science',
-          classId: 'class-8',
-          completed: false,
-          completedSections: ['c8-sci-ch2-s1'],
-          progressPercent: 40,
-          lastAccessed: Date.now() - 3600 * 1000 * 5, // 5 hours ago
-        },
-        'c8-m-ch2': {
-          chapterId: 'c8-m-ch2',
-          subjectId: 'c8-maths',
-          classId: 'class-8',
-          completed: false,
-          completedSections: ['c8-m-ch2-s1'],
-          progressPercent: 60,
-          lastAccessed: Date.now() - 3600 * 1000 * 24, // 1 day ago
-        },
-        'c8-soc-ch1': {
-          chapterId: 'c8-soc-ch1',
-          subjectId: 'c8-social',
-          classId: 'class-8',
-          completed: true,
-          completedSections: ['c8-soc-ch1-s1'],
-          progressPercent: 100,
-          lastAccessed: Date.now() - 3600 * 1000 * 48,
-        },
-      };
-
-      const initialBookmarks: BookmarkItem[] = [
-        {
-          id: 'bm-math-closure',
-          classId: 'class-8',
-          subjectId: 'c8-maths',
-          chapterId: 'c8-m-ch1',
-          sectionId: 'c8-m-ch1-s2',
-          title: 'Distributive & Closure Formula',
-          subtitle: 'Class 8 • Mathematics • Ch 1',
-          type: 'formula',
-          dateAdded: Date.now() - 3600 * 1000 * 12,
-          previewText: 'a(b + c) = ab + ac (Applicable for Addition & Multiplication in ℚ)',
-        },
-        {
-          id: 'bm-sci-pasteur',
-          classId: 'class-8',
-          subjectId: 'c8-science',
-          chapterId: 'c8-sci-ch2',
-          sectionId: 'c8-sci-ch2-s1',
-          title: 'Fermentation & Pasteurization Process',
-          subtitle: 'Class 8 • Science • Ch 2',
-          type: 'section',
-          dateAdded: Date.now() - 3600 * 1000 * 72,
-          previewText: 'Louis Pasteur (1857) - Conversion of sugar into alcohol by yeast',
-        },
-        {
-          id: 'bm-math-ch1',
-          classId: 'class-8',
-          subjectId: 'c8-maths',
-          chapterId: 'c8-m-ch1',
-          title: 'Rational Numbers Master Chapter',
-          subtitle: 'Class 8 • Mathematics',
-          type: 'chapter',
-          dateAdded: Date.now() - 3600 * 1000 * 24,
-          previewText: 'Complete notes and practice problems for Rational Numbers',
-        },
-      ];
-
-      await AsyncStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(initialProgress));
-      await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(initialBookmarks));
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(DEFAULT_PROFILE));
-      await AsyncStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
-    }
-  } catch (error) {
-    console.error('Failed to seed initial demo data:', error);
-  }
+  displayName: '',
+  firstName: '',
+  lastName: '',
+  dateOfBirth: '',
+  gender: '',
+  activeClassId: '',
+  schoolName: '',
+  location: '',
+  district: '',
+  section: '',
+  rollNumber: '',
+  medium: '',
+  fatherName: '',
+  motherName: '',
+  guardianName: '',
+  guardianPhone: '',
+  parentPhone: '',
+  academicYear: '',
+  isOnboarded: false,
+  streakDays: 0,
+  avatarUrl: '',
+  studyGoalMinutes: 0,
 };
 
 // ========================
@@ -114,7 +38,8 @@ export const seedInitialDataIfNeeded = async (): Promise<void> => {
 export const getUserProfile = async (): Promise<UserProfile> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-    return data ? JSON.parse(data) : DEFAULT_PROFILE;
+    if (!data) return DEFAULT_PROFILE;
+    return { ...DEFAULT_PROFILE, ...JSON.parse(data) };
   } catch {
     return DEFAULT_PROFILE;
   }

@@ -72,8 +72,39 @@ export type ChapterProgress = {
 
 export type UserProfile = {
   displayName: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  gender?: string;
   activeClassId: string;
+  schoolName: string;
+  location?: string;
+  district?: string;
+  section: string;
+  rollNumber: string;
+  medium: string;
+  fatherName?: string;
+  motherName?: string;
+  guardianName?: string;
+  guardianPhone?: string;
+  parentPhone?: string;
+  academicYear?: string;
+  isOnboarded?: boolean;
   streakDays: number;
   avatarUrl: string;
   studyGoalMinutes: number;
+};
+
+export type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  detailedBody?: string;
+  actionLabel?: string;
+  type: 'announcement' | 'reminder' | 'achievement' | 'update';
+  icon: string;
+  read: boolean;
+  createdAt: number;
+  actionRoute?: string;
+  actionParams?: Record<string, string>;
 };

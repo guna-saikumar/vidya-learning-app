@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
@@ -15,12 +13,9 @@ import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { removeBookmark } from '../services/progressService';
-import { MainTabParamList, RootStackParamList } from '../types/navigation';
+import { RootStackParamList } from '../types/navigation';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Bookmarks'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type Props = NativeStackScreenProps<RootStackParamList, 'Bookmarks'>;
 
 export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
   const { bookmarks, refreshData } = useLearningProgress();
@@ -53,7 +48,6 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
       <HeaderBar
         title="Bookmarks"
         subtitle="Saved chapters and study notes."
-        activeRoute="Bookmarks"
         onProfilePress={() => navigation.navigate('Profile')}
       />
 

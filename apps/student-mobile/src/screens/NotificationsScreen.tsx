@@ -10,7 +10,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
-import { HoverCard, PageIntro } from '../components/common';
+import { PageIntro } from '../components/common';
 import {
   getAllNotifications,
   markAsRead,
@@ -18,7 +18,7 @@ import {
   initializeNotificationsIfNeeded,
 } from '../services/notificationService';
 import { RootStackParamList } from '../types/navigation';
-import { Notification } from '../types/quiz';
+import { Notification } from '../types/curriculum';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Notifications'>;
 
@@ -75,7 +75,7 @@ export const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
     <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       {/* Clean Top Navbar without Back Section */}
-      <HeaderBar activeRoute="Notifications" />
+      <HeaderBar />
 
       <ScrollView
         className="flex-1"

@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../../constants/colors';
 
-export type BottomNavTab = 'Home' | 'Learn' | 'Tasks' | 'Progress' | 'Profile' | 'Bookmarks' | 'MyLearning';
+export type BottomNavTab = 'Home' | 'Learn' | 'Profile';
 
 interface BottomNavProps {
   activeTab?: BottomNavTab;
@@ -18,8 +18,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
   const tabs: Array<{ key: BottomNavTab; label: string; icon: keyof typeof MaterialIcons.glyphMap }> = [
     { key: 'Home', label: 'Home', icon: 'home' },
     { key: 'Learn', label: 'Learn', icon: 'auto-stories' },
-    { key: 'Tasks', label: 'Tasks', icon: 'assignment' },
-    { key: 'Progress', label: 'Progress', icon: 'bar-chart' },
     { key: 'Profile', label: 'Profile', icon: 'person' },
   ];
 
@@ -33,7 +31,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
       style={{ paddingBottom: bottomInset, height: 62 + bottomInset }}
     >
       {tabs.map((tab) => {
-        const isActive = activeTab === tab.key || (tab.key === 'Progress' && activeTab === 'MyLearning');
+        const isActive = activeTab === tab.key;
         const color = isActive ? Colors.primary : '#99877f';
 
         return (

@@ -99,33 +99,6 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         title={chapter.title}
         subtitle={`${subject.name} • Chapter ${chapter.order}`}
         onProfilePress={() => navigation.navigate("Profile")}
-        showBookmark
-        isBookmarked={isBookmarked}
-        onBookmarkPress={onBookmark}
-        rightAction={
-          <TouchableOpacity
-            className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border ${
-              isCompleted
-                ? 'bg-success border-success'
-                : 'bg-white border-success'
-            }`}
-            onPress={onToggleDone}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons
-              name={isCompleted ? 'check' : 'radio-button-unchecked'}
-              size={15}
-              color={isCompleted ? Colors.white : Colors.success}
-            />
-            <Text
-              className={`font-manrope-bold text-xs ${
-                isCompleted ? 'text-white' : 'text-success'
-              }`}
-            >
-              {isCompleted ? 'Done' : 'Mark Done'}
-            </Text>
-          </TouchableOpacity>
-        }
       />
 
       <ScrollView
@@ -133,22 +106,82 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 50, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Chapter Header Block */}
-        <View className="gap-2">
-          <View className="flex-row items-center gap-2">
-            <Text className="font-manrope-semibold text-xs text-textSecondary">{schoolClass.title}</Text>
-            <Text className="text-textMuted text-xs">•</Text>
-            <Text className="font-manrope-semibold text-xs text-textSecondary">
-              {chapter.sections.length} Sections
-            </Text>
-            <Text className="text-textMuted text-xs">•</Text>
-            <Text
-              className={`font-manrope-bold text-xs ${
-                isCompleted ? 'text-success' : 'text-primary'
+        {/* Chapter Header Block & Action Row (Arranged Below Header) */}
+        <View className="bg-white rounded-2xl p-4 border border-border shadow-xs gap-3">
+          {/* Metadata Row */}
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <Text className="font-manrope-semibold text-xs text-textSecondary">{schoolClass.title}</Text>
+              <Text className="text-textMuted text-xs">•</Text>
+              <Text className="font-manrope-semibold text-xs text-textSecondary">
+                {chapter.sections.length} Sections
+              </Text>
+            </View>
+
+            <View
+              className={`px-2.5 py-0.5 rounded-full ${
+                isCompleted ? 'bg-successBg' : 'bg-palePeach'
               }`}
             >
-              {isCompleted ? 'Completed' : 'In Progress'}
-            </Text>
+              <Text
+                className={`font-manrope-bold text-xs ${
+                  isCompleted ? 'text-success' : 'text-primary'
+                }`}
+              >
+                {isCompleted ? 'Completed' : 'In Progress'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Action Buttons Row */}
+          <View className="flex-row items-center gap-2.5 pt-1">
+            {/* Mark Done Button */}
+            <TouchableOpacity
+              className={`flex-1 flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl border ${
+                isCompleted
+                  ? 'bg-success border-success'
+                  : 'bg-white border-success'
+              }`}
+              onPress={onToggleDone}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons
+                name={isCompleted ? 'check-circle' : 'radio-button-unchecked'}
+                size={17}
+                color={isCompleted ? Colors.white : Colors.success}
+              />
+              <Text
+                className={`font-manrope-bold text-xs ${
+                  isCompleted ? 'text-white' : 'text-success'
+                }`}
+              >
+                {isCompleted ? 'Completed' : 'Mark Done'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Bookmark Button */}
+            <TouchableOpacity
+              className={`flex-1 flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl border ${
+                isBookmarked
+                  ? 'bg-palePeach border-primary'
+                  : 'bg-white border-border'
+              }`}
+              onPress={onBookmark}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons
+                name={isBookmarked ? 'bookmark' : 'bookmark-border'}
+                size={17}
+                color={isBookmarked ? Colors.primary : Colors.textPrimary}
+              />
+              <Text
+                className={`font-manrope-bold text-xs ${
+                  isBookmarked ? 'text-primary' : 'text-textPrimary'
+                }`}
+              >
+                {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 

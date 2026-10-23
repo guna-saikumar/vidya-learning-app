@@ -7,10 +7,9 @@ import {
   StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { SearchBar } from '../components/common';
-import { SubjectCard } from '../components/curriculum';
+import { SubjectCard, LearningProgressCard } from '../components/curriculum';
 import { getClassById } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
@@ -20,11 +19,31 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ClassSubjects'>;
 
 export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { classId } = route.params;
-  const { progressMap } = useLearningProgress();
+  const { progressMap, profile } = useLearningProgress();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SubjectCategory>('all');
 
   const schoolClass = getClassById(classId);
+
+  const { totalChapters, completedChapters, progressPercent } = useMemo(() => {
+    if (!schoolClass) return { totalChapters: 0, completedChapters: 0, progressPercent: 0 };
+    let total = 0;
+    let completed = 0;
+    schoolClass.subjects.forEach((s) => {
+      s.chapters.forEach((ch) => {
+        total++;
+        if (progressMap[ch.id]?.completed) {
+          completed++;
+        }
+      });
+    });
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return {
+      totalChapters: total,
+      completedChapters: completed,
+      progressPercent: percent,
+    };
+  }, [schoolClass, progressMap]);
 
   const filteredSubjects = useMemo(() => {
     if (!schoolClass) return [];
@@ -77,7 +96,6 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
         onBackPress={() => navigation.goBack()}
         title={schoolClass.title}
         subtitle={`${schoolClass.subjects.length} Subjects`}
-        activeRoute="Learn"
         onProfilePress={() => navigation.navigate("Profile")}
       />
 
@@ -86,6 +104,26 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 18 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Learning Progress Card as in reference image */}
+        <LearningProgressCard
+          mediumNote={`${profile?.medium || 'English'} medium · Choose a subject to browse its chapters and lessons.`}
+          completedCount={completedChapters}
+          totalCount={totalChapters}
+          progressPercent={progressPercent}
+        />
+
+        {/* Subjects Header */}
+        <View className="flex-row items-center justify-between pt-1">
+          <Text className="font-manrope-extrabold text-xl text-textPrimary tracking-tight">
+            Subjects
+          </Text>
+          <View className="bg-palePeach px-3 py-1 rounded-full border border-border/60">
+            <Text className="font-manrope-bold text-xs text-primaryDark">
+              {schoolClass.subjects.length} Subjects
+            </Text>
+          </View>
+        </View>
+
         {/* Search Bar */}
         <SearchBar
           value={searchQuery}

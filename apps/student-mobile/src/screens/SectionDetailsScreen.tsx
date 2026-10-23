@@ -20,7 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SectionDetails'>;
 
 export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { classId, subjectId, chapterId, sectionId } = route.params;
-  const { progressMap, refreshData } = useLearningProgress();
+  const { progressMap, refreshData, bookmarks, handleToggleBookmark } = useLearningProgress();
 
   const result = getSectionById(sectionId);
   const section = result?.section;
@@ -42,6 +42,7 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const currentChapterProgress = progressMap[chapterId];
   const isSectionDone =
     currentChapterProgress?.completedSections?.includes(sectionId) || false;
+  const isBookmarked = bookmarks.some((b) => b.sectionId === sectionId);
 
   const currentIndex = chapter.sections.findIndex((s) => s.id === sectionId);
   const prevSection = currentIndex > 0 ? chapter.sections[currentIndex - 1] : null;
@@ -49,6 +50,19 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
     currentIndex < chapter.sections.length - 1
       ? chapter.sections[currentIndex + 1]
       : null;
+
+  const onBookmark = async () => {
+    await handleToggleBookmark({
+      classId,
+      subjectId,
+      chapterId,
+      sectionId,
+      title: section.title,
+      subtitle: `${subject.name} • ${chapter.title}`,
+      type: 'section',
+      previewText: section.content || section.summaryPoint,
+    });
+  };
 
   const handleMarkSectionDone = async () => {
     await markSectionCompleted(
@@ -77,6 +91,31 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Topic metadata & Bookmark action */}
+        <View className="flex-row items-center justify-between pb-1">
+          <Text className="font-manrope-bold text-xs text-primary">Topic {currentIndex + 1} of {chapter.sections.length}</Text>
+          <TouchableOpacity
+            className={`flex-row items-center gap-1 px-3 py-1.5 rounded-full border shadow-2xs ${
+              isBookmarked ? 'bg-palePeach border-primary' : 'bg-white border-border'
+            }`}
+            onPress={onBookmark}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons
+              name={isBookmarked ? 'bookmark' : 'bookmark-border'}
+              size={15}
+              color={isBookmarked ? Colors.primary : Colors.textSecondary}
+            />
+            <Text
+              className={`font-manrope-bold text-xs ${
+                isBookmarked ? 'text-primary' : 'text-textSecondary'
+              }`}
+            >
+              {isBookmarked ? 'Bookmarked' : 'Add to Bookmark'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Lead overview paragraph */}
         <Text className="font-manrope-medium text-[15px] text-textLead leading-[25px]">{section.content}</Text>
 
