@@ -26,8 +26,6 @@ import type {
   UpsertProgressInput,
 } from "./students.schemas";
 
-const DEFAULT_STATE = "Andhra Pradesh";
-
 /** Allowed avatar mime types → file extension. */
 const AVATAR_MIME_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -72,28 +70,16 @@ const FIELD_COLUMNS = [
   "lastName",
   "gender",
   "dob",
-  "aadharNumber",
-  "bloodGroup",
-  "casteCategory",
-  "doorNo",
-  "street",
   "villageCity",
-  "mandal",
   "district",
-  "state",
-  "pincode",
-  "schoolId",
   "schoolName",
-  "schoolCode",
   "grade",
   "section",
   "medium",
   "rollNumber",
-  "admissionNumber",
   "fatherName",
   "motherName",
   "parentPhone",
-  "guardianPhone",
 ] as const;
 
 type ProfileRow = {
@@ -138,7 +124,13 @@ type ChapterContext = {
 };
 
 const PROFILE_SELECT = `
-  SELECT sp.*, u."email", u."name"
+  SELECT sp."userId", sp."activeClassId", sp."streakDays", sp."avatarUrl",
+         sp."firstName", sp."lastName", sp."gender", sp."dob",
+         sp."villageCity", sp."district", sp."schoolName",
+         sp."grade", sp."section", sp."medium", sp."rollNumber",
+         sp."fatherName", sp."motherName", sp."parentPhone",
+         sp."language", sp."notificationsEnabled", sp."isOnboarded",
+         u."email", u."name"
     FROM "StudentProfile" sp
     JOIN "User" u ON u."id" = sp."userId"
    WHERE sp."userId" = $1`;
@@ -167,29 +159,20 @@ const toProfileDto = (p: ProfileRow) => ({
   lastName: p.lastName,
   gender: p.gender,
   dob: p.dob,
-  aadharNumber: p.aadharNumber,
-  bloodGroup: p.bloodGroup,
-  casteCategory: p.casteCategory,
-  doorNo: p.doorNo,
-  street: p.street,
-  villageCity: p.villageCity,
-  mandal: p.mandal,
+  dateOfBirth: p.dob,
   district: p.district,
-  state: p.state,
-  pincode: p.pincode,
-  schoolId: p.schoolId,
+  location: p.villageCity,
+  villageCity: p.villageCity,
   schoolName: p.schoolName,
-  schoolCode: p.schoolCode,
   classId: p.activeClassId,
+  activeClassId: p.activeClassId,
   grade: p.grade,
   section: p.section,
   medium: p.medium,
   rollNumber: p.rollNumber,
-  admissionNumber: p.admissionNumber,
   fatherName: p.fatherName,
   motherName: p.motherName,
   parentPhone: p.parentPhone,
-  guardianPhone: p.guardianPhone,
   avatarUrl: p.avatarUrl ? p.avatarUrl : null,
   streakDays: p.streakDays,
   language: p.language,
@@ -258,24 +241,17 @@ export class StudentsService {
   ): Promise<Record<string, unknown>> {
     const raw = input as Record<string, unknown>;
     const values: Record<string, unknown> = {};
-    for (const col of FIELD_COLUMNS) {
-      if (raw[col] !== undefined) values[col] = clean(raw[col]);
-      else if (replace) values[col] = null;
-    }
-    if (replace && values.state == null) values.state = DEFAULT_STATE;
 
-    // School: fill name/UDISE code from the directory when not supplied.
-    if (values.schoolId) {
-      const school = await this.db.queryOne<{
-        id: string;
-        name: string;
-        udiseCode: string;
-      }>(`SELECT "id", "name", "udiseCode" FROM "School" WHERE "id" = $1`, [
-        values.schoolId,
-      ]);
-      if (!school) throw new BadRequestException({ error: "Unknown schoolId" });
-      if (!values.schoolName) values.schoolName = school.name;
-      if (!values.schoolCode) values.schoolCode = school.udiseCode;
+    const rawLocation = raw.location ?? raw.villageCity;
+    const rawDob = raw.dob ?? raw.dateOfBirth;
+
+    for (const col of FIELD_COLUMNS) {
+      let val = raw[col];
+      if (col === "villageCity" && rawLocation !== undefined) val = rawLocation;
+      if (col === "dob" && rawDob !== undefined) val = rawDob;
+
+      if (val !== undefined) values[col] = clean(val);
+      else if (replace) values[col] = null;
     }
 
     // Class: explicit classId wins, otherwise derive `class-<grade>` if it exists.

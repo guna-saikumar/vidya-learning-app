@@ -15,10 +15,6 @@ const valid = {
   grade: 7,
   section: "b",
   medium: "telugu",
-  casteCategory: "bc",
-  bloodGroup: "o+",
-  aadharNumber: "123456789012",
-  pincode: "517502",
   parentPhone: "9876543210",
 };
 
@@ -29,16 +25,12 @@ describe("onboarding schema", () => {
       gender: "FEMALE",
       section: "B",
       medium: "TELUGU",
-      casteCategory: "BC",
-      bloodGroup: "O+",
       grade: "7",
     });
   });
 
   it.each([
     ["future dob", { dob: "2999-01-01" }],
-    ["bad aadhar", { aadharNumber: "123" }],
-    ["bad pincode", { pincode: "12" }],
     ["bad phone", { parentPhone: "123" }],
     ["grade out of range", { grade: 5 }],
     ["unknown medium", { medium: "FRENCH" }],
@@ -57,8 +49,8 @@ describe("onboarding schema", () => {
 describe("profile patch schema", () => {
   it("accepts partial bodies and null to clear", () => {
     expect(updateProfileSchema.safeParse({}).success).toBe(true);
-    expect(updateProfileSchema.parse({ street: null, section: "c" })).toEqual({
-      street: null,
+    expect(updateProfileSchema.parse({ rollNumber: null, section: "c" })).toEqual({
+      rollNumber: null,
       section: "C",
     });
   });
