@@ -19,17 +19,17 @@ This document is the source of truth for implementation tasks across the Vidya m
 
 ## Local Runtime
 
-One command after clone (macOS Homebrew Postgres + LAN share):
+One command after clone on **macOS, Linux, or Windows** (native Postgres — no Docker):
 
 ```bash
 npm start
 ```
 
-Starts:
+Starts (`scripts/start.mjs`):
 
-1. Postgres (listens on `0.0.0.0` so others on the same Wi‑Fi can connect)
+1. Native Postgres (LAN bind when conf is writable)
 2. SQL migrate + seed
-3. **pgweb** DB UI on `:8083` (Prisma Studio alternative)
+3. **pgweb** DB UI on `:8083` (optional if installed)
 4. Nest API on `:4000` (bound `0.0.0.0`)
 5. Student Expo with `--lan` on `:8081`
 

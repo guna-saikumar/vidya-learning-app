@@ -23,20 +23,25 @@ Expo + React Native · NestJS on Fastify · Postgres + raw SQL (`pg`) · pnpm wo
 
 ## Run locally (single command)
 
-Needs Node 22.12+, pnpm 8. On macOS, Homebrew installs Postgres + **pgweb** if missing.
+Works on **macOS, Linux, and Windows** (Node 22.12+, pnpm 8, native PostgreSQL — no Docker).
 
 ```bash
 npm start
 ```
 
-That auto-detects your Wi‑Fi host (no LAN IP to type), writes `.env` + `apps/student-mobile/.env`, and prints ready-to-use URLs:
+That auto-detects your Wi‑Fi host (no LAN IP to type), writes `.env` + `apps/student-mobile/.env` / `.env.local`, and prints ready-to-use URLs:
 
 | Service | How you get it |
 |---|---|
 | API / Swagger | printed `http://…:4000` / `/docs` |
 | Postgres | printed `postgresql://vidya:vidya@…:5432/vidya` |
-| DB UI (**pgweb**) | printed `http://…:8083` |
+| DB UI (**pgweb**) | printed `http://…:8083` (optional; skipped if not installed) |
 | Student Expo | QR / printed URL — app uses Expo’s LAN host automatically |
+
+**Postgres (one-time):**
+- macOS: `brew install postgresql@17` (also auto-installed by `npm start` when Homebrew is present)
+- Linux: `sudo apt install postgresql postgresql-contrib` (or distro equivalent)
+- Windows: [PostgreSQL installer](https://www.postgresql.org/download/windows/) — add `bin` to PATH. If bootstrap needs the `postgres` superuser password, set `VIDYA_PG_SUPER_PASSWORD`.
 
 ```bash
 npm run db:psql     # interactive psql on this machine
@@ -44,7 +49,7 @@ npm run db:psql     # interactive psql on this machine
 
 Login: `student@vidya.test` / `StudentDemo1!`
 
-On Apple networks, share URLs often use `YourMac.local` (Bonjour) so teammates never type an IP. Anyone who clones runs `npm start` for their own full stack.
+On Apple networks, share URLs often use `YourMac.local` (Bonjour) so teammates never type an IP.
 
 ## Tests
 
