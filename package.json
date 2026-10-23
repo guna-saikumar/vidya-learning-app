@@ -4,9 +4,11 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node scripts/start.mjs",
+    "start:app": "node scripts/start.mjs --app",
     "db:psql": "node scripts/db-psql.mjs",
     "db:migrate": "pnpm --dir packages/db migrate",
     "db:seed": "pnpm --dir packages/db seed",
+    "backend:ngrok": "node scripts/backend-ngrok.mjs",
     "postman:export": "python3 scripts/export-postman-collection.py",
     "dev:student-mobile": "cd apps/student-mobile && npx expo start --lan",
     "dev:api": "cd apps/api && pnpm dev",

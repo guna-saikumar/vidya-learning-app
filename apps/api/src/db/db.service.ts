@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import { Pool, types, type PoolClient, type QueryResultRow } from "pg";
+import { Pool, types, type PoolClient, type PoolConfig, type QueryResultRow } from "pg";
 
 /**
  * `TIMESTAMP(3)` columns (Prisma `DateTime`) hold UTC wall-clock values without a
@@ -18,10 +18,32 @@ const normalizeParam = (value: unknown): unknown =>
 
 export type DbQueryResult<T> = { rows: T[]; rowCount: number };
 
+/** Prefer discrete DB_* env fields; fall back to DATABASE_URL (e.g. Neon). */
+function poolConfigFromEnv(): PoolConfig {
+  const host = process.env.DB_HOST?.trim();
+  const user = process.env.DB_USERNAME?.trim();
+  const password = process.env.DB_PASSWORD;
+  const database = process.env.DB_NAME?.trim();
+  if (host && user && password !== undefined && database) {
+    return {
+      host,
+      port: Number(process.env.DB_PORT?.trim() || 5432),
+      user,
+      password,
+      database,
+    };
+  }
+  const connectionString = process.env.DATABASE_URL?.trim();
+  if (connectionString) return { connectionString };
+  throw new Error(
+    "Database config missing. Set DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_NAME (or DATABASE_URL)."
+  );
+}
+
 @Injectable()
 export class DbService implements OnModuleDestroy {
   private readonly pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    ...poolConfigFromEnv(),
     types: {
       getTypeParser: (oid: number, format?: "text" | "binary") => {
         if (oid === TIMESTAMP_OID) return parseUtcTimestamp;

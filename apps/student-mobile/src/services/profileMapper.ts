@@ -208,7 +208,6 @@ export function validateDateOfBirth(raw: string): DobValidationResult {
   return { valid: true, iso, age };
 }
 
-
 /** Map API bookmark DTO onto the mobile `BookmarkItem` shape. */
 export function normalizeBookmark(api: Record<string, unknown>): BookmarkItem {
   const sectionId =

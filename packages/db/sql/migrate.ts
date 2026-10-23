@@ -1,17 +1,20 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Pool } from "pg";
+import { getPoolConfig } from "../src/connection";
+import { loadRootEnv } from "../src/load-env";
 
 const migrationsDir = join(__dirname, "migrations");
 
 async function main() {
-  const url = process.env.DATABASE_URL;
-  if (!url) {
-    console.error("DATABASE_URL is required");
+  loadRootEnv();
+  let pool: Pool;
+  try {
+    pool = new Pool(getPoolConfig());
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
     process.exit(1);
   }
-
-  const pool = new Pool({ connectionString: url });
   const client = await pool.connect();
   try {
     await client.query(`

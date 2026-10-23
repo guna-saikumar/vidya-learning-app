@@ -27,7 +27,11 @@ services:
     environment:
       NODE_ENV: development
       PORT: 4000
-      DATABASE_URL: postgresql://vidya:vidya@postgres:5432/vidya
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: vidya
+      DB_PASSWORD: vidya
+      DB_NAME: vidya
       JWT_SECRET: dev-only-jwt-secret-change-me
     ports:
       - "4000:4000"

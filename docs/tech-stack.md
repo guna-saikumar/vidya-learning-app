@@ -26,16 +26,19 @@ This document is the source of truth for implementation tasks across the Vidya m
 One command after clone on **macOS, Linux, or Windows** (native Postgres — no Docker):
 
 ```bash
-npm start
+npm start              # full stack
+npm run start:app      # student Expo only
 ```
 
-Starts (`scripts/start.mjs`) with step status + a URL board (LAN IP + localhost):
+`npm start` (`scripts/start.mjs`) with step status + a URL board (LAN IP + localhost):
 
 1. Native Postgres (LAN bind when conf is writable)
 2. SQL migrate + seed (logged)
 3. **pgweb** DB UI on `:8083` (optional if installed)
 4. Nest API on `:4000` (bound `0.0.0.0`)
 5. Student Expo with `--lan` on `:8081` (interactive QR / keys)
+
+`npm run start:app` skips Postgres/API/pgweb and only starts Expo (reads `EXPO_PUBLIC_API_URL` from `.env`).
 
 ```bash
 npm run db:psql     # CLI against local DB
