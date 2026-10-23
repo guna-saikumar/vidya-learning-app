@@ -33,6 +33,21 @@ export class HttpErrorFilter implements ExceptionFilter {
       return;
     }
 
+    // Fastify plugin errors (e.g. multipart limits) carry a 4xx `statusCode`.
+    const statusCode = (exception as { statusCode?: unknown } | null)
+      ?.statusCode;
+    if (
+      typeof statusCode === "number" &&
+      statusCode >= 400 &&
+      statusCode < 500
+    ) {
+      res.status(statusCode).send({
+        error:
+          exception instanceof Error ? exception.message : "Request failed",
+      });
+      return;
+    }
+
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: "Internal server error" });
   }
 }

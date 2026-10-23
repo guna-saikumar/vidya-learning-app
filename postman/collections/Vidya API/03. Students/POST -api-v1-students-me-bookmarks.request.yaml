@@ -1,0 +1,28 @@
+$kind: http-request
+name: "POST /api/v1/students/me/bookmarks"
+description: "Bookmark a chapter or section. Saves `bookmarkId`."
+url: "{{baseUrl}}/api/v1/students/me/bookmarks"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "chapterId": "{{chapterId}}",
+      "sectionId": "{{sectionId}}",
+      "previewText": "Key idea…"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 201 || pm.response.code === 200) {
+        const json = pm.response.json();
+        if (json.bookmark && json.bookmark.id) pm.collectionVariables.set('bookmarkId', json.bookmark.id);
+      }
+    language: text/javascript
+order: 10000

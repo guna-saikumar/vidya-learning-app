@@ -1,0 +1,20 @@
+$kind: http-request
+name: "PUT /api/v1/students/me/progress/:chapterId"
+description: "Update chapter reading % / completion."
+url: "{{baseUrl}}/api/v1/students/me/progress/{{chapterId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "progressPercent": 60,
+      "completed": false,
+      "sectionId": "{{sectionId}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 8000

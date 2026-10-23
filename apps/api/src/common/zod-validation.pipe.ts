@@ -7,7 +7,13 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
   transform(value: unknown): T {
     const parsed = this.schema.safeParse(value);
     if (!parsed.success) {
-      throw new BadRequestException({ error: "Invalid request body" });
+      throw new BadRequestException({
+        error: "Invalid request body",
+        details: parsed.error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      });
     }
     return parsed.data;
   }

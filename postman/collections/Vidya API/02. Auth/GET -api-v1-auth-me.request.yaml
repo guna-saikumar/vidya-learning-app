@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/auth/me"
+description: "Session check: `{ user: { id, email }, isOnboarded }`."
+url: "{{baseUrl}}/api/v1/auth/me"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 4000

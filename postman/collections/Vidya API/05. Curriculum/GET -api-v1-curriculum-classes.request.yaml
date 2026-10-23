@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/curriculum/classes"
+description: "List classes."
+url: "{{baseUrl}}/api/v1/curriculum/classes"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 1000

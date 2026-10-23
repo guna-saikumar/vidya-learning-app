@@ -28,7 +28,7 @@ import { NotificationsService } from "./notifications.service";
 @ApiTags("notifications")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, StudentRoleGuard)
-@Controller("api/me/notifications")
+@Controller("api/v1/notifications")
 export class NotificationsController {
   constructor(
     @Inject(NotificationsService)
@@ -44,6 +44,12 @@ export class NotificationsController {
     query: NotificationListQuery
   ) {
     return this.notifications.listMine(req.user!.sub, query);
+  }
+
+  @Get(":id")
+  @ApiOperation({ summary: "Get one of my notifications" })
+  getOne(@Req() req: AuthedRequest, @Param("id") id: string) {
+    return this.notifications.getMine(req.user!.sub, id);
   }
 
   @Post("read-all")

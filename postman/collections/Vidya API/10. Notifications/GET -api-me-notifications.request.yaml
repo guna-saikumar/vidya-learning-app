@@ -1,9 +1,0 @@
-$kind: http-request
-name: GET /api/me/notifications
-url: "{{baseUrl}}/api/me/notifications"
-method: GET
-auth:
-  type: bearer
-  credentials:
-    token: "{{studentToken}}"
-order: 11000

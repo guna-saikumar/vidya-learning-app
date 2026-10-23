@@ -1,9 +1,0 @@
-$kind: http-request
-name: GET /api/me/profile
-url: "{{baseUrl}}/api/me/profile"
-method: GET
-auth:
-  type: bearer
-  credentials:
-    token: "{{studentToken}}"
-order: 7000

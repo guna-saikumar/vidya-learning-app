@@ -1,0 +1,19 @@
+$kind: http-request
+name: "PATCH /api/v1/students/me/settings"
+description: "Language (`en`|`te`) and notifications toggle."
+url: "{{baseUrl}}/api/v1/students/me/settings"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "language": "te",
+      "notificationsEnabled": true
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 4000

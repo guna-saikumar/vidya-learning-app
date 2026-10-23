@@ -1,9 +1,0 @@
-$kind: http-request
-name: GET /api/me/quiz-attempts
-url: "{{baseUrl}}/api/me/quiz-attempts"
-method: GET
-auth:
-  type: bearer
-  credentials:
-    token: "{{studentToken}}"
-order: 9300

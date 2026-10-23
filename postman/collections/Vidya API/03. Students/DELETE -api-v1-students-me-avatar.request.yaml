@@ -1,0 +1,10 @@
+$kind: http-request
+name: "DELETE /api/v1/students/me/avatar"
+description: "Remove profile photo."
+url: "{{baseUrl}}/api/v1/students/me/avatar"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 6000

@@ -5,20 +5,19 @@ import { DbModule } from "./db/db.module";
 import { loadRootEnv, rootEnvFilePaths } from "./env";
 import { MailerModule } from "./mailer/mailer.module";
 import { CurriculumModule } from "./modules/curriculum/curriculum.module";
-import { DashboardModule } from "./modules/dashboard/dashboard.module";
-import { ExamsModule } from "./modules/exams/exams.module";
 import { HealthModule } from "./modules/health/health.module";
-import { MaterialsModule } from "./modules/materials/materials.module";
-import { MeModule } from "./modules/me/me.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
-import { QuizzesModule } from "./modules/quizzes/quizzes.module";
-import { TasksModule } from "./modules/tasks/tasks.module";
+import { SchoolsModule } from "./modules/schools/schools.module";
+import { StudentsModule } from "./modules/students/students.module";
 
 loadRootEnv();
 
 /**
  * Root Nest module — feature modules live under `src/modules/*`.
  * Cross-cutting auth/db/mailer stay at `src/{auth,db,mailer}`.
+ *
+ * API surface (all under `/api/v1`, plus `/health`):
+ * auth · students · schools · curriculum · notifications.
  */
 @Module({
   imports: [
@@ -30,14 +29,10 @@ loadRootEnv();
     MailerModule,
     AuthModule,
     HealthModule,
+    StudentsModule,
+    SchoolsModule,
     CurriculumModule,
-    DashboardModule,
-    MaterialsModule,
-    MeModule,
-    QuizzesModule,
-    TasksModule,
     NotificationsModule,
-    ExamsModule,
   ],
 })
 export class AppModule {}

@@ -40,7 +40,10 @@ export class ApiClient {
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const headers = new Headers(init.headers);
-    headers.set("Content-Type", "application/json");
+    // Let fetch set the multipart boundary itself for FormData bodies.
+    if (!(typeof FormData !== "undefined" && init.body instanceof FormData)) {
+      headers.set("Content-Type", "application/json");
+    }
     headers.set("Accept", "application/json");
 
     if (this.accessToken) {
@@ -92,6 +95,11 @@ export class ApiClient {
       method: "POST",
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
+  }
+
+  /** multipart/form-data upload (e.g. avatar). */
+  postForm<T>(path: string, form: FormData) {
+    return this.request<T>(path, { method: "POST", body: form });
   }
 
   put<T>(path: string, body?: unknown) {

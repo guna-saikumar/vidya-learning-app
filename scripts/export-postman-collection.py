@@ -52,7 +52,15 @@ def req_to_item(data: dict) -> dict:
     ]
     body = None
     b = data.get("body")
-    if b and b.get("content") is not None:
+    if b and b.get("type") == "form-data":
+        body = {
+            "mode": "formdata",
+            "formdata": [
+                {"key": f.get("key"), "type": f.get("type", "text"), "src" if f.get("type") == "file" else "value": f.get("value", "")}
+                for f in (b.get("content") or [])
+            ],
+        }
+    elif b and b.get("content") is not None:
         body = {
             "mode": "raw",
             "raw": b["content"],

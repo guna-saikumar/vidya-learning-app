@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/notifications/:id"
+description: "Notification detail."
+url: "{{baseUrl}}/api/v1/notifications/{{notificationId}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 2000

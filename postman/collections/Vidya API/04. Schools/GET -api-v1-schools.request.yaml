@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/schools"
+description: "Search schools (`q`, `district`, `limit`)."
+url: "{{baseUrl}}/api/v1/schools?q=zphs&district=&limit=20"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 1000

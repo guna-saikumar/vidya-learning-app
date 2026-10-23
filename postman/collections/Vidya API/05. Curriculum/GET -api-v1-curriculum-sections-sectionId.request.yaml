@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/curriculum/sections/:sectionId"
+description: "Section reading content."
+url: "{{baseUrl}}/api/v1/curriculum/sections/{{sectionId}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 5000

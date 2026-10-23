@@ -9,7 +9,7 @@ export type SendMailOpts = {
 };
 
 /**
- * Nodemailer mailer — kept for future admin/notifications.
+ * Nodemailer mailer — currently unused by the student API (reserved for future notifications).
  * Student auth does not send OTP emails (no self-register / forgot-password).
  */
 @Injectable()

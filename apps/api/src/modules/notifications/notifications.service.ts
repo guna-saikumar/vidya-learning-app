@@ -21,15 +21,14 @@ const NOTIFICATION_COLUMNS = `"id", "title", "message", "detailedBody", "type", 
 export const toNotificationDto = (n: NotificationRow) => ({
   id: n.id,
   title: n.title,
-  message: n.message,
+  body: n.message,
   detailedBody: n.detailedBody,
   type: n.type,
+  isRead: n.readAt !== null,
+  createdAt: n.createdAt.toISOString(),
   icon: n.icon,
-  read: n.readAt !== null,
-  readAt: n.readAt?.toISOString() ?? null,
   actionRoute: n.actionRoute,
   actionLabel: n.actionLabel,
-  createdAt: n.createdAt.toISOString(),
 });
 
 @Injectable()
@@ -44,43 +43,36 @@ export class NotificationsService {
           ? `AND "readAt" IS NULL`
           : `AND "readAt" IS NOT NULL`;
 
-    const [rows, unread] = await Promise.all([
-      this.db.query<NotificationRow>(
-        `SELECT ${NOTIFICATION_COLUMNS} FROM "Notification"
-          WHERE "userId" = $1 ${readClause}
-          ORDER BY "createdAt" DESC`,
-        [userId]
-      ),
-      this.db.queryOne<{ count: number }>(
-        `SELECT COUNT(*)::int AS "count" FROM "Notification"
-          WHERE "userId" = $1 AND "readAt" IS NULL`,
-        [userId]
-      ),
-    ]);
-    return {
-      items: rows.rows.map(toNotificationDto),
-      unreadCount: unread?.count ?? 0,
-    };
+    const { rows } = await this.db.query<NotificationRow>(
+      `SELECT ${NOTIFICATION_COLUMNS} FROM "Notification"
+        WHERE "userId" = $1 ${readClause}
+        ORDER BY "createdAt" DESC, "id" ASC`,
+      [userId]
+    );
+    return rows.map(toNotificationDto);
   }
 
-  async markRead(userId: string, id: string) {
-    const existing = await this.db.queryOne<NotificationRow>(
+  async getMine(userId: string, id: string) {
+    const row = await this.db.queryOne<NotificationRow>(
       `SELECT ${NOTIFICATION_COLUMNS} FROM "Notification"
         WHERE "id" = $1 AND "userId" = $2`,
       [id, userId]
     );
-    if (!existing) {
+    if (!row) throw new NotFoundException({ error: "Notification not found" });
+    return toNotificationDto(row);
+  }
+
+  async markRead(userId: string, id: string) {
+    const { rowCount } = await this.db.query(
+      `UPDATE "Notification"
+          SET "readAt" = COALESCE("readAt", ${SQL_NOW_UTC})
+        WHERE "id" = $1 AND "userId" = $2`,
+      [id, userId]
+    );
+    if (rowCount === 0) {
       throw new NotFoundException({ error: "Notification not found" });
     }
-    if (existing.readAt) return toNotificationDto(existing);
-
-    const row = await this.db.queryOne<NotificationRow>(
-      `UPDATE "Notification" SET "readAt" = ${SQL_NOW_UTC}
-        WHERE "id" = $1
-        RETURNING ${NOTIFICATION_COLUMNS}`,
-      [id]
-    );
-    return toNotificationDto(row ?? existing);
+    return { success: true };
   }
 
   async markAllRead(userId: string) {
@@ -89,6 +81,6 @@ export class NotificationsService {
         WHERE "userId" = $1 AND "readAt" IS NULL`,
       [userId]
     );
-    return { updated: rowCount };
+    return { success: true, markedCount: rowCount };
   }
 }

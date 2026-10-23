@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Vidya API",
-    "description": "# Vidya API (student)\n\nLocal: `http://localhost:4000` or your LAN IP from `npm start`\nSame Wi‑Fi teammates: use the printed LAN API URL.\n\n## Setup\n1. Set `studentPassword` from seed (`StudentDemo1!`) — **do not commit secrets**.\n2. Run **Student Auth → login** — token auto-saves.\n3. Student domains: Health, Auth, Curriculum, Materials, Dashboard, Learning, Quizzes, Tasks, Notifications, Exams.\n4. After editing YAML, run `npm run postman:export`.\n\n## Docs\n- Swagger UI: `{{baseUrl}}/docs`\n- OpenAPI JSON: `{{baseUrl}}/docs-json`",
+    "description": "# Vidya API (student, `/api/v1`)\n\nLocal: `http://localhost:4000` or your LAN IP from `npm start`.\n\n## Setup\n1. Set `studentPassword` from the seed (`StudentDemo1!`) — **do not commit secrets**.\n2. Run **Auth → login** — `studentToken` / `refreshToken` auto-save.\n3. Set `chapterId`, `sectionId`, `classId`, `subjectId`, `schoolId`, `notificationId` from list responses\n   (seed examples below).\n4. After editing YAML, run `npm run postman:export`.\n\n## Surface\nHealth, Auth, Students (onboarding, profile, avatar, settings, progress, bookmarks),\nSchools, Curriculum, Notifications.\n\n## Docs\n- Swagger UI: `{{baseUrl}}/docs`\n- OpenAPI JSON: `{{baseUrl}}/docs-json`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -23,7 +23,35 @@
       "value": ""
     },
     {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
       "key": "studentUserId",
+      "value": ""
+    },
+    {
+      "key": "classId",
+      "value": "class-8"
+    },
+    {
+      "key": "subjectId",
+      "value": "c8-telugu"
+    },
+    {
+      "key": "chapterId",
+      "value": "c8-tel-ch1"
+    },
+    {
+      "key": "sectionId",
+      "value": "c8-tel-ch1-s1"
+    },
+    {
+      "key": "schoolId",
+      "value": "school-vzg-001"
+    },
+    {
+      "key": "notificationId",
       "value": ""
     },
     {
@@ -111,10 +139,10 @@
       ]
     },
     {
-      "name": "02. Student Auth",
+      "name": "02. Auth",
       "item": [
         {
-          "name": "POST /api/auth/login",
+          "name": "POST /api/v1/auth/login",
           "request": {
             "method": "POST",
             "header": [
@@ -124,17 +152,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
+              "raw": "{{baseUrl}}/api/v1/auth/login",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "v1",
                 "auth",
                 "login"
               ]
             },
-            "description": "Student login. Saves `studentToken`.",
+            "description": "Student login. Saves `studentToken` and `refreshToken`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}",
@@ -145,7 +174,7 @@
               }
             }
           },
-          "description": "Student login. Saves `studentToken`.",
+          "description": "Student login. Saves `studentToken` and `refreshToken`.",
           "event": [
             {
               "listen": "test",
@@ -155,6 +184,8 @@
                   "if (pm.response.code === 200) {",
                   "  const json = pm.response.json();",
                   "  if (json.accessToken) pm.collectionVariables.set('studentToken', json.accessToken);",
+                  "  if (json.refreshToken) pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "  if (json.user) pm.collectionVariables.set('studentUserId', json.user.id);",
                   "}"
                 ]
               }
@@ -162,280 +193,9 @@
           ]
         },
         {
-          "name": "GET /api/auth/me",
+          "name": "POST /api/v1/auth/refresh",
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "me"
-              ]
-            },
-            "description": "Current student profile.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "description": "Current student profile."
-        }
-      ]
-    },
-    {
-      "name": "04. Curriculum",
-      "item": [
-        {
-          "name": "GET /api/classes",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/classes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "classes"
-              ]
-            },
-            "description": "List classes + curriculum stats (public)."
-          },
-          "description": "List classes + curriculum stats (public)."
-        },
-        {
-          "name": "GET /api/classes/:classId",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/classes/class-8",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "classes",
-                "class-8"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET /api/subjects/:subjectId",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/subjects/c8-maths",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "subjects",
-                "c8-maths"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET /api/chapters/:chapterId",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/chapters/c8-m-ch1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "chapters",
-                "c8-m-ch1"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET /api/sections/:sectionId",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/sections/c8-m-ch1-s1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "sections",
-                "c8-m-ch1-s1"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "05. Materials",
-      "item": [
-        {
-          "name": "GET /api/materials",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/materials?classId=class-8",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "materials"
-              ],
-              "query": [
-                {
-                  "key": "classId",
-                  "value": "class-8"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "06. Dashboards",
-      "item": [
-        {
-          "name": "GET /api/dashboard",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/dashboard",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "dashboard"
-              ]
-            },
-            "description": "Student home: identity + curriculum overview.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "description": "Student home: identity + curriculum overview."
-        }
-      ]
-    },
-    {
-      "name": "07. Learning",
-      "item": [
-        {
-          "name": "GET /api/me/profile",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/me/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me",
-                "profile"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "PATCH /api/me/profile",
-          "request": {
-            "method": "PATCH",
+            "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
@@ -443,53 +203,98 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/me/profile",
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "me",
-                "profile"
+                "v1",
+                "auth",
+                "refresh"
               ]
             },
+            "description": "Rotate the refresh token (the old one is revoked). Saves both tokens.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"activeClassId\": \"class-8\",\n  \"studyGoalMinutes\": 45\n}",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
             }
-          }
+          },
+          "description": "Rotate the refresh token (the old one is revoked). Saves both tokens.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.accessToken) pm.collectionVariables.set('studentToken', json.accessToken);",
+                  "  if (json.refreshToken) pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "GET /api/me/progress",
+          "name": "POST /api/v1/auth/logout",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/me/progress",
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "me",
-                "progress"
+                "v1",
+                "auth",
+                "logout"
               ]
             },
+            "description": "Revoke the refresh token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Revoke the refresh token."
+        },
+        {
+          "name": "GET /api/v1/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Session check: `{ user: { id, email }, isOnboarded }`.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -500,10 +305,48 @@
                 }
               ]
             }
-          }
+          },
+          "description": "Session check: `{ user: { id, email }, isOnboarded }`."
+        }
+      ]
+    },
+    {
+      "name": "03. Students",
+      "item": [
+        {
+          "name": "GET /api/v1/students/me/profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "profile"
+              ]
+            },
+            "description": "Full student profile.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Full student profile."
         },
         {
-          "name": "PUT /api/me/progress/chapters/:chapterId",
+          "name": "PUT /api/v1/students/me/onboarding",
           "request": {
             "method": "PUT",
             "header": [
@@ -513,21 +356,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/me/progress/chapters/c8-m-ch1",
+              "raw": "{{baseUrl}}/api/v1/students/me/onboarding",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "v1",
+                "students",
                 "me",
-                "progress",
-                "chapters",
-                "c8-m-ch1"
+                "onboarding"
               ]
             },
+            "description": "Submit the 4-step onboarding wizard.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"completedSections\": [\"c8-m-ch1-s1\"],\n  \"progressPercent\": 25,\n  \"studyMinutes\": 10\n}",
+              "raw": "{\n  \"firstName\": \"Meera\",\n  \"lastName\": \"Iyer\",\n  \"gender\": \"FEMALE\",\n  \"dob\": \"2014-05-12\",\n  \"aadharNumber\": \"123456789012\",\n  \"bloodGroup\": \"O+\",\n  \"casteCategory\": \"BC\",\n  \"doorNo\": \"4-5\",\n  \"street\": \"Main Street\",\n  \"villageCity\": \"Tirupati\",\n  \"mandal\": \"Tirupati Rural\",\n  \"district\": \"Tirupati\",\n  \"state\": \"Andhra Pradesh\",\n  \"pincode\": \"517502\",\n  \"schoolId\": \"school-ctr-001\",\n  \"schoolName\": \"ZPHS Tirupati Rural\",\n  \"schoolCode\": \"28220100606\",\n  \"classId\": \"class-7\",\n  \"grade\": \"7\",\n  \"section\": \"B\",\n  \"medium\": \"TELUGU\",\n  \"rollNumber\": \"12\",\n  \"admissionNumber\": \"ADM-2026-0077\",\n  \"fatherName\": \"R Iyer\",\n  \"motherName\": \"S Iyer\",\n  \"parentPhone\": \"9876543210\",\n  \"guardianPhone\": \"9876543211\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -544,12 +388,13 @@
                 }
               ]
             }
-          }
+          },
+          "description": "Submit the 4-step onboarding wizard."
         },
         {
-          "name": "POST /api/me/progress/sections/:sectionId/complete",
+          "name": "PATCH /api/v1/students/me/profile",
           "request": {
-            "method": "POST",
+            "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",
@@ -557,22 +402,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/me/progress/sections/c8-m-ch1-s1/complete",
+              "raw": "{{baseUrl}}/api/v1/students/me/profile",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "v1",
+                "students",
                 "me",
-                "progress",
-                "sections",
-                "c8-m-ch1-s1",
-                "complete"
+                "profile"
               ]
             },
+            "description": "Partial profile update.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"minutes\": 5\n}",
+              "raw": "{\n  \"section\": \"A\",\n  \"guardianPhone\": \"9000000000\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -589,65 +434,83 @@
                 }
               ]
             }
-          }
+          },
+          "description": "Partial profile update."
         },
         {
-          "name": "GET /api/me/bookmarks",
+          "name": "PATCH /api/v1/students/me/settings",
           "request": {
-            "method": "GET",
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "settings"
+              ]
+            },
+            "description": "Language (`en`|`te`) and notifications toggle.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"te\",\n  \"notificationsEnabled\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Language (`en`|`te`) and notifications toggle."
+        },
+        {
+          "name": "POST /api/v1/students/me/avatar",
+          "request": {
+            "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/me/bookmarks",
+              "raw": "{{baseUrl}}/api/v1/students/me/avatar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "v1",
+                "students",
                 "me",
-                "bookmarks"
+                "avatar"
               ]
             },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "POST /api/me/bookmarks",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/me/bookmarks",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me",
-                "bookmarks"
-              ]
-            },
+            "description": "Upload profile photo (multipart, field `file`, JPEG/PNG/WebP/GIF, max 5 MB).",
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"classId\": \"class-8\",\n  \"subjectId\": \"c8-maths\",\n  \"chapterId\": \"c8-m-ch1\",\n  \"title\": \"Rational Numbers\",\n  \"subtitle\": \"Mathematics\",\n  \"type\": \"chapter\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
                 }
-              }
+              ]
             },
             "auth": {
               "type": "bearer",
@@ -659,26 +522,232 @@
                 }
               ]
             }
-          }
+          },
+          "description": "Upload profile photo (multipart, field `file`, JPEG/PNG/WebP/GIF, max 5 MB)."
         },
         {
-          "name": "DELETE /api/me/bookmarks/:id",
+          "name": "DELETE /api/v1/students/me/avatar",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/me/bookmarks/{{bookmarkId}}",
+              "raw": "{{baseUrl}}/api/v1/students/me/avatar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "v1",
+                "students",
+                "me",
+                "avatar"
+              ]
+            },
+            "description": "Remove profile photo.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Remove profile photo."
+        },
+        {
+          "name": "GET /api/v1/students/me/progress",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "progress"
+              ]
+            },
+            "description": "`{ overallPercent, chapters: { [chapterId]: {...} } }`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "`{ overallPercent, chapters: { [chapterId]: {...} } }`."
+        },
+        {
+          "name": "PUT /api/v1/students/me/progress/:chapterId",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/progress/{{chapterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "progress",
+                "{{chapterId}}"
+              ]
+            },
+            "description": "Update chapter reading % / completion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"progressPercent\": 60,\n  \"completed\": false,\n  \"sectionId\": \"{{sectionId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Update chapter reading % / completion."
+        },
+        {
+          "name": "GET /api/v1/students/me/bookmarks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "bookmarks"
+              ]
+            },
+            "description": "List bookmarks.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "List bookmarks."
+        },
+        {
+          "name": "POST /api/v1/students/me/bookmarks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "bookmarks"
+              ]
+            },
+            "description": "Bookmark a chapter or section. Saves `bookmarkId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chapterId\": \"{{chapterId}}\",\n  \"sectionId\": \"{{sectionId}}\",\n  \"previewText\": \"Key idea…\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Bookmark a chapter or section. Saves `bookmarkId`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.bookmark && json.bookmark.id) pm.collectionVariables.set('bookmarkId', json.bookmark.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/v1/students/me/bookmarks/:bookmarkId",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks/{{bookmarkId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
                 "me",
                 "bookmarks",
                 "{{bookmarkId}}"
               ]
             },
-            "description": "Remove bookmark",
+            "description": "Remove bookmark by id.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -690,30 +759,78 @@
               ]
             }
           },
-          "description": "Remove bookmark"
+          "description": "Remove bookmark by id."
         },
         {
-          "name": "GET /api/me/study-stats",
+          "name": "DELETE /api/v1/students/me/bookmarks/by-section/:sectionId",
           "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/me/study-stats?range=7d",
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks/by-section/{{sectionId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
+                "v1",
+                "students",
                 "me",
-                "study-stats"
+                "bookmarks",
+                "by-section",
+                "{{sectionId}}"
+              ]
+            },
+            "description": "Remove bookmark(s) by section id.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Remove bookmark(s) by section id."
+        }
+      ]
+    },
+    {
+      "name": "04. Schools",
+      "item": [
+        {
+          "name": "GET /api/v1/schools",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools?q=zphs&district=&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools"
               ],
               "query": [
                 {
-                  "key": "range",
-                  "value": "7d"
+                  "key": "q",
+                  "value": "zphs"
+                },
+                {
+                  "key": "district",
+                  "value": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
                 }
               ]
             },
+            "description": "Search schools (`q`, `district`, `limit`).",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -724,34 +841,63 @@
                 }
               ]
             }
-          }
+          },
+          "description": "Search schools (`q`, `district`, `limit`)."
+        },
+        {
+          "name": "GET /api/v1/schools/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}"
+              ]
+            },
+            "description": "School detail.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "School detail."
         }
       ]
     },
     {
-      "name": "08. Quizzes",
+      "name": "05. Curriculum",
       "item": [
         {
-          "name": "GET /api/quizzes",
+          "name": "GET /api/v1/curriculum/classes",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/quizzes?chapterId=c8-m-ch1",
+              "raw": "{{baseUrl}}/api/v1/curriculum/classes",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "quizzes"
-              ],
-              "query": [
-                {
-                  "key": "chapterId",
-                  "value": "c8-m-ch1"
-                }
+                "v1",
+                "curriculum",
+                "classes"
               ]
             },
+            "description": "List classes.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -762,24 +908,29 @@
                 }
               ]
             }
-          }
+          },
+          "description": "List classes."
         },
         {
-          "name": "GET /api/quizzes/:id",
+          "name": "GET /api/v1/curriculum/classes/:classId/subjects",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/quizzes/quiz-c8-m-ch1",
+              "raw": "{{baseUrl}}/api/v1/curriculum/classes/{{classId}}/subjects",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "quizzes",
-                "quiz-c8-m-ch1"
+                "v1",
+                "curriculum",
+                "classes",
+                "{{classId}}",
+                "subjects"
               ]
             },
+            "description": "Subjects for a class.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -790,67 +941,28 @@
                 }
               ]
             }
-          }
+          },
+          "description": "Subjects for a class."
         },
         {
-          "name": "POST /api/quizzes/:id/attempts",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/quizzes/quiz-c8-m-ch1/attempts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "quizzes",
-                "quiz-c8-m-ch1",
-                "attempts"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"answers\": [2, 1, 1]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET /api/me/quiz-attempts",
+          "name": "GET /api/v1/curriculum/subjects/:subjectId",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/me/quiz-attempts",
+              "raw": "{{baseUrl}}/api/v1/curriculum/subjects/{{subjectId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "me",
-                "quiz-attempts"
+                "v1",
+                "curriculum",
+                "subjects",
+                "{{subjectId}}"
               ]
             },
+            "description": "Subject with chapter index.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -861,136 +973,95 @@
                 }
               ]
             }
-          }
+          },
+          "description": "Subject with chapter index."
+        },
+        {
+          "name": "GET /api/v1/curriculum/chapters/:chapterId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/curriculum/chapters/{{chapterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "curriculum",
+                "chapters",
+                "{{chapterId}}"
+              ]
+            },
+            "description": "Chapter with sections and `pdfUrl`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Chapter with sections and `pdfUrl`."
+        },
+        {
+          "name": "GET /api/v1/curriculum/sections/:sectionId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/curriculum/sections/{{sectionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "curriculum",
+                "sections",
+                "{{sectionId}}"
+              ]
+            },
+            "description": "Section reading content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Section reading content."
         }
       ]
     },
     {
-      "name": "09. Tasks",
+      "name": "06. Notifications",
       "item": [
         {
-          "name": "GET /api/me/tasks",
+          "name": "GET /api/v1/notifications",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/me/tasks",
+              "raw": "{{baseUrl}}/api/v1/notifications",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "me",
-                "tasks"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "PATCH /api/me/tasks/:id",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/me/tasks/task-quiz-1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me",
-                "tasks",
-                "task-quiz-1"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"in-progress\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "10. Notifications",
-      "item": [
-        {
-          "name": "GET /api/me/notifications",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/me/notifications",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me",
+                "v1",
                 "notifications"
               ]
             },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "PATCH /api/me/notifications/:id/read",
-          "request": {
-            "method": "PATCH",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/me/notifications/notif-1/read",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me",
-                "notifications",
-                "notif-1",
-                "read"
-              ]
-            },
-            "description": "Mark notification read",
+            "description": "List notifications (`?unread=true` optional).",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1002,25 +1073,89 @@
               ]
             }
           },
-          "description": "Mark notification read"
+          "description": "List notifications (`?unread=true` optional)."
         },
         {
-          "name": "POST /api/me/notifications/read-all",
+          "name": "GET /api/v1/notifications/:id",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/me/notifications/read-all",
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "me",
+                "v1",
+                "notifications",
+                "{{notificationId}}"
+              ]
+            },
+            "description": "Notification detail.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Notification detail."
+        },
+        {
+          "name": "PATCH /api/v1/notifications/:id/read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            },
+            "description": "Mark as read.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Mark as read."
+        },
+        {
+          "name": "POST /api/v1/notifications/read-all",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
                 "notifications",
                 "read-all"
               ]
             },
+            "description": "Mark all as read.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1031,70 +1166,8 @@
                 }
               ]
             }
-          }
-        }
-      ]
-    },
-    {
-      "name": "11. Exams",
-      "item": [
-        {
-          "name": "GET /api/me/exams/schedule",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/me/exams/schedule",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me",
-                "exams",
-                "schedule"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET /api/me/exams/results",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/me/exams/results",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me",
-                "exams",
-                "results"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{studentToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          }
+          },
+          "description": "Mark all as read."
         }
       ]
     }

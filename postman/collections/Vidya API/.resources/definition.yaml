@@ -1,15 +1,19 @@
 $kind: collection
 description: |-
-  # Vidya API (student)
+  # Vidya API (student, `/api/v1`)
 
-  Local: `http://localhost:4000` or your LAN IP from `npm start`
-  Same Wi‑Fi teammates: use the printed LAN API URL.
+  Local: `http://localhost:4000` or your LAN IP from `npm start`.
 
   ## Setup
-  1. Set `studentPassword` from seed (`StudentDemo1!`) — **do not commit secrets**.
-  2. Run **Student Auth → login** — token auto-saves.
-  3. Student domains: Health, Auth, Curriculum, Materials, Dashboard, Learning, Quizzes, Tasks, Notifications, Exams.
+  1. Set `studentPassword` from the seed (`StudentDemo1!`) — **do not commit secrets**.
+  2. Run **Auth → login** — `studentToken` / `refreshToken` auto-save.
+  3. Set `chapterId`, `sectionId`, `classId`, `subjectId`, `schoolId`, `notificationId` from list responses
+     (seed examples below).
   4. After editing YAML, run `npm run postman:export`.
+
+  ## Surface
+  Health, Auth, Students (onboarding, profile, avatar, settings, progress, bookmarks),
+  Schools, Curriculum, Notifications.
 
   ## Docs
   - Swagger UI: `{{baseUrl}}/docs`
@@ -19,5 +23,12 @@ variables:
   studentEmail: student@vidya.test
   studentPassword: ""
   studentToken: ""
+  refreshToken: ""
   studentUserId: ""
+  classId: class-8
+  subjectId: c8-telugu
+  chapterId: c8-tel-ch1
+  sectionId: c8-tel-ch1-s1
+  schoolId: school-vzg-001
+  notificationId: ""
   bookmarkId: ""

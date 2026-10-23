@@ -1,6 +1,0 @@
-$kind: http-request
-name: GET /api/classes
-description: List classes + curriculum stats (public).
-url: "{{baseUrl}}/api/classes"
-method: GET
-order: 1000
