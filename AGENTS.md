@@ -30,7 +30,7 @@ Run lint and typecheck before declaring any task done.
 - Backend uses **NestJS v11** with `@nestjs/platform-fastify` and `fastify` v5.
 - Backend data/auth/docs stack is PostgreSQL with **raw `pg` SQL** (no ORM), Zod, JWT, CORS, Swagger/OpenAPI, and bcrypt.
 - Student-only product surface (no admin app / admin API routes).
-- Local default: `npm start` (Postgres LAN + migrate/seed + **pgweb** + API + student Expo). CLI: `npm run db:psql`.
+- Local default: `npm start` → `node scripts/start.mjs` (cross-platform macOS/Linux/Windows, **native Postgres**, no Docker). Starts migrate/seed + pgweb + API + student Expo. CLI: `npm run db:psql`.
 - Do not reintroduce Prisma, Prisma Studio, or another ORM unless the architecture is intentionally changed.
 - See `docs/tech-stack.md` for the full project stack.
 
@@ -42,9 +42,9 @@ Run lint and typecheck before declaring any task done.
 
 ## Local Development
 
-- Default: `npm start` — Postgres (LAN), SQL migrate/seed, pgweb `:8083`, Nest API `:4000`, student Expo `--lan`.
+- Default: `npm start` — native Postgres (LAN), SQL migrate/seed, pgweb `:8083`, Nest API `:4000`, student Expo `--lan`. Same command on Windows, Linux, and macOS.
 - Database CLI: `npm run db:psql`. DB web UI: pgweb (not Prisma Studio).
-- Docker Compose remains available under `pnpm docker:up` but is not the default.
+- Docker Compose (`pnpm docker:up`) is optional and not used by `npm start`.
 - Do not add deployment scripts or deployment platform config until deployment is explicitly reintroduced.
 
 ## Rules

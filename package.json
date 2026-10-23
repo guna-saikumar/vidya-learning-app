@@ -3,8 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "start": "bash scripts/local.sh",
-    "db:psql": "bash scripts/db-psql.sh",
+    "start": "node scripts/start.mjs",
+    "db:psql": "node scripts/db-psql.mjs",
     "db:migrate": "pnpm --dir packages/db migrate",
     "db:seed": "pnpm --dir packages/db seed",
     "postman:export": "python3 scripts/export-postman-collection.py",
