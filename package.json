@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node scripts/start.mjs",
+    "start:app": "node scripts/start.mjs --app",
     "db:psql": "node scripts/db-psql.mjs",
     "db:migrate": "pnpm --dir packages/db migrate",
     "db:seed": "pnpm --dir packages/db seed",

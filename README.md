@@ -26,10 +26,11 @@ Expo + React Native · NestJS on Fastify · Postgres + raw SQL (`pg`) · pnpm wo
 Works on **macOS, Linux, and Windows** (Node 22.12+, pnpm 8, native PostgreSQL — no Docker).
 
 ```bash
-npm start
+npm start              # full stack: Postgres + migrate/seed + API + Expo + pgweb
+npm run start:app      # student Expo only (uses API URL from existing .env)
 ```
 
-That auto-detects your Wi‑Fi IP, runs migrate + seed (with status steps), writes `.env` + `apps/student-mobile/.env` / `.env.local`, and prints a URL board (LAN IP + localhost) for App / API / Docs / Database / DB UI. The Expo terminal stays interactive (QR + `i` / `a` / `w` / `r`).
+`npm start` auto-detects your Wi‑Fi IP, runs migrate + seed (with status steps), writes `.env` + `apps/student-mobile/.env` / `.env.local`, and prints a URL board (LAN IP + localhost) for App / API / Docs / Database / DB UI. The Expo terminal stays interactive (QR + `i` / `a` / `w` / `r`).
 
 **Postgres (one-time):**
 - macOS: `brew install postgresql@17` (also auto-installed by `npm start` when Homebrew is present)
