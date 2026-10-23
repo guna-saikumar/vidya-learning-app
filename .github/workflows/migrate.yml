@@ -1,17 +1,15 @@
 name: Database migrate
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: neon-migrate-main
+  group: sql-migrate
   cancel-in-progress: false
 
 jobs:
   migrate:
-    name: prisma migrate deploy
+    name: sql migrate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,14 +25,7 @@ jobs:
         with:
           run_install: true
 
-      - name: Generate Prisma client
-        run: pnpm --dir packages/db exec prisma generate
+      - name: Apply SQL migrations
+        run: pnpm --dir packages/db migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-
-      - name: Apply migrations
-        run: pnpm --dir packages/db exec prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}

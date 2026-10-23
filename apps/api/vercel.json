@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nestjs",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile --config.production=false",
-  "buildCommand": "cd ../.. && pnpm --dir packages/db exec prisma generate",
+  "buildCommand": "cd ../.. && pnpm --dir apps/api build",
   "regions": ["iad1"]
 }

@@ -6,7 +6,8 @@ learning platform monorepo: an expo student app, an expo admin app and a nestjs 
 
 - student app: classes and learning content
 - admin app: stats and approvals
-- api: jwt auth, zod validation, prisma, swagger at `/docs`
+- api: jwt auth, zod validation, raw `pg` sql, swagger at `/docs`
+- admin api: get-only static fixtures (+ static demo login)
 - shared packages for auth, api client, curriculum, design tokens and ui
 
 | path | what it is |
@@ -14,33 +15,30 @@ learning platform monorepo: an expo student app, an expo admin app and a nestjs 
 | `apps/student-mobile` | expo student app |
 | `apps/admin-mobile` | expo admin shell |
 | `apps/api` | nestjs 11 + fastify 5 api |
-| `packages/db` | prisma schema, migrations, seed |
+| `packages/db` | sql migrations + seed (`pg`) |
 | `packages/auth`, `api-client`, `curriculum`, `design-tokens`, `ui`, `config` | shared code |
 
 more: [docs/architecture.md](docs/architecture.md), [docs/tech-stack.md](docs/tech-stack.md), [docs/repo-structure.md](docs/repo-structure.md)
 
 ## stack
 
-expo + react native · nestjs on fastify · prisma · postgres · pnpm workspaces + turbo · docker
+expo + react native · nestjs on fastify · postgres + raw sql (`pg`) · pnpm workspaces + turbo
 
 ## run locally
 
-needs node 22.12+, pnpm 8 and docker (colima or docker desktop).
+needs node 22.12+, pnpm 8, and homebrew postgres (installed by the start script on macOS).
 
 ```bash
-pnpm start          # postgres, api, both expo web apps, mailhog
-pnpm docker:logs    # follow logs
-pnpm docker:down    # stop
+npm start           # postgres + migrate + seed + api (foreground)
+npm run db:psql     # interactive psql (no gui)
 ```
 
 | service | url |
 |---|---|
 | api / swagger | http://localhost:4000, http://localhost:4000/docs |
-| student web | http://localhost:8081 |
-| admin web | http://localhost:8082 |
-| mailhog | http://localhost:8025 |
 
-seeded logins: `student@vidya.test` / `StudentDemo1!`, `admin@example.com` / `AdminDemo1!`. on a phone with expo go, the api url is your machine's lan ip (`VIDYA_DEV_HOST`), not `localhost`.
+seeded student: `student@vidya.test` / `StudentDemo1!`.  
+static admin login: `admin@vidya.edu.in` / `AdminDemo1!` (admin gets return fixtures, not db).
 
 tests:
 
@@ -72,8 +70,6 @@ local benchmark, single run on one machine: 8 vCPU Intel Xeon, 16 GB RAM, Linux 
 
 - thin test coverage: one api e2e file (admin rbac) plus unit tests in `packages/auth`, `packages/api-client` and the student app.
 - `pnpm audit` reports 11 high, 14 moderate and 1 low advisories (19 oct 2026).
-- prisma warns that `package.json#prisma` config is deprecated ahead of prisma 7.
-
 ## license
 
 [mit](LICENSE)

@@ -2,9 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 /**
- * Resolve monorepo-root env files so Nest can run from apps/api.
- * Order: `.env` (local Docker) then `.env.local` (neon deploy).
- * First defined value wins, so local Docker wins over Neon when both exist.
+ * Resolve monorepo-root `.env` so Nest can run from apps/api.
+ * Local-only: prefer root `.env` (created by `npm start` / scripts/local.sh).
  */
 export function rootEnvFilePaths(): string[] {
   const root = resolve(process.cwd(), "../..");
@@ -38,19 +37,5 @@ function loadEnvFile(path: string): void {
 export function loadRootEnv(): void {
   for (const path of rootEnvFilePaths()) {
     loadEnvFile(path);
-  }
-}
-
-/** Map Neon CLI vars onto Prisma's DIRECT_URL when needed. */
-export function applyDatabaseEnvAliases(): void {
-  if (!process.env.DIRECT_URL && process.env.DATABASE_URL_UNPOOLED) {
-    process.env.DIRECT_URL = process.env.DATABASE_URL_UNPOOLED;
-  }
-  if (!process.env.DATABASE_URL_UNPOOLED && process.env.DIRECT_URL) {
-    process.env.DATABASE_URL_UNPOOLED = process.env.DIRECT_URL;
-  }
-  // Local Docker: same URL for pooled + direct
-  if (!process.env.DIRECT_URL && process.env.DATABASE_URL) {
-    process.env.DIRECT_URL = process.env.DATABASE_URL;
   }
 }

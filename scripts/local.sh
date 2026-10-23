@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Local Postgres (Homebrew, no Docker) + open pgAdmin 4 with Vidya credentials.
+# Local stack: Homebrew Postgres + SQL migrate/seed + Nest API (psql CLI only).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OS="$(uname -s)"
-# Keep installs predictable / fast (no brew self-update mid-script).
 export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_ENV_HINTS=1
 PG_VERSION="${VIDYA_PG_VERSION:-17}"
@@ -13,7 +12,7 @@ PG_PASSWORD="vidya"
 PG_DB="vidya"
 PG_HOST="localhost"
 PG_PORT="5432"
-SERVERS_JSON="${ROOT}/scripts/pgadmin-vidya-local.json"
+DB_URL="postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
@@ -22,7 +21,7 @@ ensure_homebrew() {
     return 0
   fi
   if [[ "${OS}" != "Darwin" ]]; then
-    echo "Homebrew is required on this OS path, or install PostgreSQL ${PG_VERSION} yourself." >&2
+    echo "Homebrew is required on macOS, or install PostgreSQL ${PG_VERSION} yourself." >&2
     exit 1
   fi
   echo "Homebrew not found — installing..."
@@ -51,7 +50,7 @@ ensure_postgres() {
     return 0
   fi
   if [[ "${OS}" != "Darwin" ]] || ! ensure_homebrew; then
-    echo "psql not found. Install PostgreSQL ${PG_VERSION}, then re-run: npm run pg-admin" >&2
+    echo "psql not found. Install PostgreSQL ${PG_VERSION}, then re-run: npm start" >&2
     exit 1
   fi
   echo "Installing postgresql@${PG_VERSION} via Homebrew..."
@@ -73,7 +72,7 @@ start_postgres() {
   if [[ "${OS}" == "Darwin" ]] && have brew; then
     echo "Starting postgresql@${PG_VERSION}..."
     brew services start "postgresql@${PG_VERSION}" >/dev/null
-  elif have pg_ctl; then
+  else
     echo "Postgres is installed but not running. Start it, then re-run." >&2
     exit 1
   fi
@@ -89,7 +88,6 @@ start_postgres() {
   exit 1
 }
 
-# brew Postgres trusts the macOS login user as a local superuser.
 psql_super() {
   local db="$1"
   shift
@@ -121,102 +119,81 @@ ensure_role_and_db() {
 
 ensure_env_file() {
   if [[ ! -f "${ROOT}/.env" ]]; then
-    echo "Creating .env from .env.example..."
-    cp "${ROOT}/.env.example" "${ROOT}/.env"
-  fi
-  # Keep local URLs pointed at Homebrew Postgres (same creds as Docker).
-  if ! grep -q "postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}" "${ROOT}/.env"; then
-    echo "Note: .env DATABASE_URL may not match local Homebrew Postgres (${PG_USER}@${PG_HOST}/${PG_DB})." >&2
-  fi
-}
-
-write_servers_json() {
-  cat > "${SERVERS_JSON}" <<EOF
-{
-  "Servers": {
-    "1": {
-      "Name": "Vidya local",
-      "Group": "Servers",
-      "Host": "${PG_HOST}",
-      "Port": ${PG_PORT},
-      "MaintenanceDB": "${PG_DB}",
-      "Username": "${PG_USER}",
-      "SSLMode": "prefer",
-      "Comment": "Created by npm run pg-admin (Homebrew Postgres, no Docker)"
-    }
-  }
-}
+    if [[ -f "${ROOT}/.env.example" ]]; then
+      echo "Creating .env from .env.example..."
+      cp "${ROOT}/.env.example" "${ROOT}/.env"
+    else
+      cat > "${ROOT}/.env" <<EOF
+DATABASE_URL="${DB_URL}"
+PORT=4000
+JWT_SECRET="dev-only-jwt-secret-change-me"
+NEXT_PUBLIC_API_URL="http://localhost:4000"
+EXPO_PUBLIC_API_URL="http://localhost:4000"
 EOF
-}
-
-open_pgadmin() {
-  if [[ "${OS}" == "Darwin" ]]; then
-    if [[ -d "/Applications/pgAdmin 4.app" ]]; then
-      echo "Opening pgAdmin 4..."
-      open -a "pgAdmin 4"
-      return 0
-    fi
-    if have brew; then
-      echo "pgAdmin 4.app not found — installing via Homebrew cask..."
-      brew install --cask pgadmin4
-      open -a "pgAdmin 4"
-      return 0
     fi
   fi
-  echo "Install pgAdmin 4, then import: ${SERVERS_JSON}" >&2
+  # Force local DB URL for this script's lifecycle (does not rewrite .env).
+  export DATABASE_URL="${DB_URL}"
+  export JWT_SECRET="${JWT_SECRET:-dev-only-jwt-secret-change-me}"
+  # No SMTP → API logs mail to console.
+  unset SMTP_HOST || true
 }
 
-maybe_migrate() {
-  if [[ "${VIDYA_PG_MIGRATE:-1}" != "1" ]]; then
-    return 0
+ensure_node() {
+  if ! have node || ! have pnpm; then
+    if [[ "${OS}" == "Darwin" ]] && ensure_homebrew; then
+      have node || brew install node@22
+      have pnpm || npm install -g pnpm@8.15.8
+    fi
   fi
+  if ! have pnpm; then
+    echo "pnpm is required. Install pnpm 8 and re-run." >&2
+    exit 1
+  fi
+}
+
+migrate_and_seed() {
+  cd "${ROOT}"
   if [[ ! -d "${ROOT}/node_modules" ]]; then
-    echo "Skipping migrate (run pnpm install first)."
-    return 0
+    echo "Installing dependencies..."
+    pnpm install
   fi
-  if [[ ! -d "${ROOT}/packages/db" ]]; then
-    return 0
-  fi
-  echo "Applying Prisma migrations..."
-  (
-    cd "${ROOT}"
-    export DATABASE_URL="postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}?schema=public"
-    export DIRECT_URL="${DATABASE_URL}"
-    pnpm --dir packages/db exec prisma generate >/dev/null
-    pnpm --dir packages/db exec prisma migrate deploy
-  ) || echo "Migrate skipped/failed — DB is up; run prisma migrate when ready." >&2
+  export DATABASE_URL="${DB_URL}"
+  echo "Running SQL migrations..."
+  pnpm --dir packages/db migrate
+  echo "Seeding demo data..."
+  pnpm --dir packages/db seed
+}
+
+start_api() {
+  cd "${ROOT}"
+  export DATABASE_URL="${DB_URL}"
+  export JWT_SECRET="${JWT_SECRET:-dev-only-jwt-secret-change-me}"
+  unset SMTP_HOST || true
+  cat <<EOF
+
+==> Vidya local API
+  Postgres:  ${DB_URL}
+  psql:      npm run db:psql
+  Docs:      http://localhost:4000/docs
+  Health:    http://localhost:4000/health
+
+  Student:   student@vidya.test / StudentDemo1!
+  Admin:     admin@vidya.edu.in / AdminDemo1!  (static GETs)
+
+EOF
+  exec pnpm --dir apps/api dev
 }
 
 main() {
-  echo "==> Vidya local Postgres + pgAdmin (no Docker)"
+  echo "==> Vidya local (Homebrew Postgres + API, no Docker / no pgAdmin GUI)"
   ensure_postgres
   start_postgres
   ensure_role_and_db
   ensure_env_file
-  write_servers_json
-  maybe_migrate
-  open_pgadmin
-
-  local db_url="postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}?schema=public"
-  cat <<EOF
-
-Postgres is running (Homebrew, no Docker)
-  Host:     ${PG_HOST}
-  Port:     ${PG_PORT}
-  Database: ${PG_DB}
-  Username: ${PG_USER}
-  Password: ${PG_PASSWORD}
-
-pgAdmin
-  1. Object → Register → Server…  (or File → Import/Export Servers…)
-  2. Import: ${SERVERS_JSON}
-     — or enter the fields above manually (password: ${PG_PASSWORD})
-
-App .env already uses the same URL as Docker local:
-  ${db_url}
-
-API only:  npm run backend   (Docker)  or  pnpm dev:api  (against this DB)
-EOF
+  ensure_node
+  migrate_and_seed
+  start_api
 }
 
 main "$@"

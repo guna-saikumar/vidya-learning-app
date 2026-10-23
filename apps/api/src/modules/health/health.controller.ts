@@ -5,13 +5,13 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { PrismaService } from "../../prisma/prisma.service";
+import { DbService } from "../../db/db.service";
 
 @ApiTags("health")
 @Controller()
 export class HealthController {
   constructor(
-    @Inject(PrismaService) private readonly prisma: PrismaService
+    @Inject(DbService) private readonly db: DbService
   ) {}
 
   @Get("health")
@@ -24,7 +24,7 @@ export class HealthController {
   @ApiOperation({ summary: "Database connectivity check" })
   async healthDb() {
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.db.query("SELECT 1");
       return {
         status: "ok",
         database: "up",

@@ -7,10 +7,9 @@ import {
 import { AppModule } from "./app.module";
 import { HttpErrorFilter } from "./common/http-exception.filter";
 import { setupApiDocs } from "./docs";
-import { applyDatabaseEnvAliases, loadRootEnv } from "./env";
+import { loadRootEnv } from "./env";
 
 loadRootEnv();
-applyDatabaseEnvAliases();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(

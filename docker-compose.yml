@@ -30,18 +30,12 @@ services:
       target: dev
     container_name: vidya-api
     restart: unless-stopped
-    command: sh -c "pnpm --dir packages/db exec prisma generate && pnpm --dir packages/db exec prisma migrate deploy && pnpm --dir packages/db seed && pnpm dev:api"
+    command: sh -c "pnpm --dir packages/db migrate && pnpm --dir packages/db seed && pnpm dev:api"
     environment:
       NODE_ENV: development
       PORT: 4000
-      DATABASE_URL: postgresql://vidya:vidya@postgres:5432/vidya?schema=public
-      DIRECT_URL: postgresql://vidya:vidya@postgres:5432/vidya?schema=public
+      DATABASE_URL: postgresql://vidya:vidya@postgres:5432/vidya
       JWT_SECRET: dev-only-jwt-secret-change-me
-      SMTP_HOST: mailhog
-      SMTP_PORT: "1025"
-      SMTP_USER: ""
-      SMTP_PASS: ""
-      SMTP_FROM: "Vidya <noreply@vidya.local>"
     ports:
       - "4000:4000"
     volumes:

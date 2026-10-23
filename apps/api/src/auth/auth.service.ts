@@ -1,10 +1,21 @@
 import { HttpException, Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import bcrypt from "bcrypt";
-import { PrismaService } from "../prisma/prisma.service";
+import { DbService } from "../db/db.service";
 import { signAccessToken } from "./jwt";
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+type UserRow = {
+  id: string;
+  email: string;
+  name: string;
+  role: "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+  passwordHash: string;
+  emailVerifiedAt: Date | null;
+};
+
+const USER_COLUMNS = `"id", "email", "name", "role", "passwordHash", "emailVerifiedAt"`;
 
 /**
  * Student auth service — login only.
@@ -15,7 +26,7 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(DbService) private readonly db: DbService,
     @Inject(ConfigService) private readonly config: ConfigService
   ) {}
 
@@ -25,7 +36,10 @@ export class AuthService {
 
   async login(input: { email: string; password: string }) {
     const email = normalizeEmail(input.email);
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.db.queryOne<UserRow>(
+      `SELECT ${USER_COLUMNS} FROM "User" WHERE "email" = $1`,
+      [email]
+    );
     if (!user || user.role !== "STUDENT") {
       // Same message for missing/non-student — avoid account enumeration.
       this.fail("Invalid email or password", 401);
@@ -63,7 +77,10 @@ export class AuthService {
   }
 
   async me(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.db.queryOne<UserRow>(
+      `SELECT ${USER_COLUMNS} FROM "User" WHERE "id" = $1`,
+      [userId]
+    );
     if (!user || user.role !== "STUDENT") {
       this.fail("Unauthorized", 401);
     }

@@ -6,9 +6,9 @@ description: |-
   Local: `http://localhost:4000`
 
   ## Setup
-  1. Set collection vars `adminPassword` / `studentPassword` from seed (`packages/db/prisma/seed.ts`) — **do not commit secrets**.
-  2. Run **Admin Auth → login** (or Student login) — tokens auto-save.
-  3. Use folders 01–11 (Health → Exams) — same domains as `apps/api/src/modules/*`.
+  1. Set collection vars `adminPassword` / `studentPassword` (seed / static admin) — **do not commit secrets**.
+  2. Run **Admin Auth → login** (static) or **Student login** — tokens auto-save.
+  3. Admin folders are GET-only (static fixtures). Student routes hit Postgres.
   4. After editing YAML, run `npm run postman:export` to refresh `postman/Vidya-API.postman_collection.json`.
 
   ## Docs

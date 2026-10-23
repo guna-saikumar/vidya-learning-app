@@ -1,11 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
-import {
-  applyDatabaseEnvAliases,
-  loadRootEnv,
-  rootEnvFilePaths,
-} from "./env";
+import { DbModule } from "./db/db.module";
+import { loadRootEnv, rootEnvFilePaths } from "./env";
 import { MailerModule } from "./mailer/mailer.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { CurriculumModule } from "./modules/curriculum/curriculum.module";
@@ -17,14 +14,12 @@ import { MeModule } from "./modules/me/me.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { QuizzesModule } from "./modules/quizzes/quizzes.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
-import { PrismaModule } from "./prisma/prisma.module";
 
 loadRootEnv();
-applyDatabaseEnvAliases();
 
 /**
  * Root Nest module — feature modules live under `src/modules/*`.
- * Cross-cutting auth/prisma/mailer stay at `src/{auth,prisma,mailer}`.
+ * Cross-cutting auth/db/mailer stay at `src/{auth,db,mailer}`.
  */
 @Module({
   imports: [
@@ -32,7 +27,7 @@ applyDatabaseEnvAliases();
       isGlobal: true,
       envFilePath: rootEnvFilePaths(),
     }),
-    PrismaModule,
+    DbModule,
     MailerModule,
     AuthModule,
     HealthModule,

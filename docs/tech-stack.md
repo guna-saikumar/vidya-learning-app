@@ -22,28 +22,29 @@ This document is the source of truth for implementation tasks across the Vidya m
 - **NestJS v11** as the backend application framework.
 - **Fastify adapter** via `@nestjs/platform-fastify` with `fastify` v5.
 - **PostgreSQL** as the primary relational database.
-- **Prisma** for ORM access, schema modeling, and migrations.
+- **Raw SQL via `pg`** for data access and migrations (no ORM).
 - **Zod** for schema validation where explicit runtime validation is needed.
 - **JWT** for authentication and protected API routes.
 - **CORS** for controlled cross-origin access.
 - **Swagger / OpenAPI** for API documentation.
 - **bcrypt** for password hashing.
-- **Docker Compose** for local development across PostgreSQL, API, and Expo app services.
+- Admin domain APIs are **GET-only with static fixtures** (plus static demo login). Student APIs are DB-backed.
 
 ## Official Docs
 
 - Fastify: https://fastify.dev/
 - NestJS: https://nestjs.com/
 - PostgreSQL: https://www.postgresql.org/
-- Prisma: https://www.prisma.io/
+- node-postgres: https://node-postgres.com/
 - Swagger: https://swagger.io/specification/
 
 ## Local Runtime
 
-Use Docker Compose for local development:
+Default local path (Homebrew Postgres + `psql` CLI, no GUI):
 
 ```bash
-pnpm docker:up
+npm start              # postgres + migrate + seed + API
+npm run db:psql        # interactive psql
 ```
 
 Deployment scripts and deployment platform config are intentionally out of scope for now.
