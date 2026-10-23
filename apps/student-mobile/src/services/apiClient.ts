@@ -56,6 +56,12 @@ axiosInstance.interceptors.request.use(
 // Token refresh on 401 response
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];
+let onAuthCleared: (() => void) | null = null;
+
+/** Wire Redux (or other) logout when refresh clears stored tokens. */
+export function setOnAuthCleared(handler: (() => void) | null): void {
+  onAuthCleared = handler;
+}
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
@@ -112,6 +118,7 @@ axiosInstance.interceptors.response.use(
       } catch (refreshErr) {
         processQueue(refreshErr, null);
         await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, AUTH_USER_KEY]);
+        onAuthCleared?.();
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;

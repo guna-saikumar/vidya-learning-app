@@ -1,4 +1,4 @@
-import { UserProfile } from '../types/curriculum';
+import { BookmarkItem, UserProfile } from '../types/curriculum';
 
 /** Defaults used when API/cache omit fields. */
 export const DEFAULT_USER_PROFILE: UserProfile = {
@@ -95,4 +95,59 @@ export function toApiProfilePatch(
   delete body.avatarUrl;
 
   return body;
+}
+
+/** Convert UI DOB (`DD/MM/YYYY` or `YYYY-MM-DD`) to API `YYYY-MM-DD`, or null if invalid. */
+export function toIsoDateOfBirth(raw: string): string | null {
+  const value = raw.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const d = new Date(`${value}T00:00:00Z`);
+    if (!Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value) {
+      return value;
+    }
+    return null;
+  }
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+  const [, dd, mm, yyyy] = match;
+  const iso = `${yyyy}-${mm}-${dd}`;
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== iso) {
+    return null;
+  }
+  return iso;
+}
+
+/** Map API bookmark DTO onto the mobile `BookmarkItem` shape. */
+export function normalizeBookmark(api: Record<string, unknown>): BookmarkItem {
+  const sectionId =
+    api.sectionId != null && String(api.sectionId).length > 0
+      ? String(api.sectionId)
+      : undefined;
+  const createdRaw = api.dateAdded ?? api.createdAt;
+  let dateAdded = Date.now();
+  if (typeof createdRaw === 'number') {
+    dateAdded = createdRaw;
+  } else if (typeof createdRaw === 'string') {
+    const parsed = Date.parse(createdRaw);
+    if (!Number.isNaN(parsed)) dateAdded = parsed;
+  }
+
+  return {
+    id: String(api.id ?? `bm-${dateAdded}`),
+    chapterId: String(api.chapterId ?? ''),
+    sectionId,
+    subjectId: String(api.subjectId ?? ''),
+    classId: String(api.classId ?? ''),
+    title: String(
+      api.title ?? api.chapterTitle ?? api.previewText ?? 'Bookmark'
+    ),
+    subtitle: String(api.subtitle ?? api.sectionTitle ?? api.subjectName ?? ''),
+    type:
+      (api.type as BookmarkItem['type']) ||
+      (sectionId ? 'section' : 'chapter'),
+    previewText:
+      api.previewText != null ? String(api.previewText) : undefined,
+    dateAdded,
+  };
 }

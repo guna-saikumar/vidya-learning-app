@@ -66,9 +66,17 @@ export const useLearningProgress = () => {
   };
 
   const handleToggleBookmark = async (item: Omit<BookmarkItem, 'id' | 'dateAdded'>) => {
-    const existing = bookmarks.find(
-      (b) => b.chapterId === item.chapterId && (!item.sectionId || b.sectionId === item.sectionId)
-    );
+    const existing = bookmarks.find((b) => {
+      if (item.sectionId) {
+        return b.chapterId === item.chapterId && b.sectionId === item.sectionId;
+      }
+      // Chapter-level toggle must not match section bookmarks on the same chapter.
+      return (
+        b.chapterId === item.chapterId &&
+        !b.sectionId &&
+        (b.type === 'chapter' || !item.type || item.type === 'chapter')
+      );
+    });
 
     if (existing) {
       await dispatch(deleteBookmarkThunk(existing.id));
@@ -79,6 +87,11 @@ export const useLearningProgress = () => {
           chapterId: item.chapterId,
           sectionId: item.sectionId,
           previewText: item.previewText,
+          title: item.title,
+          subtitle: item.subtitle,
+          classId: item.classId,
+          subjectId: item.subjectId,
+          type: item.type || (item.sectionId ? 'section' : 'chapter'),
         })
       );
       return true;

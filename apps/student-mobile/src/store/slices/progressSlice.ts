@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { studentsApi } from '../../services/apiClient';
+import { normalizeBookmark } from '../../services/profileMapper';
 import { BookmarkItem, ChapterProgress } from '../../types/curriculum';
 
 const STORAGE_KEYS = {
@@ -99,14 +100,27 @@ export const fetchBookmarksThunk = createAsyncThunk(
     try {
       const res = await studentsApi.getBookmarks();
       if (Array.isArray(res)) {
-        await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(res));
-        return res;
+        const bookmarks = res.map((row) =>
+          normalizeBookmark(row as Record<string, unknown>)
+        );
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.BOOKMARKS,
+          JSON.stringify(bookmarks)
+        );
+        return bookmarks;
       }
       return [];
     } catch {
       try {
         const cached = await AsyncStorage.getItem(STORAGE_KEYS.BOOKMARKS);
-        if (cached) return JSON.parse(cached);
+        if (cached) {
+          const parsed = JSON.parse(cached) as unknown[];
+          return Array.isArray(parsed)
+            ? parsed.map((row) =>
+                normalizeBookmark(row as Record<string, unknown>)
+              )
+            : [];
+        }
       } catch {}
       return [];
     }
@@ -134,18 +148,22 @@ export const addBookmarkThunk = createAsyncThunk(
         sectionId: bookmarkData.sectionId,
         previewText: bookmarkData.previewText,
       });
-      return {
-        id: String(created?.id || `bm-${Date.now()}`),
+      const apiBookmark = (created?.bookmark || created) as Record<string, unknown>;
+      return normalizeBookmark({
+        ...apiBookmark,
+        title: bookmarkData.title || apiBookmark.title || apiBookmark.chapterTitle,
+        subtitle:
+          bookmarkData.subtitle ||
+          apiBookmark.subtitle ||
+          apiBookmark.sectionTitle ||
+          apiBookmark.subjectName,
+        classId: bookmarkData.classId || apiBookmark.classId,
+        subjectId: bookmarkData.subjectId || apiBookmark.subjectId,
+        type: bookmarkData.type || (bookmarkData.sectionId ? 'section' : 'chapter'),
+        previewText: bookmarkData.previewText || apiBookmark.previewText,
         chapterId: bookmarkData.chapterId,
         sectionId: bookmarkData.sectionId,
-        title: bookmarkData.title || bookmarkData.previewText || 'Bookmark',
-        subtitle: bookmarkData.subtitle || '',
-        classId: bookmarkData.classId || '',
-        subjectId: bookmarkData.subjectId || '',
-        type: bookmarkData.type || (bookmarkData.sectionId ? 'section' : 'chapter'),
-        previewText: bookmarkData.previewText || '',
-        dateAdded: Date.now(),
-      } as BookmarkItem;
+      });
     } catch (e) {
       // Fallback local bookmark
       const fallback: BookmarkItem = {

@@ -1,7 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
-import authReducer from './slices/authSlice';
+import { setOnAuthCleared } from '../services/apiClient';
+import authReducer, { forceLogout } from './slices/authSlice';
 import studentReducer from './slices/studentSlice';
 import curriculumReducer from './slices/curriculumSlice';
 import progressReducer from './slices/progressSlice';
@@ -19,6 +20,10 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false,
     }),
+});
+
+setOnAuthCleared(() => {
+  store.dispatch(forceLogout());
 });
 
 export type RootState = ReturnType<typeof store.getState>;

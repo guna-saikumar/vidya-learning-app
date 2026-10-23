@@ -34,6 +34,8 @@ const initialState: AuthState = {
   error: null,
 };
 
+type StoredAuthUser = AuthUserState & { isOnboarded?: boolean };
+
 export const loginUserThunk = createAsyncThunk(
   'auth/loginUser',
   async ({ email, pass }: { email: string; pass: string }, { rejectWithValue }) => {
@@ -46,9 +48,12 @@ export const loginUserThunk = createAsyncThunk(
         await AsyncStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
       }
 
-      // Fetch fresh /api/v1/auth/me
       const meRes = await authApi.me();
-      await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(meRes.user));
+      const stored: StoredAuthUser = {
+        ...meRes.user,
+        isOnboarded: !!meRes.isOnboarded,
+      };
+      await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(stored));
 
       return {
         accessToken,
@@ -57,8 +62,14 @@ export const loginUserThunk = createAsyncThunk(
         isOnboarded: !!meRes.isOnboarded,
       };
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Login failed';
-      return rejectWithValue(msg);
+      // Login wrote tokens before /me — clear orphans on any failure.
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, AUTH_USER_KEY]);
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Login failed';
+      return rejectWithValue(typeof msg === 'string' ? msg : 'Login failed');
     }
   }
 );
@@ -66,25 +77,57 @@ export const loginUserThunk = createAsyncThunk(
 export const checkSessionThunk = createAsyncThunk(
   'auth/checkSession',
   async (_, { rejectWithValue }) => {
+    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      return null;
+    }
+
+    const refresh = await AsyncStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
+    const storedRaw = await AsyncStorage.getItem(AUTH_USER_KEY);
+    let stored: StoredAuthUser | null = null;
     try {
-      const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-      if (!token) {
-        return null;
-      }
+      stored = storedRaw ? (JSON.parse(storedRaw) as StoredAuthUser) : null;
+    } catch {
+      stored = null;
+    }
+
+    try {
       const meRes = await authApi.me();
-      const storedUser = await AsyncStorage.getItem(AUTH_USER_KEY);
-      const user = meRes.user || (storedUser ? JSON.parse(storedUser) : null);
-      const refresh = await AsyncStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
+      const user = meRes.user || stored;
+      const isOnboarded = !!meRes.isOnboarded;
+      if (user) {
+        await AsyncStorage.setItem(
+          AUTH_USER_KEY,
+          JSON.stringify({ ...user, isOnboarded })
+        );
+      }
 
       return {
         token,
         refreshToken: refresh,
         user,
-        isOnboarded: !!meRes.isOnboarded,
+        isOnboarded,
       };
     } catch (err: any) {
-      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, AUTH_USER_KEY]);
-      return rejectWithValue('Session expired');
+      const status = err?.response?.status as number | undefined;
+      // Only clear credentials on definitive auth failures — not flaky network.
+      if (status === 401 || status === 403) {
+        await AsyncStorage.multiRemove([
+          AUTH_TOKEN_KEY,
+          AUTH_REFRESH_TOKEN_KEY,
+          AUTH_USER_KEY,
+        ]);
+        return rejectWithValue('Session expired');
+      }
+      if (stored) {
+        return {
+          token,
+          refreshToken: refresh,
+          user: stored,
+          isOnboarded: !!stored.isOnboarded,
+        };
+      }
+      return rejectWithValue('Session unavailable');
     }
   }
 );
@@ -108,6 +151,16 @@ const authSlice = createSlice({
       state.isOnboarded = action.payload;
     },
     clearAuthError: (state) => {
+      state.error = null;
+    },
+    /** Sync Redux after the Axios interceptor clears storage on refresh failure. */
+    forceLogout: (state) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      state.token = null;
+      state.refreshToken = null;
+      state.isOnboarded = false;
+      state.loading = false;
       state.error = null;
     },
   },
@@ -172,5 +225,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setIsOnboarded, clearAuthError } = authSlice.actions;
+export const { setIsOnboarded, clearAuthError, forceLogout } = authSlice.actions;
 export default authSlice.reducer;
