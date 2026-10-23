@@ -22,6 +22,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
   ];
 
   const handleTabPress = (key: BottomNavTab) => {
+    if (activeTab === key) return;
     navigation.navigate(key);
   };
 

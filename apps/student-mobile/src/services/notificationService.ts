@@ -16,7 +16,16 @@ export const initializeNotificationsIfNeeded = async (): Promise<void> => {
   }
 };
 
-export const getAllNotifications = async (): Promise<Notification[]> => {
+let memoryNotifications: Notification[] | null = null;
+let lastNotificationsFetch = 0;
+const NOTIFICATIONS_CACHE_TTL = 60000; // 1 minute in-memory cache TTL
+
+export const getAllNotifications = async (force = false): Promise<Notification[]> => {
+  const now = Date.now();
+  if (!force && memoryNotifications && now - lastNotificationsFetch < NOTIFICATIONS_CACHE_TTL) {
+    return memoryNotifications;
+  }
+
   try {
     const apiNotifications = await notificationsApi.getNotifications();
     if (Array.isArray(apiNotifications) && apiNotifications.length > 0) {
@@ -30,8 +39,11 @@ export const getAllNotifications = async (): Promise<Notification[]> => {
         read: Boolean(n.isRead ?? n.read),
         createdAt: typeof n.createdAt === 'string' ? new Date(n.createdAt).getTime() : (n.createdAt || Date.now()),
       }));
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-      return mapped.sort((a, b) => b.createdAt - a.createdAt);
+      const sorted = mapped.sort((a, b) => b.createdAt - a.createdAt);
+      memoryNotifications = sorted;
+      lastNotificationsFetch = now;
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
+      return sorted;
     }
   } catch {
     // Offline fallback
@@ -41,10 +53,17 @@ export const getAllNotifications = async (): Promise<Notification[]> => {
     const data = await AsyncStorage.getItem(STORAGE_KEY);
     if (data) {
       const notifications: Notification[] = JSON.parse(data);
-      return notifications.sort((a, b) => b.createdAt - a.createdAt);
+      const sorted = notifications.sort((a, b) => b.createdAt - a.createdAt);
+      memoryNotifications = sorted;
+      lastNotificationsFetch = now;
+      return sorted;
     }
+    memoryNotifications = MOCK_NOTIFICATIONS;
+    lastNotificationsFetch = now;
     return MOCK_NOTIFICATIONS;
   } catch {
+    memoryNotifications = MOCK_NOTIFICATIONS;
+    lastNotificationsFetch = now;
     return MOCK_NOTIFICATIONS;
   }
 };
@@ -87,6 +106,7 @@ export const markAsRead = async (notificationId: string): Promise<void> => {
       }
       return n;
     });
+    memoryNotifications = updated;
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (error) {
     console.error('Failed to mark notification as read:', error);
@@ -98,6 +118,7 @@ export const markAllAsRead = async (): Promise<void> => {
     notificationsApi.markAllRead().catch(() => {});
     const all = await getAllNotifications();
     const updated = all.map((n) => ({ ...n, read: true }));
+    memoryNotifications = updated;
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (error) {
     console.error('Failed to mark all notifications as read:', error);
