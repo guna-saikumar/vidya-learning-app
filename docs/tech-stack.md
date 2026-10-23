@@ -29,13 +29,13 @@ One command after clone on **macOS, Linux, or Windows** (native Postgres — no 
 npm start
 ```
 
-Starts (`scripts/start.mjs`):
+Starts (`scripts/start.mjs`) with step status + a URL board (LAN IP + localhost):
 
 1. Native Postgres (LAN bind when conf is writable)
-2. SQL migrate + seed
+2. SQL migrate + seed (logged)
 3. **pgweb** DB UI on `:8083` (optional if installed)
 4. Nest API on `:4000` (bound `0.0.0.0`)
-5. Student Expo with `--lan` on `:8081`
+5. Student Expo with `--lan` on `:8081` (interactive QR / keys)
 
 ```bash
 npm run db:psql     # CLI against local DB

@@ -42,7 +42,7 @@ Run lint and typecheck before declaring any task done.
 
 ## Local Development
 
-- Default: `npm start` — native Postgres (LAN), SQL migrate/seed, pgweb `:8083`, Nest API `:4000`, student Expo `--lan`. Same command on Windows, Linux, and macOS.
+- Default: `npm start` — native Postgres (LAN), migrate/seed with status, URL board (App/API/DB + LAN IP), pgweb `:8083`, Nest API `:4000`, interactive Expo `--lan`. Same command on Windows, Linux, and macOS.
 - Database CLI: `npm run db:psql`. DB web UI: pgweb (not Prisma Studio).
 - Docker Compose (`pnpm docker:up`) is optional and not used by `npm start`.
 - Do not add deployment scripts or deployment platform config until deployment is explicitly reintroduced.

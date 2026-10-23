@@ -29,14 +29,7 @@ Works on **macOS, Linux, and Windows** (Node 22.12+, pnpm 8, native PostgreSQL �
 npm start
 ```
 
-That auto-detects your Wi‑Fi host (no LAN IP to type), writes `.env` + `apps/student-mobile/.env` / `.env.local`, and prints ready-to-use URLs:
-
-| Service | How you get it |
-|---|---|
-| API / Swagger | printed `http://…:4000` / `/docs` |
-| Postgres | printed `postgresql://vidya:vidya@…:5432/vidya` |
-| DB UI (**pgweb**) | printed `http://…:8083` (optional; skipped if not installed) |
-| Student Expo | QR / printed URL — app uses Expo’s LAN host automatically |
+That auto-detects your Wi‑Fi IP, runs migrate + seed (with status steps), writes `.env` + `apps/student-mobile/.env` / `.env.local`, and prints a URL board (LAN IP + localhost) for App / API / Docs / Database / DB UI. The Expo terminal stays interactive (QR + `i` / `a` / `w` / `r`).
 
 **Postgres (one-time):**
 - macOS: `brew install postgresql@17` (also auto-installed by `npm start` when Homebrew is present)
