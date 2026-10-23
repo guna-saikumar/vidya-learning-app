@@ -2,9 +2,8 @@ import { type NestFastifyApplication } from "@nestjs/platform-fastify";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 /**
- * OpenAPI + Swagger UI that works on Vercel.
- * Nest's default SwaggerModule.setup() needs @fastify/static, which breaks
- * under Vercel's CJS serverless runtime (ERR_REQUIRE_ESM). We serve the UI
+ * OpenAPI + Swagger UI without @fastify/static.
+ * Nest's default SwaggerModule.setup() needs @fastify/static; we serve the UI
  * from a CDN and the OpenAPI JSON from /docs-json instead.
  */
 export function setupApiDocs(app: NestFastifyApplication): void {
@@ -17,7 +16,6 @@ export function setupApiDocs(app: NestFastifyApplication): void {
     .setVersion("0.1.0")
     .addBearerAuth()
     .addServer("/", "Current host")
-    .addServer("https://vidya-api-kohl.vercel.app", "Production (Vercel)")
     .addServer("http://localhost:4000", "Local")
     .build();
 
