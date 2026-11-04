@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Image,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -14,6 +15,7 @@ import { HeaderBar, BottomNav } from '../components/navigation';
 import { SearchBar, HoverCard } from '../components/common';
 import { ChapterListItem } from '../components/curriculum';
 import { getSubjectById } from '../services/curriculumService';
+import { getApiErrorMessage } from '../services/apiClient';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
 
@@ -242,7 +244,10 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
           {filteredChapters.length > 0 ? (
             filteredChapters.map((chapter) => {
               const p = progressMap[chapter.id];
-              const isBookmarked = bookmarks.some((b) => b.chapterId === chapter.id);
+              const isBookmarked = bookmarks.some(
+                (b) =>
+                  b.type === 'chapter' && b.chapterId === chapter.id
+              );
               return (
                 <ChapterListItem
                   key={chapter.id}
@@ -250,17 +255,24 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
                   isCompleted={p?.completed || false}
                   progressPercent={p?.progressPercent || 0}
                   isBookmarked={isBookmarked}
-                  onBookmarkPress={() =>
-                    handleToggleBookmark({
-                      classId,
-                      subjectId,
-                      chapterId: chapter.id,
-                      title: `${chapter.title} Notes`,
-                      subtitle: `${schoolClass.title} • ${subject.name}`,
-                      type: 'chapter',
-                      previewText: chapter.description || chapter.title,
-                    })
-                  }
+                  onBookmarkPress={async () => {
+                    try {
+                      await handleToggleBookmark({
+                        classId,
+                        subjectId,
+                        chapterId: chapter.id,
+                        title: `${chapter.title} Notes`,
+                        subtitle: `${schoolClass.title} • ${subject.name}`,
+                        type: 'chapter',
+                        previewText: chapter.description || chapter.title,
+                      });
+                    } catch (error) {
+                      Alert.alert(
+                        'Could not update bookmark',
+                        getApiErrorMessage(error, 'Please try again.')
+                      );
+                    }
+                  }}
                   onPress={() =>
                     navigation.navigate('ChapterDetails', {
                       classId,

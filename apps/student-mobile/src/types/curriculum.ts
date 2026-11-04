@@ -47,6 +47,8 @@ export type SchoolClass = {
   subjects: Subject[];
 };
 
+export type BookmarkType = 'chapter' | 'section' | 'formula';
+
 export type BookmarkItem = {
   id: string;
   classId: string;
@@ -55,7 +57,7 @@ export type BookmarkItem = {
   sectionId?: string;
   title: string;
   subtitle: string;
-  type: 'chapter' | 'section' | 'formula';
+  type: BookmarkType;
   dateAdded: number;
   previewText?: string;
 };

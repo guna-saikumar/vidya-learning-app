@@ -86,4 +86,36 @@ describe("settings / progress / bookmarks", () => {
       createBookmarkSchema.safeParse({ chapterId: "c1", sectionId: null }).success
     ).toBe(true);
   });
+
+  it("bookmark type must match its target", () => {
+    expect(
+      createBookmarkSchema.safeParse({
+        chapterId: "c1",
+        sectionId: "s1",
+        type: "section",
+      }).success
+    ).toBe(true);
+
+    expect(
+      createBookmarkSchema.safeParse({ chapterId: "c1", type: "section" }).success
+    ).toBe(false);
+
+    expect(
+      createBookmarkSchema.safeParse({
+        chapterId: "c1",
+        sectionId: "s1",
+        type: "chapter",
+      }).success
+    ).toBe(false);
+
+    expect(
+      createBookmarkSchema.safeParse({ chapterId: "c1", type: "unknown" }).success
+    ).toBe(false);
+  });
+
+  it("accepts formula bookmarks without a section", () => {
+    expect(
+      createBookmarkSchema.safeParse({ chapterId: "c1", type: "formula" }).success
+    ).toBe(true);
+  });
 });

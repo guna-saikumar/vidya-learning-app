@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { resolveApiBaseUrl, hostFromExpoUri } from '@vidya/api-client';
 
@@ -36,6 +36,78 @@ export const getApiBaseUrl = (): string => {
     expoDevHost: getDevHost(),
   });
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Converts Axios/API errors into a message that can be shown to the user. */
+export function getApiErrorMessage(
+  error: unknown,
+  fallback = 'Something went wrong. Please try again.'
+): string {
+  if (typeof error === 'string' && error.trim()) return error;
+  if (axios.isAxiosError(error)) {
+    const data: unknown = error.response?.data;
+    if (isRecord(data)) {
+      if (typeof data.error === 'string' && data.error.trim()) {
+        return data.error;
+      }
+      if (typeof data.message === 'string' && data.message.trim()) {
+        return data.message;
+      }
+    }
+    if (!error.response) {
+      return 'Cannot reach the server. Check your internet connection.';
+    }
+    if (error.response.status >= 500) {
+      return 'The server could not complete the request. Please try again.';
+    }
+  }
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return fallback;
+}
+
+/** True when the request never reached the server (offline, DNS, timeout). */
+export function isOfflineError(error: unknown): boolean {
+  return axios.isAxiosError(error) && !error.response;
+}
+
+/** True when the server answered with a specific HTTP status. */
+export function isApiStatusError(error: unknown, status: number): boolean {
+  return axios.isAxiosError(error) && error.response?.status === status;
+}
+
+export type ApiBookmarkType = 'chapter' | 'section' | 'formula';
+
+/** Bookmark DTO returned by `GET/POST /api/v1/students/me/bookmarks`. */
+export interface ApiBookmark {
+  id: string;
+  classId: string;
+  subjectId: string;
+  chapterId: string;
+  sectionId?: string | null;
+  title: string;
+  subtitle?: string | null;
+  type: ApiBookmarkType;
+  previewText?: string | null;
+  dateAdded?: string;
+  createdAt?: string;
+}
+
+export interface AddBookmarkBody {
+  chapterId: string;
+  sectionId?: string;
+  type: ApiBookmarkType;
+  title?: string;
+  subtitle?: string;
+  previewText?: string;
+}
+
+export interface BookmarkMutationResponse {
+  success: boolean;
+  bookmark: ApiBookmark;
+}
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: getApiBaseUrl(),
@@ -230,20 +302,27 @@ export const studentsApi = {
     const res = await axiosInstance.put(`/api/v1/students/me/progress/${chapterId}`, body);
     return res.data;
   },
-  getBookmarks: async () => {
-    const res = await axiosInstance.get('/api/v1/students/me/bookmarks');
+  getBookmarks: async (): Promise<ApiBookmark[]> => {
+    const res = await axiosInstance.get<ApiBookmark[]>('/api/v1/students/me/bookmarks');
     return res.data;
   },
-  addBookmark: async (body: { chapterId: string; sectionId?: string; previewText?: string }) => {
-    const res = await axiosInstance.post('/api/v1/students/me/bookmarks', body);
+  addBookmark: async (body: AddBookmarkBody): Promise<BookmarkMutationResponse> => {
+    const res = await axiosInstance.post<BookmarkMutationResponse>(
+      '/api/v1/students/me/bookmarks',
+      body
+    );
     return res.data;
   },
-  deleteBookmark: async (bookmarkId: string) => {
-    const res = await axiosInstance.delete(`/api/v1/students/me/bookmarks/${bookmarkId}`);
+  deleteBookmark: async (bookmarkId: string): Promise<{ success: boolean }> => {
+    const res = await axiosInstance.delete<{ success: boolean }>(
+      `/api/v1/students/me/bookmarks/${encodeURIComponent(bookmarkId)}`
+    );
     return res.data;
   },
-  deleteBookmarkBySection: async (sectionId: string) => {
-    const res = await axiosInstance.delete(`/api/v1/students/me/bookmarks/by-section/${sectionId}`);
+  deleteBookmarkBySection: async (sectionId: string): Promise<{ success: boolean }> => {
+    const res = await axiosInstance.delete<{ success: boolean }>(
+      `/api/v1/students/me/bookmarks/by-section/${encodeURIComponent(sectionId)}`
+    );
     return res.data;
   },
 };

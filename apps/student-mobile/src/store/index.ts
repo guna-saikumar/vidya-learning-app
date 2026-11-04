@@ -1,12 +1,53 @@
-import { configureStore } from '@reduxjs/toolkit';
+import {
+  configureStore,
+  createListenerMiddleware,
+  isAnyOf,
+} from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 import { setOnAuthCleared } from '../services/apiClient';
+import {
+  clearBookmarkCaches,
+  writeBookmarkCache,
+} from '../services/bookmarkCache';
+import { BookmarkItem } from '../types/curriculum';
+
 import authReducer, { forceLogout } from './slices/authSlice';
 import studentReducer from './slices/studentSlice';
 import curriculumReducer from './slices/curriculumSlice';
-import progressReducer from './slices/progressSlice';
+import progressReducer, {
+  addBookmarkThunk,
+  deleteBookmarkThunk,
+  fetchBookmarksThunk,
+} from './slices/progressSlice';
 import notificationsReducer from './slices/notificationsSlice';
+
+type BookmarkCacheState = {
+  auth: { user: { id: string } | null };
+  progress: { bookmarks: BookmarkItem[] };
+};
+
+/**
+ * Persists the bookmark list after every successful bookmark operation, using
+ * the state *after* the reducer has applied it. This keeps AsyncStorage in
+ * sync with Redux without letting an in-flight fetch write a stale snapshot.
+ */
+const bookmarkCacheListener = createListenerMiddleware();
+
+bookmarkCacheListener.startListening({
+  matcher: isAnyOf(
+    fetchBookmarksThunk.fulfilled,
+    addBookmarkThunk.fulfilled,
+    deleteBookmarkThunk.fulfilled
+  ),
+  effect: async (_action, listenerApi) => {
+    const state = listenerApi.getState() as BookmarkCacheState;
+    const userId = state.auth.user?.id;
+    if (!userId) return;
+
+    await writeBookmarkCache(userId, state.progress.bookmarks);
+  },
+});
 
 export const store = configureStore({
   reducer: {
@@ -19,10 +60,11 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
+    }).prepend(bookmarkCacheListener.middleware),
 });
 
 setOnAuthCleared(() => {
+  void clearBookmarkCaches();
   store.dispatch(forceLogout());
 });
 

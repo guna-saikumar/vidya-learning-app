@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Image,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -14,6 +15,7 @@ import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
 import { getChapterById } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
+import { getApiErrorMessage } from '../services/apiClient';
 import { recordChapterVisit } from '../services/progressService';
 import { RootStackParamList } from '../types/navigation';
 
@@ -73,15 +75,22 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   };
 
   const onBookmark = async () => {
-    await handleToggleBookmark({
-      classId,
-      subjectId,
-      chapterId,
-      title: `${chapter.title} Notes`,
-      subtitle: `${schoolClass.title} • ${subject.name}`,
-      type: 'chapter',
-      previewText: chapter.description || chapter.title,
-    });
+    try {
+      await handleToggleBookmark({
+        classId,
+        subjectId,
+        chapterId,
+        title: `${chapter.title} Notes`,
+        subtitle: `${schoolClass.title} • ${subject.name}`,
+        type: 'chapter',
+        previewText: chapter.description || chapter.title,
+      });
+    } catch (error) {
+      Alert.alert(
+        'Could not update bookmark',
+        getApiErrorMessage(error, 'Please try again.')
+      );
+    }
   };
 
   const handleQuizSelect = (optionIndex: number) => {

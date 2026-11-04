@@ -115,11 +115,36 @@ export const upsertProgressSchema = z.object({
   sectionId: id.optional(),
 });
 
-export const createBookmarkSchema = z.object({
-  chapterId: id,
-  sectionId: id.nullish(),
-  previewText: z.string().trim().max(2000).nullish(),
-});
+export const bookmarkTypeSchema = z.enum(["chapter", "section", "formula"]);
+export type BookmarkType = z.infer<typeof bookmarkTypeSchema>;
+
+export const createBookmarkSchema = z
+  .object({
+    chapterId: id,
+    sectionId: id.nullish(),
+    // Optional for backwards compatibility; the service infers it when omitted.
+    type: bookmarkTypeSchema.optional(),
+    title: z.string().trim().min(1).max(200).nullish(),
+    subtitle: z.string().trim().max(200).nullish(),
+    previewText: z.string().trim().max(2000).nullish(),
+  })
+  .superRefine((value, ctx) => {
+    // Never silently turn a malformed bookmark into a different type.
+    if (value.type === "section" && !value.sectionId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sectionId"],
+        message: "sectionId is required for section bookmarks",
+      });
+    }
+    if (value.type === "chapter" && value.sectionId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sectionId"],
+        message: "Chapter bookmarks cannot target a section",
+      });
+    }
+  });
 
 export type UpdateOnboardingInput = z.infer<typeof updateOnboardingSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

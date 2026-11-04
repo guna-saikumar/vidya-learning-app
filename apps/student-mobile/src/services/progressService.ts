@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BookmarkItem, ChapterProgress, UserProfile } from '../types/curriculum';
+
+import { ChapterProgress, UserProfile } from '../types/curriculum';
+
 import { studentsApi } from './apiClient';
+
 import {
   DEFAULT_USER_PROFILE,
   normalizeProfile,
@@ -8,22 +11,28 @@ import {
 } from './profileMapper';
 
 const STORAGE_KEYS = {
-  BOOKMARKS: '@vidya_bookmarks',
   PROGRESS: '@vidya_chapter_progress',
   USER_PROFILE: '@vidya_user_profile',
 };
 
 const DEFAULT_PROFILE = DEFAULT_USER_PROFILE;
 
-// ========================
+// ==================================================
 // USER PROFILE & CLASS
-// ========================
+// ==================================================
+
 export const getUserProfile = async (): Promise<UserProfile> => {
   try {
     const apiProfile = await studentsApi.getProfile();
+
     if (apiProfile) {
       const profile = normalizeProfile(apiProfile);
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.USER_PROFILE,
+        JSON.stringify(profile)
+      );
+
       return profile;
     }
   } catch {
@@ -31,62 +40,105 @@ export const getUserProfile = async (): Promise<UserProfile> => {
   }
 
   try {
-    const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-    if (!data) return DEFAULT_PROFILE;
+    const data = await AsyncStorage.getItem(
+      STORAGE_KEYS.USER_PROFILE
+    );
+
+    if (!data) {
+      return DEFAULT_PROFILE;
+    }
+
     return normalizeProfile(JSON.parse(data));
   } catch {
     return DEFAULT_PROFILE;
   }
 };
 
-export const updateActiveGrade = async (classId: string): Promise<void> => {
+export const updateActiveGrade = async (
+  classId: string
+): Promise<void> => {
   try {
     const profile = await getUserProfile();
-    const updated = { ...profile, activeClassId: classId };
-    await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(updated));
-    studentsApi.updateProfile(toApiProfilePatch({ activeClassId: classId })).catch(() => {});
+
+    const updated = {
+      ...profile,
+      activeClassId: classId,
+    };
+
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.USER_PROFILE,
+      JSON.stringify(updated)
+    );
+
+    await studentsApi.updateProfile(
+      toApiProfilePatch({ activeClassId: classId })
+    );
   } catch (error) {
     console.error('Failed to update active grade:', error);
+    throw error;
   }
 };
 
-export const updateUserProfile = async (updates: Partial<UserProfile>): Promise<UserProfile> => {
-  try {
-    const current = await getUserProfile();
-    const merged = { ...current, ...updates };
-    await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(merged));
-    studentsApi.updateProfile(toApiProfilePatch(updates)).catch(() => {});
-    return merged;
-  } catch {
-    return DEFAULT_PROFILE;
-  }
+export const updateUserProfile = async (
+  updates: Partial<UserProfile>
+): Promise<UserProfile> => {
+  const current = await getUserProfile();
+
+  const merged = {
+    ...current,
+    ...updates,
+  };
+
+  await studentsApi.updateProfile(
+    toApiProfilePatch(updates)
+  );
+
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.USER_PROFILE,
+    JSON.stringify(merged)
+  );
+
+  return merged;
 };
 
-
-// ========================
+// ==================================================
 // LEARNING PROGRESS
-// ========================
-export const getAllProgress = async (): Promise<Record<string, ChapterProgress>> => {
+// ==================================================
+
+export const getAllProgress = async (): Promise<
+  Record<string, ChapterProgress>
+> => {
   try {
     const res = await studentsApi.getProgress();
-    if (res && res.chapters) {
-      await AsyncStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(res.chapters));
-      return res.chapters;
-    }
+
+    const progress = res?.chapters ?? res ?? {};
+
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.PROGRESS,
+      JSON.stringify(progress)
+    );
+
+    return progress;
   } catch {
     // Offline fallback
   }
 
   try {
-    const data = await AsyncStorage.getItem(STORAGE_KEYS.PROGRESS);
+    const data = await AsyncStorage.getItem(
+      STORAGE_KEYS.PROGRESS
+    );
+
     return data ? JSON.parse(data) : {};
   } catch {
     return {};
   }
 };
 
-export const getChapterProgress = async (chapterId: string): Promise<ChapterProgress | null> => {
+export const getChapterProgress = async (
+  chapterId: string
+): Promise<ChapterProgress | null> => {
   const all = await getAllProgress();
+
   return all[chapterId] || null;
 };
 
@@ -95,36 +147,38 @@ export const recordChapterVisit = async (
   subjectId: string,
   chapterId: string
 ): Promise<void> => {
-  try {
-    const all = await getAllProgress();
-    const existing = all[chapterId] || {
-      chapterId,
-      subjectId,
-      classId,
-      completed: false,
-      completedSections: [],
-      progressPercent: 20,
-      lastAccessed: Date.now(),
-    };
+  const all = await getAllProgress();
 
-    const newPercent = Math.max(existing.progressPercent, 20);
-    all[chapterId] = {
-      ...existing,
-      lastAccessed: Date.now(),
-      progressPercent: newPercent,
-    };
-    await AsyncStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(all));
+  const existing = all[chapterId] || {
+    chapterId,
+    subjectId,
+    classId,
+    completed: false,
+    completedSections: [],
+    progressPercent: 20,
+    lastAccessed: Date.now(),
+  };
 
-    // Send to PostgreSQL database
-    studentsApi
-      .updateProgress(chapterId, {
-        progressPercent: newPercent,
-        completed: existing.completed,
-      })
-      .catch(() => {});
-  } catch (error) {
-    console.error('Error recording chapter visit:', error);
-  }
+  const newPercent = Math.max(
+    existing.progressPercent,
+    20
+  );
+
+  all[chapterId] = {
+    ...existing,
+    lastAccessed: Date.now(),
+    progressPercent: newPercent,
+  };
+
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.PROGRESS,
+    JSON.stringify(all)
+  );
+
+  await studentsApi.updateProgress(chapterId, {
+    progressPercent: newPercent,
+    completed: existing.completed,
+  });
 };
 
 export const toggleChapterCompletion = async (
@@ -132,42 +186,40 @@ export const toggleChapterCompletion = async (
   subjectId: string,
   chapterId: string
 ): Promise<boolean> => {
-  try {
-    const all = await getAllProgress();
-    const existing = all[chapterId] || {
-      chapterId,
-      subjectId,
-      classId,
-      completed: false,
-      completedSections: [],
-      progressPercent: 0,
-      lastAccessed: Date.now(),
-    };
+  const all = await getAllProgress();
 
-    const newCompleted = !existing.completed;
-    const newPercent = newCompleted ? 100 : 50;
-    all[chapterId] = {
-      ...existing,
-      completed: newCompleted,
-      progressPercent: newPercent,
-      lastAccessed: Date.now(),
-    };
+  const existing = all[chapterId] || {
+    chapterId,
+    subjectId,
+    classId,
+    completed: false,
+    completedSections: [],
+    progressPercent: 0,
+    lastAccessed: Date.now(),
+  };
 
-    await AsyncStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(all));
+  const newCompleted = !existing.completed;
 
-    // Send to PostgreSQL database
-    studentsApi
-      .updateProgress(chapterId, {
-        progressPercent: newPercent,
-        completed: newCompleted,
-      })
-      .catch(() => {});
+  const newPercent = newCompleted ? 100 : 50;
 
-    return newCompleted;
-  } catch (error) {
-    console.error('Error toggling chapter completion:', error);
-    return false;
-  }
+  all[chapterId] = {
+    ...existing,
+    completed: newCompleted,
+    progressPercent: newPercent,
+    lastAccessed: Date.now(),
+  };
+
+  await studentsApi.updateProgress(chapterId, {
+    progressPercent: newPercent,
+    completed: newCompleted,
+  });
+
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.PROGRESS,
+    JSON.stringify(all)
+  );
+
+  return newCompleted;
 };
 
 export const markSectionCompleted = async (
@@ -177,150 +229,53 @@ export const markSectionCompleted = async (
   sectionId: string,
   totalSectionsCount: number
 ): Promise<void> => {
-  try {
-    const all = await getAllProgress();
-    const existing = all[chapterId] || {
-      chapterId,
-      subjectId,
-      classId,
-      completed: false,
-      completedSections: [],
-      progressPercent: 0,
-      lastAccessed: Date.now(),
-    };
+  const all = await getAllProgress();
 
-    const sections = new Set(existing.completedSections);
-    sections.add(sectionId);
-    const updatedSections = Array.from(sections);
-    const percent = Math.min(
-      100,
-      Math.round((updatedSections.length / Math.max(1, totalSectionsCount)) * 100)
-    );
-    const completed = percent === 100;
+  const existing = all[chapterId] || {
+    chapterId,
+    subjectId,
+    classId,
+    completed: false,
+    completedSections: [],
+    progressPercent: 0,
+    lastAccessed: Date.now(),
+  };
 
-    all[chapterId] = {
-      ...existing,
-      completedSections: updatedSections,
-      progressPercent: percent,
-      completed,
-      lastAccessed: Date.now(),
-    };
+  const sections = new Set(
+    existing.completedSections || []
+  );
 
-    await AsyncStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(all));
+  sections.add(sectionId);
 
-    // Send to PostgreSQL database
-    studentsApi
-      .updateProgress(chapterId, {
-        progressPercent: percent,
-        completed,
-        sectionId,
-      })
-      .catch(() => {});
-  } catch (error) {
-    console.error('Error marking section completed:', error);
-  }
-};
+  const updatedSections = Array.from(sections);
 
-// ========================
-// BOOKMARKS
-// ========================
-export const getAllBookmarks = async (): Promise<BookmarkItem[]> => {
-  try {
-    const res = await studentsApi.getBookmarks();
-    if (Array.isArray(res)) {
-      const mapped: BookmarkItem[] = res.map((b: any) => ({
-        id: String(b.id),
-        classId: b.classId || '',
-        subjectId: b.subjectId || '',
-        chapterId: b.chapterId,
-        sectionId: b.sectionId,
-        title: b.title || b.previewText || 'Bookmark',
-        subtitle: b.subtitle || b.subjectName || '',
-        type: b.type || (b.sectionId ? 'section' : 'chapter'),
-        previewText: b.previewText || '',
-        dateAdded: b.createdAt ? new Date(b.createdAt).getTime() : Date.now(),
-      }));
-      await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(mapped));
-      return mapped;
-    }
-  } catch {
-    // Offline fallback
-  }
+  const percent = Math.min(
+    100,
+    Math.round(
+      (updatedSections.length /
+        Math.max(1, totalSectionsCount)) *
+        100
+    )
+  );
 
-  try {
-    const data = await AsyncStorage.getItem(STORAGE_KEYS.BOOKMARKS);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
+  const completed = percent === 100;
 
-export const isChapterBookmarked = async (chapterId: string): Promise<boolean> => {
-  const bookmarks = await getAllBookmarks();
-  return bookmarks.some((b) => b.chapterId === chapterId && b.type === 'chapter');
-};
+  all[chapterId] = {
+    ...existing,
+    completedSections: updatedSections,
+    progressPercent: percent,
+    completed,
+    lastAccessed: Date.now(),
+  };
 
-export const toggleBookmark = async (
-  item: Omit<BookmarkItem, 'id' | 'dateAdded'>
-): Promise<boolean> => {
-  try {
-    const bookmarks = await getAllBookmarks();
-    const existingIndex = bookmarks.findIndex(
-      (b) =>
-        b.chapterId === item.chapterId &&
-        b.sectionId === item.sectionId &&
-        b.type === item.type
-    );
+  await studentsApi.updateProgress(chapterId, {
+    progressPercent: percent,
+    completed,
+    sectionId,
+  });
 
-    if (existingIndex >= 0) {
-      // Remove bookmark
-      const removed = bookmarks.splice(existingIndex, 1)[0];
-      await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(bookmarks));
-      if (removed.id && !removed.id.startsWith('bm-')) {
-        studentsApi.deleteBookmark(removed.id).catch(() => {});
-      } else if (item.sectionId) {
-        studentsApi.deleteBookmarkBySection(item.sectionId).catch(() => {});
-      }
-      return false;
-    } else {
-      // Add bookmark
-      let apiBookmark: any = null;
-      try {
-        apiBookmark = await studentsApi.addBookmark({
-          chapterId: item.chapterId,
-          sectionId: item.sectionId,
-          previewText: item.previewText || item.title,
-        });
-      } catch {
-        // offline fallback
-      }
-
-      const newItem: BookmarkItem = {
-        ...item,
-        id: apiBookmark?.id
-          ? String(apiBookmark.id)
-          : `bm-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        dateAdded: Date.now(),
-      };
-      bookmarks.unshift(newItem);
-      await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(bookmarks));
-      return true;
-    }
-  } catch (error) {
-    console.error('Error toggling bookmark:', error);
-    return false;
-  }
-};
-
-export const removeBookmark = async (id: string): Promise<void> => {
-  try {
-    const bookmarks = await getAllBookmarks();
-    const filtered = bookmarks.filter((b) => b.id !== id);
-    await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(filtered));
-    if (!id.startsWith('bm-')) {
-      studentsApi.deleteBookmark(id).catch(() => {});
-    }
-  } catch (error) {
-    console.error('Error removing bookmark:', error);
-  }
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.PROGRESS,
+    JSON.stringify(all)
+  );
 };

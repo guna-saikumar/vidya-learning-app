@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,6 +14,7 @@ import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
 import { getSectionById } from '../services/curriculumService';
 import { markSectionCompleted } from '../services/progressService';
+import { getApiErrorMessage } from '../services/apiClient';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
 
@@ -42,7 +44,9 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const currentChapterProgress = progressMap[chapterId];
   const isSectionDone =
     currentChapterProgress?.completedSections?.includes(sectionId) || false;
-  const isBookmarked = bookmarks.some((b) => b.sectionId === sectionId);
+  const isBookmarked = bookmarks.some(
+    (b) => b.type === 'section' && b.sectionId === sectionId
+  );
 
   const currentIndex = chapter.sections.findIndex((s) => s.id === sectionId);
   const prevSection = currentIndex > 0 ? chapter.sections[currentIndex - 1] : null;
@@ -52,16 +56,23 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
       : null;
 
   const onBookmark = async () => {
-    await handleToggleBookmark({
-      classId,
-      subjectId,
-      chapterId,
-      sectionId,
-      title: section.title,
-      subtitle: `${subject.name} • ${chapter.title}`,
-      type: 'section',
-      previewText: section.content || section.summaryPoint,
-    });
+    try {
+      await handleToggleBookmark({
+        classId,
+        subjectId,
+        chapterId,
+        sectionId,
+        title: section.title,
+        subtitle: `${subject.name} • ${chapter.title}`,
+        type: 'section',
+        previewText: section.content || section.summaryPoint,
+      });
+    } catch (error) {
+      Alert.alert(
+        'Could not update bookmark',
+        getApiErrorMessage(error, 'Please try again.')
+      );
+    }
   };
 
   const handleMarkSectionDone = async () => {

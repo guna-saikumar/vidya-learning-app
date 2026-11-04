@@ -104,12 +104,16 @@ type ProgressRow = {
 
 type BookmarkRow = {
   id: string;
+  classId: string;
   chapterId: string;
   chapterTitle: string;
   subjectId: string;
   subjectName: string;
   sectionId: string | null;
   sectionTitle: string | null;
+  title: string;
+  subtitle: string | null;
+  type: "chapter" | "section" | "formula";
   previewText: string | null;
   dateAdded: Date;
 };
@@ -138,14 +142,25 @@ const PROFILE_SELECT = `
 const PROGRESS_COLUMNS = `"chapterId", "completed", "progressPercent", "lastAccessed", "lastSectionId"`;
 
 const BOOKMARK_SELECT = `
-  SELECT b."id", b."chapterId", ch."title" AS "chapterTitle",
-         b."subjectId", s."name" AS "subjectName",
-         b."sectionId", se."title" AS "sectionTitle",
-         b."previewText", b."dateAdded"
-    FROM "Bookmark" b
-    JOIN "Chapter" ch ON ch."id" = b."chapterId"
-    JOIN "Subject" s ON s."id" = b."subjectId"
-    LEFT JOIN "Section" se ON se."id" = b."sectionId"`;
+  SELECT
+    b."id",
+    b."classId",
+    b."chapterId",
+    ch."title" AS "chapterTitle",
+    b."subjectId",
+    s."name" AS "subjectName",
+    b."sectionId",
+    se."title" AS "sectionTitle",
+    b."title",
+    b."subtitle",
+    b."type",
+    b."previewText",
+    b."dateAdded"
+  FROM "Bookmark" b
+  JOIN "Chapter" ch ON ch."id" = b."chapterId"
+  JOIN "Subject" s ON s."id" = b."subjectId"
+  LEFT JOIN "Section" se ON se."id" = b."sectionId"
+`;
 
 /** Empty strings clear a value; `undefined`/`null` become `null`. */
 const clean = (v: unknown): unknown =>
@@ -197,13 +212,18 @@ const toProgressDto = (p: ProgressRow) => ({
 
 const toBookmarkDto = (b: BookmarkRow) => ({
   id: b.id,
+  classId: b.classId,
   chapterId: b.chapterId,
   chapterTitle: b.chapterTitle,
   subjectId: b.subjectId,
   subjectName: b.subjectName,
   sectionId: b.sectionId,
   sectionTitle: b.sectionTitle,
+  title: b.title,
+  subtitle: b.subtitle,
+  type: b.type,
   previewText: b.previewText,
+  dateAdded: b.dateAdded.toISOString(),
   createdAt: b.dateAdded.toISOString(),
 });
 
@@ -544,8 +564,37 @@ export class StudentsService {
     );
   }
 
+  private getBookmarkByTarget(
+    userId: string,
+    chapterId: string,
+    sectionId: string | null,
+    type: BookmarkRow["type"]
+  ) {
+    return this.db.queryOne<{ id: string }>(
+      `SELECT "id" FROM "Bookmark"
+        WHERE "userId" = $1 AND "chapterId" = $2
+          AND "sectionId" IS NOT DISTINCT FROM $3
+          AND "type" = $4::"BookmarkType"
+        LIMIT 1`,
+      [userId, chapterId, sectionId, type]
+    );
+  }
+
   async createBookmark(userId: string, input: CreateBookmarkInput) {
     const chapter = await this.chapterContext(input.chapterId);
+    const type: BookmarkRow["type"] =
+      input.type ?? (input.sectionId ? "section" : "chapter");
+
+    if (type === "section" && !input.sectionId) {
+      throw new BadRequestException({
+        error: "sectionId is required for section bookmarks",
+      });
+    }
+    if (type === "chapter" && input.sectionId) {
+      throw new BadRequestException({
+        error: "Chapter bookmarks cannot target a section",
+      });
+    }
 
     let sectionTitle: string | null = null;
     if (input.sectionId) {
@@ -562,38 +611,54 @@ export class StudentsService {
       sectionTitle = section.title;
     }
 
-    const type = input.sectionId ? "section" : "chapter";
-    const existing = await this.db.queryOne<{ id: string }>(
-      `SELECT "id" FROM "Bookmark"
-        WHERE "userId" = $1 AND "chapterId" = $2
-          AND "sectionId" IS NOT DISTINCT FROM $3
-        LIMIT 1`,
-      [userId, chapter.id, input.sectionId ?? null]
+    const title = input.title?.trim() || sectionTitle || chapter.title;
+    const subtitle =
+      input.subtitle?.trim() ||
+      (input.sectionId ? chapter.title : chapter.subjectName);
+
+    // The unique index in migration 003 enforces one bookmark per
+    // (user, chapter, section, type). ON CONFLICT keeps this idempotent
+    // under concurrent requests instead of relying on a check-then-insert.
+    const inserted = await this.db.queryOne<{ id: string }>(
+      `INSERT INTO "Bookmark"
+         ("id", "userId", "classId", "subjectId", "chapterId", "sectionId",
+          "title", "subtitle", "type", "previewText")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::"BookmarkType", $10)
+       ON CONFLICT DO NOTHING
+       RETURNING "id"`,
+      [
+        newId(),
+        userId,
+        chapter.classId,
+        chapter.subjectId,
+        chapter.id,
+        input.sectionId ?? null,
+        title,
+        subtitle,
+        type,
+        input.previewText?.trim() || null,
+      ]
     );
 
-    let id = existing?.id;
-    if (!id) {
-      id = newId();
-      await this.db.query(
-        `INSERT INTO "Bookmark"
-           ("id", "userId", "classId", "subjectId", "chapterId", "sectionId",
-            "title", "subtitle", "type", "previewText")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::"BookmarkType", $10)`,
-        [
-          id,
+    const id =
+      inserted?.id ??
+      (
+        await this.getBookmarkByTarget(
           userId,
-          chapter.classId,
-          chapter.subjectId,
           chapter.id,
           input.sectionId ?? null,
-          sectionTitle ?? chapter.title,
-          sectionTitle ? chapter.title : chapter.subjectName,
-          type,
-          input.previewText ?? null,
-        ]
-      );
+          type
+        )
+      )?.id;
+
+    if (!id) {
+      throw new BadRequestException({ error: "Could not save bookmark" });
     }
-    const bookmark = (await this.getBookmark(userId, id))!;
+
+    const bookmark = await this.getBookmark(userId, id);
+    if (!bookmark) {
+      throw new NotFoundException({ error: "Bookmark not found" });
+    }
     return { success: true, bookmark: toBookmarkDto(bookmark) };
   }
 

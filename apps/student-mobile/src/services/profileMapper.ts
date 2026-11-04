@@ -1,4 +1,4 @@
-import { BookmarkItem, UserProfile } from '../types/curriculum';
+import { BookmarkItem, BookmarkType, UserProfile } from '../types/curriculum';
 import { getApiBaseUrl } from './apiClient';
 
 /**
@@ -208,13 +208,68 @@ export function validateDateOfBirth(raw: string): DobValidationResult {
   return { valid: true, iso, age };
 }
 
-/** Map API bookmark DTO onto the mobile `BookmarkItem` shape. */
-export function normalizeBookmark(api: Record<string, unknown>): BookmarkItem {
-  const sectionId =
-    api.sectionId != null && String(api.sectionId).length > 0
-      ? String(api.sectionId)
-      : undefined;
-  const createdRaw = api.dateAdded ?? api.createdAt;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function nonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+const BOOKMARK_TYPES = ['chapter', 'section', 'formula'] as const;
+
+function isBookmarkType(value: string): value is BookmarkType {
+  return (BOOKMARK_TYPES as readonly string[]).includes(value);
+}
+
+function parseBookmarkType(
+  value: unknown,
+  sectionId: string | undefined
+): BookmarkType {
+  if (value === undefined || value === null || value === '') {
+    return sectionId ? 'section' : 'chapter';
+  }
+  if (typeof value === 'string' && isBookmarkType(value)) {
+    return value;
+  }
+  throw new Error(`Unsupported bookmark type: ${String(value)}`);
+}
+
+/**
+ * Map an API bookmark DTO onto the mobile `BookmarkItem` shape.
+ *
+ * This deliberately throws instead of inventing an id or converting an
+ * unknown type. A bookmark without a server id must never enter Redux/cache.
+ */
+export function normalizeBookmark(input: unknown): BookmarkItem {
+  if (!isRecord(input)) {
+    throw new Error('Invalid bookmark payload');
+  }
+
+  const id = nonEmptyString(input.id);
+  const chapterId = nonEmptyString(input.chapterId);
+  const classId = nonEmptyString(input.classId);
+  const subjectId = nonEmptyString(input.subjectId);
+
+  if (!id) throw new Error('Bookmark payload is missing id');
+  if (!chapterId) throw new Error('Bookmark payload is missing chapterId');
+  if (!classId) throw new Error('Bookmark payload is missing classId');
+  if (!subjectId) throw new Error('Bookmark payload is missing subjectId');
+
+  const sectionId = nonEmptyString(input.sectionId);
+  const type = parseBookmarkType(input.type, sectionId);
+
+  if (type === 'section' && !sectionId) {
+    throw new Error('Section bookmark is missing sectionId');
+  }
+
+  const createdRaw = input.dateAdded ?? input.createdAt;
   let dateAdded = Date.now();
   if (typeof createdRaw === 'number') {
     dateAdded = createdRaw;
@@ -224,20 +279,23 @@ export function normalizeBookmark(api: Record<string, unknown>): BookmarkItem {
   }
 
   return {
-    id: String(api.id ?? `bm-${dateAdded}`),
-    chapterId: String(api.chapterId ?? ''),
+    id,
+    chapterId,
     sectionId,
-    subjectId: String(api.subjectId ?? ''),
-    classId: String(api.classId ?? ''),
-    title: String(
-      api.title ?? api.chapterTitle ?? api.previewText ?? 'Bookmark'
-    ),
-    subtitle: String(api.subtitle ?? api.sectionTitle ?? api.subjectName ?? ''),
-    type:
-      (api.type as BookmarkItem['type']) ||
-      (sectionId ? 'section' : 'chapter'),
-    previewText:
-      api.previewText != null ? String(api.previewText) : undefined,
+    subjectId,
+    classId,
+    title:
+      nonEmptyString(input.title) ??
+      nonEmptyString(input.chapterTitle) ??
+      nonEmptyString(input.previewText) ??
+      'Bookmark',
+    subtitle:
+      nonEmptyString(input.subtitle) ??
+      nonEmptyString(input.sectionTitle) ??
+      nonEmptyString(input.subjectName) ??
+      '',
+    type,
+    previewText: optionalString(input.previewText),
     dateAdded,
   };
 }

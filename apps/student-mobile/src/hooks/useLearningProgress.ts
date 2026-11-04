@@ -1,9 +1,11 @@
 import { useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
+
 import {
   fetchProfileThunk,
   updateProfileThunk,
 } from '../store/slices/studentSlice';
+
 import {
   fetchProgressThunk,
   saveChapterProgressThunk,
@@ -11,67 +13,137 @@ import {
   addBookmarkThunk,
   deleteBookmarkThunk,
 } from '../store/slices/progressSlice';
+
 import { BookmarkItem, UserProfile } from '../types/curriculum';
 
+const CACHE_TTL_MS = 60000;
+
+// Module-level so every screen using this hook shares one refresh cycle and
+// one set of API calls instead of firing duplicates on mount.
 let lastFetchedAt = 0;
-const CACHE_TTL_MS = 60000; // 1 minute in-memory cache TTL
+let lastFetchedUserId: string | null = null;
+let inFlightRefresh: Promise<void> | null = null;
 
 export const useLearningProgress = () => {
   const dispatch = useAppDispatch();
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
+  const isAuthenticated = useAppSelector(
+    (state) => state.auth.isAuthenticated
+  );
+  const userId = useAppSelector((state) => state.auth.user?.id ?? null);
+
   const profile = useAppSelector((state) => state.student.profile);
   const studentLoading = useAppSelector((state) => state.student.loading);
-  const progressMap = useAppSelector((state) => state.progress.progressMap);
-  const bookmarks = useAppSelector((state) => state.progress.bookmarks);
-  const progressLoading = useAppSelector((state) => state.progress.loading);
+
+  const progressMap = useAppSelector(
+    (state) => state.progress.progressMap
+  );
+
+  const bookmarks = useAppSelector(
+    (state) => state.progress.bookmarks
+  );
+  const bookmarksLoading = useAppSelector(
+    (state) => state.progress.bookmarksLoading
+  );
+  const bookmarksError = useAppSelector(
+    (state) => state.progress.bookmarksError
+  );
+  const bookmarksSource = useAppSelector(
+    (state) => state.progress.bookmarksSource
+  );
+  const deletingBookmarkIds = useAppSelector(
+    (state) => state.progress.deletingBookmarkIds
+  );
 
   const loading = isAuthenticated && studentLoading && !profile;
 
+  // Fetch profile, progress and bookmarks.
   const refreshData = useCallback(
     async (force = false) => {
-      if (!isAuthenticated) return;
-      const now = Date.now();
-      const isStale = now - lastFetchedAt > CACHE_TTL_MS;
-      const hasData = !!profile && Object.keys(progressMap).length > 0;
-
-      if (!force && hasData && !isStale) {
+      if (!isAuthenticated || !userId) {
+        lastFetchedAt = 0;
+        lastFetchedUserId = null;
         return;
       }
 
+      const now = Date.now();
+      const userChanged = lastFetchedUserId !== userId;
+      const isStale =
+        force || userChanged || now - lastFetchedAt > CACHE_TTL_MS;
+
+      if (!isStale) {
+        return;
+      }
+
+      if (inFlightRefresh) {
+        await inFlightRefresh;
+
+        // If the account changed while the previous refresh was running, fall
+        // through and start a fresh cycle for the new user.
+        if (lastFetchedUserId === userId) {
+          return;
+        }
+      }
+
       lastFetchedAt = now;
-      await Promise.all([
-        dispatch(fetchProfileThunk()),
-        dispatch(fetchProgressThunk()),
-        dispatch(fetchBookmarksThunk()),
-      ]);
+      lastFetchedUserId = userId;
+
+      const task = (async () => {
+        const results = await Promise.allSettled([
+          dispatch(fetchProfileThunk()).unwrap(),
+          dispatch(fetchProgressThunk()).unwrap(),
+          dispatch(fetchBookmarksThunk()).unwrap(),
+        ]);
+
+        // Allow another fetch if one of the requests failed.
+        if (results.some((result) => result.status === 'rejected')) {
+          lastFetchedAt = 0;
+        }
+      })();
+
+      inFlightRefresh = task;
+      try {
+        await task;
+      } finally {
+        if (inFlightRefresh === task) {
+          inFlightRefresh = null;
+        }
+      }
     },
-    [dispatch, isAuthenticated, profile, progressMap]
+    [dispatch, isAuthenticated, userId]
   );
 
   useEffect(() => {
-    const hasData = !!profile && Object.keys(progressMap).length > 0;
-    const isStale = Date.now() - lastFetchedAt > CACHE_TTL_MS;
-    if (!hasData || isStale) {
-      refreshData();
-    }
-  }, [refreshData, profile, progressMap]);
+    refreshData();
+  }, [refreshData]);
 
+  // Update active grade.
   const selectActiveGrade = async (gradeId: string) => {
-    await dispatch(updateProfileThunk({ activeClassId: gradeId }));
+    await dispatch(
+      updateProfileThunk({ activeClassId: gradeId })
+    ).unwrap();
   };
 
-  const saveProfile = async (updates: Partial<UserProfile>): Promise<UserProfile> => {
-    const res = await dispatch(updateProfileThunk(updates));
-    return (res.payload as UserProfile) || profile!;
+  // Update profile.
+  const saveProfile = async (
+    updates: Partial<UserProfile>
+  ): Promise<UserProfile> => {
+    const result = await dispatch(
+      updateProfileThunk(updates)
+    ).unwrap();
+
+    return (result as UserProfile) || profile!;
   };
 
+  // Toggle chapter completion.
   const handleToggleChapterCompletion = async (
-    classId: string,
-    subjectId: string,
+    _classId: string,
+    _subjectId: string,
     chapterId: string
   ) => {
     const current = progressMap[chapterId];
     const isCompleted = !current?.completed;
+
     const progressPercent = isCompleted ? 100 : 0;
 
     await dispatch(
@@ -80,41 +152,59 @@ export const useLearningProgress = () => {
         progressPercent,
         completed: isCompleted,
       })
-    );
+    ).unwrap();
+
     return isCompleted;
   };
 
-  const handleToggleBookmark = async (item: Omit<BookmarkItem, 'id' | 'dateAdded'>) => {
-    const existing = bookmarks.find((b) => {
-      if (item.sectionId) {
-        return b.chapterId === item.chapterId && b.sectionId === item.sectionId;
-      }
-      // Chapter-level toggle must not match section bookmarks on the same chapter.
-      return (
-        b.chapterId === item.chapterId &&
-        !b.sectionId &&
-        (b.type === 'chapter' || !item.type || item.type === 'chapter')
-      );
-    });
+  // Add or remove a bookmark. Redux is the only source of truth for the list;
+  // the server call must succeed before local state changes.
+  const handleToggleBookmark = async (
+    item: Omit<BookmarkItem, 'id' | 'dateAdded'>
+  ) => {
+    const sectionId = item.sectionId || undefined;
+
+    // Match on the full target (chapter + section + type). Without the type,
+    // a chapter bookmark could be mistaken for a section bookmark.
+    const existing = bookmarks.find(
+      (bookmark) =>
+        bookmark.chapterId === item.chapterId &&
+        (bookmark.sectionId || undefined) === sectionId &&
+        bookmark.type === item.type
+    );
 
     if (existing) {
-      await dispatch(deleteBookmarkThunk(existing.id));
+      if (deletingBookmarkIds.includes(existing.id)) {
+        return false;
+      }
+
+      await dispatch(deleteBookmarkThunk(existing.id)).unwrap();
       return false;
-    } else {
-      await dispatch(
-        addBookmarkThunk({
-          chapterId: item.chapterId,
-          sectionId: item.sectionId,
-          previewText: item.previewText,
-          title: item.title,
-          subtitle: item.subtitle,
-          classId: item.classId,
-          subjectId: item.subjectId,
-          type: item.type || (item.sectionId ? 'section' : 'chapter'),
-        })
-      );
-      return true;
     }
+
+    await dispatch(
+      addBookmarkThunk({
+        classId: item.classId,
+        subjectId: item.subjectId,
+        chapterId: item.chapterId,
+        sectionId,
+        title: item.title,
+        subtitle: item.subtitle,
+        type: item.type,
+        previewText: item.previewText,
+      })
+    ).unwrap();
+
+    return true;
+  };
+
+  // Remove bookmark from the Redux-managed list.
+  const removeBookmark = async (id: string) => {
+    if (deletingBookmarkIds.includes(id)) {
+      return;
+    }
+
+    await dispatch(deleteBookmarkThunk(id)).unwrap();
   };
 
   return {
@@ -122,10 +212,15 @@ export const useLearningProgress = () => {
     profile,
     progressMap,
     bookmarks,
+    bookmarksLoading,
+    bookmarksError,
+    bookmarksSource,
+    deletingBookmarkIds,
     refreshData,
     selectActiveGrade,
     saveProfile,
     handleToggleChapterCompletion,
     handleToggleBookmark,
+    removeBookmark,
   };
 };

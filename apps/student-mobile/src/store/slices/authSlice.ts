@@ -6,6 +6,7 @@ import {
   AUTH_REFRESH_TOKEN_KEY,
   AUTH_USER_KEY,
 } from '../../services/apiClient';
+import { clearBookmarkCaches } from '../../services/bookmarkCache';
 
 export interface AuthUserState {
   id: string;
@@ -148,6 +149,9 @@ export const logoutUserThunk = createAsyncThunk('auth/logoutUser', async () => {
       '@vidya_user_profile',
       '@vidya_chapter_progress',
     ]);
+    // Bookmarks are cached per user; remove every scoped cache (and the old
+    // unscoped key) so the next account cannot see this user's list.
+    await clearBookmarkCaches();
   }
 });
 

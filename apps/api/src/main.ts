@@ -20,7 +20,15 @@ async function bootstrap() {
     new FastifyAdapter({ logger: true })
   );
 
-  app.enableCors();
+  // Fastify's CORS defaults only allow GET/HEAD/POST. The mobile web build
+  // needs DELETE (bookmark removal) and PUT/PATCH (progress/profile updates),
+  // otherwise the browser blocks the request during preflight and Axios
+  // reports it as a network failure.
+  app.enableCors({
+    origin: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+  });
 
   // Profile photos: multipart uploads (single image, <= 5 MB) + static /uploads/*.
   // (Plugin typings resolve a second fastify copy, hence the casts.)
