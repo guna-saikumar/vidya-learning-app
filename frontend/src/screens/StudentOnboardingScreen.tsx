@@ -174,7 +174,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const isEdit = route.params?.isEdit || false;
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { profile, saveProfile } = useLearningProgress();
   const classes = getClasses();
 
@@ -440,9 +440,46 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => Math.max(prev - 1, 1));
-    } else if (isEdit) {
+    } else if (navigation.canGoBack()) {
       navigation.goBack();
+    } else {
+      Alert.alert(
+        'Leave Setup?',
+        'You can explore Vidya Learning and complete your academic details later in Profile.',
+        [
+          { text: 'Stay Here', style: 'cancel' },
+          {
+            text: 'Go to Home',
+            onPress: () => {
+              dispatch(setIsOnboarded(true));
+              navigation.navigate('Home');
+            },
+          },
+          {
+            text: 'Sign Out',
+            style: 'destructive',
+            onPress: () => logout(),
+          },
+        ]
+      );
     }
+  };
+
+  const handleSkipOrHome = () => {
+    Alert.alert(
+      'Skip Setup for Now?',
+      'You can explore the curriculum and complete your school & class details anytime in Profile.',
+      [
+        { text: 'Stay Here', style: 'cancel' },
+        {
+          text: 'Go to Home',
+          onPress: () => {
+            dispatch(setIsOnboarded(true));
+            navigation.navigate('Home');
+          },
+        },
+      ]
+    );
   };
 
   const handleSubmit = async () => {
@@ -632,20 +669,33 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       className="flex-1 bg-white"
     >
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      {isEdit ? (
-        <HeaderBar
-          showBack
-          onBackPress={handleBack}
-          title="Edit Student Profile"
-          subtitle="Update student, school, and parent details"
-        />
-      ) : null}
+      <HeaderBar
+        showBack
+        onBackPress={handleBack}
+        title={isEdit ? 'Edit Student Profile' : 'Student Setup'}
+        subtitle={
+          isEdit
+            ? 'Update student, school, and parent details'
+            : 'Personalize your class, medium & school'
+        }
+        rightAction={
+          !isEdit ? (
+            <TouchableOpacity
+              onPress={handleSkipOrHome}
+              className="px-3 py-1.5 rounded-full bg-palePeach border border-border"
+              activeOpacity={0.8}
+            >
+              <Text className="font-manrope-bold text-xs text-primary">Skip</Text>
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
 
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: 22,
-          paddingTop: isEdit ? 16 : Math.max(insets.top, 24) + 8,
+          paddingTop: 16,
           paddingBottom: 28,
           gap: 18,
         }}
@@ -1245,17 +1295,15 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
           )}
 
           <View className="flex-row items-center gap-3">
-            {/* Back Button */}
-            {(currentStep > 1 || isEdit) && (
-              <TouchableOpacity
-                className="px-5 py-3.5 rounded-2xl bg-white border border-border items-center justify-center flex-row gap-1 shadow-xs"
-                onPress={handleBack}
-                activeOpacity={0.8}
-              >
-                <MaterialIcons name="chevron-left" size={20} color={Colors.textSecondary} />
-                <Text className="font-manrope-bold text-xs text-textSecondary">Back</Text>
-              </TouchableOpacity>
-            )}
+            {/* Back Button - always accessible on all steps */}
+            <TouchableOpacity
+              className="px-5 py-3.5 rounded-2xl bg-white border border-border items-center justify-center flex-row gap-1 shadow-xs"
+              onPress={handleBack}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="chevron-left" size={20} color={Colors.textSecondary} />
+              <Text className="font-manrope-bold text-xs text-textSecondary">Back</Text>
+            </TouchableOpacity>
 
             {/* Next Step Navigation */}
             {currentStep < 4 && (
@@ -1308,6 +1356,19 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Quick exit option for first-time onboarding */}
+          {!isEdit && (
+            <TouchableOpacity
+              className="items-center py-2"
+              onPress={handleSkipOrHome}
+              activeOpacity={0.7}
+            >
+              <Text className="font-manrope-medium text-xs text-textSecondary underline">
+                Skip setup for now & explore Dashboard
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
 
