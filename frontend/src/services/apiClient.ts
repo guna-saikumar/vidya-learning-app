@@ -50,6 +50,14 @@ export function getApiErrorMessage(
   if (axios.isAxiosError(error)) {
     const data: unknown = error.response?.data;
     if (isRecord(data)) {
+      if (Array.isArray(data.details)) {
+        const first = data.details.find(
+          (item) => isRecord(item) && typeof item.message === 'string' && item.message.trim()
+        );
+        if (first && isRecord(first) && typeof first.message === 'string') {
+          return first.message;
+        }
+      }
       if (typeof data.error === 'string' && data.error.trim()) {
         return data.error;
       }

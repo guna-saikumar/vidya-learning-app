@@ -545,25 +545,28 @@ const progressSlice = createSlice({
           'Failed to save bookmark.';
       });
 
-    // Delete bookmark (optimistic removal so it disappears on the very first tap!)
+    // Delete bookmark only after the server confirms. Removing it in `pending`
+    // makes the thunk miss the row and return without calling the API.
     builder
       .addCase(deleteBookmarkThunk.pending, (state, action) => {
         state.bookmarksError = null;
         if (!state.deletingBookmarkIds.includes(action.meta.arg)) {
           state.deletingBookmarkIds.push(action.meta.arg);
         }
-        state.bookmarksRevision += 1;
-        state.bookmarks = state.bookmarks.filter(
-          (bookmark) => bookmark.id !== action.meta.arg
-        );
       })
       .addCase(deleteBookmarkThunk.fulfilled, (state, action) => {
         state.deletingBookmarkIds = state.deletingBookmarkIds.filter(
           (id) => id !== action.payload.id
         );
-        state.bookmarks = state.bookmarks.filter(
-          (bookmark) => bookmark.id !== action.payload.id
-        );
+
+        if (action.payload.status === 'deleted') {
+          state.bookmarksRevision += 1;
+          state.bookmarks = state.bookmarks.filter(
+            (bookmark) => bookmark.id !== action.payload.id
+          );
+          state.bookmarksSource = 'server';
+        }
+
         state.bookmarksError = null;
       })
       .addCase(deleteBookmarkThunk.rejected, (state, action) => {

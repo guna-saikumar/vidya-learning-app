@@ -180,9 +180,9 @@ export const useLearningProgress = () => {
   };
 
   // Record visit to chapter/topic to accurately power Continue Learning.
-  const recordVisit = (classId: string, subjectId: string, chapterId: string) => {
+  const recordVisit = useCallback((classId: string, subjectId: string, chapterId: string) => {
     dispatch(recordChapterVisit({ classId, subjectId, chapterId }));
-  };
+  }, [dispatch]);
 
   // Add or remove a bookmark. Redux is the only source of truth for the list;
   // the server call must succeed before local state changes.
@@ -225,9 +225,14 @@ export const useLearningProgress = () => {
     return true;
   };
 
-  // Remove bookmark immediately with optimistic UI update.
+  // Remove bookmark only after the server confirms. Optimistic removal makes
+  // deleteBookmarkThunk think the bookmark is already gone and skip the API call.
   const removeBookmark = async (id: string) => {
-    await dispatch(deleteBookmarkThunk(id));
+    if (deletingBookmarkIds.includes(id)) {
+      return;
+    }
+
+    await dispatch(deleteBookmarkThunk(id)).unwrap();
   };
 
   return {

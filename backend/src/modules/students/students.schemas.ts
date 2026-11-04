@@ -37,9 +37,11 @@ const mobile10 = z
   .transform((v) => {
     if (v === null || v === undefined) return null;
     const s = String(v).replace(/\D/g, "");
-    return s.length === 10 ? s : s.length === 0 ? null : String(v);
+    return s.length === 0 ? null : s;
   })
-  .pipe(z.string().regex(/^\d{10}$/, "Must be a 10-digit mobile number").nullable());
+  .pipe(
+    z.string().regex(/^\d{10}$/, "Mobile number must contain exactly 10 digits.").nullable()
+  );
 
 const mediumEnum = z
   .string()

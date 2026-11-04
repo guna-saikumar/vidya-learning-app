@@ -19,9 +19,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/colors';
 import { HeaderBar } from '../components/navigation';
 import { useLearningProgress } from '../hooks/useLearningProgress';
+import { getApiErrorMessage } from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
+import { UserProfile } from '../types/curriculum';
 import { useAppDispatch } from '../store';
 import {
   submitOnboardingThunk,
@@ -175,7 +177,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   const dispatch = useAppDispatch();
   const isEdit = route.params?.isEdit || false;
   const { user, logout } = useAuth();
-  const { profile, saveProfile } = useLearningProgress();
+  const { profile } = useLearningProgress();
   const classes = getClasses();
 
   // Multi-step state: 1: Student, 2: School & Location, 3: Class & Medium, 4: Parents
@@ -415,17 +417,12 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
           Alert.alert('Required Field', "Please enter mother's name.");
           return false;
         }
-        const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
-        if (cleanPhone.length !== 10) {
-          Alert.alert('Required Field', 'Please enter a 10-digit parent contact number.');
-          return false;
-        }
-      } else if (parentPhone.trim()) {
-        const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
-        if (cleanPhone.length !== 10) {
-          Alert.alert('Invalid Phone', 'Please enter a valid 10-digit parent contact number.');
-          return false;
-        }
+      }
+      const cleanPhone = parentPhone.replace(/\D/g, '');
+      const phoneRequired = !isEdit || parentPhone.trim().length > 0;
+      if (phoneRequired && cleanPhone.length !== 10) {
+        Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
+        return false;
       }
     }
     return true;
@@ -449,8 +446,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    const cleanPhone = parentPhone ? parentPhone.replace(/\D/g, '').slice(-10) : '';
+    const cleanPhone = parentPhone.replace(/\D/g, '');
     const cleanClassId = normalizeClassId(activeClassId);
     const cleanGrade = cleanClassId.replace(/\D/g, '') || '8';
     const apiMedium = normalizeMediumApi(medium);
@@ -472,7 +471,6 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     }
 
     if (isEdit) {
-      // In edit mode, ensure at least academic steps are validated
       if (!district.trim()) {
         setCurrentStep(2);
         Alert.alert('Required Field', 'Please select a district.');
@@ -498,10 +496,15 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         Alert.alert('Required Field', 'Please choose your section.');
         return;
       }
+      if (parentPhone.trim() && cleanPhone.length !== 10) {
+        setCurrentStep(4);
+        Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
+        return;
+      }
 
       setIsSubmitting(true);
       try {
-        const patchPayload: Record<string, any> = {
+        const patchPayload: Record<string, string> = {
           schoolName: schoolName.trim(),
           district: district.trim(),
           location: location.trim(),
@@ -520,13 +523,12 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         if (cleanDob) patchPayload.dateOfBirth = cleanDob;
         if (fatherName.trim()) patchPayload.fatherName = fatherName.trim();
         if (motherName.trim()) patchPayload.motherName = motherName.trim();
-        if (cleanPhone && cleanPhone.length === 10) {
+        if (cleanPhone.length === 10) {
           patchPayload.parentPhone = cleanPhone;
           patchPayload.guardianPhone = cleanPhone;
         }
 
-        const updated = await dispatch(updateProfileThunk(patchPayload)).unwrap();
-        // Refresh Redux and local state with authoritative data from API
+        const updated = await dispatch(updateProfileThunk(patchPayload as Partial<UserProfile>)).unwrap();
         await dispatch(fetchProfileThunk()).unwrap().catch(() => updated);
 
         Alert.alert(
@@ -534,19 +536,17 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
           'Your academic details have been successfully saved.',
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
-      } catch (err: any) {
-        const msg =
-          typeof err === 'string'
-            ? err
-            : err?.message || 'Failed to save student details. Please try again.';
-        Alert.alert('Could not save', msg);
+      } catch (err: unknown) {
+        Alert.alert(
+          'Could not save',
+          getApiErrorMessage(err, 'Failed to save student details. Please try again.')
+        );
       } finally {
         setIsSubmitting(false);
       }
       return;
     }
 
-    // Initial onboarding flow (PUT)
     for (let s = 1; s <= 4; s++) {
       if (!validateStep(s)) {
         setCurrentStep(s);
@@ -557,6 +557,12 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     if (!cleanDob) {
       setCurrentStep(1);
       Alert.alert('Invalid Date of Birth', 'Please enter student date of birth (DD/MM/YYYY).');
+      return;
+    }
+
+    if (cleanPhone.length !== 10) {
+      setCurrentStep(4);
+      Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
       return;
     }
 
@@ -582,14 +588,12 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         })
       ).unwrap();
       dispatch(setIsOnboarded(true));
-
       navigation.navigate('Home');
-    } catch (err: any) {
-      const msg =
-        typeof err === 'string'
-          ? err
-          : err?.message || 'Failed to save student details. Please try again.';
-      Alert.alert('Could not save', msg);
+    } catch (err: unknown) {
+      Alert.alert(
+        'Could not save',
+        getApiErrorMessage(err, 'Failed to save student details. Please try again.')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1193,7 +1197,16 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
               <Text className="font-manrope-bold text-xs text-textSecondary">
                 Parent / Guardian Contact Mobile <Text className="text-primary">*</Text>
               </Text>
-              <View className="flex-row items-center bg-softWarm border border-border rounded-xl px-3.5 py-3">
+              <View
+                className="flex-row items-center bg-softWarm border rounded-xl px-3.5 py-3"
+                style={{
+                  borderColor:
+                    parentPhone.trim().length > 0 &&
+                    parentPhone.replace(/\D/g, '').length !== 10
+                      ? Colors.error
+                      : Colors.border,
+                }}
+              >
                 <MaterialIcons name="phone" size={18} color={Colors.textMuted} />
                 <TextInput
                   className="flex-1 ml-2.5 font-manrope-bold text-sm text-textPrimary"
@@ -1204,6 +1217,15 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                   keyboardType="phone-pad"
                 />
               </View>
+              {parentPhone.trim().length > 0 &&
+                parentPhone.replace(/\D/g, '').length !== 10 && (
+                  <Text
+                    className="font-manrope-medium text-xs"
+                    style={{ color: Colors.error }}
+                  >
+                    Mobile number must contain exactly 10 digits.
+                  </Text>
+                )}
             </View>
 
             {/* Summary Confirmation Note */}

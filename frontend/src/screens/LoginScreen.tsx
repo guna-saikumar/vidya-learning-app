@@ -15,7 +15,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
-import { ApiError } from '../api-client';
 
 export const LoginScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -76,18 +75,21 @@ export const LoginScreen: React.FC = () => {
 
     try {
       await login(trimmedEmail, password);
-    } catch (err: any) {
+    } catch (err: unknown) {
       const msg =
-        err?.message ||
-        'Invalid email address or password. Please check your credentials and try again.';
+        err instanceof Error && err.message
+          ? err.message
+          : 'Unable to sign in. Please try again.';
+      const isCredentialError =
+        /credential|email or password|unauthorized|invalid email|invalid password/i.test(msg);
       setErrorMessage(msg);
-      setEmailError('Incorrect email or password');
-      setPasswordError('Incorrect email or password');
-      Alert.alert(
-        'Invalid Credentials',
-        'The email address or password you entered is incorrect. Please check your credentials and try again.',
-        [{ text: 'OK' }]
-      );
+      if (isCredentialError) {
+        setEmailError('Incorrect email or password');
+        setPasswordError('Incorrect email or password');
+        Alert.alert('Invalid Credentials', msg, [{ text: 'OK' }]);
+      } else {
+        Alert.alert('Could not sign in', msg, [{ text: 'OK' }]);
+      }
     } finally {
       setLoading(false);
     }

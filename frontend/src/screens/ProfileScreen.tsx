@@ -77,32 +77,42 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { user, logout } = useAuth();
   const { profile, bookmarks, progressMap, saveProfile, refreshData } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const [selectedStudyGoal, setSelectedStudyGoal] = useState<string>('30 mins');
-  const classes = getClasses();
+  const [studyMedium, setStudyMedium] = useState<'English' | 'Telugu'>(
+    (profile?.medium || '').toUpperCase().includes('TELUGU') ? 'Telugu' : 'English'
+  );
+  const [selectedStudyGoal, setSelectedStudyGoal] = useState('45 mins');
 
   useEffect(() => {
-    AsyncStorage.getItem('@vidya_daily_study_goal').then((stored) => {
-      if (stored) {
-        setSelectedStudyGoal(stored);
-      } else if (profile?.studyGoalMinutes) {
-        setSelectedStudyGoal(`${profile.studyGoalMinutes} mins`);
-      }
-    });
+    if (profile?.medium) {
+      setStudyMedium(profile.medium.toUpperCase().includes('TELUGU') ? 'Telugu' : 'English');
+    }
+  }, [profile?.medium]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('@vidya_study_goal')
+      .then((value) => {
+        if (value) {
+          setSelectedStudyGoal(value);
+          return;
+        }
+        if (profile?.studyGoalMinutes) {
+          setSelectedStudyGoal(`${profile.studyGoalMinutes} mins`);
+        }
+      })
+      .catch(() => {});
   }, [profile?.studyGoalMinutes]);
 
   const handleSelectStudyGoal = async (goal: string) => {
     setSelectedStudyGoal(goal);
-    await AsyncStorage.setItem('@vidya_daily_study_goal', goal);
-    const mins = parseInt(goal, 10);
     try {
-      await saveProfile({ studyGoalMinutes: mins });
+      await AsyncStorage.setItem('@vidya_study_goal', goal);
     } catch {
-      // Offline fallback persisted to AsyncStorage
+      Alert.alert('Could not update', 'Failed to save daily study goal.');
     }
-    Alert.alert('Study Goal Updated', `Your daily study goal has been set to ${goal}.`);
   };
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const classes = getClasses();
 
   useFocusEffect(
     useCallback(() => {
@@ -481,17 +491,40 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               </View>
               <View className="flex-row gap-1 bg-[#F5F2EF] p-1 rounded-xl">
                 <TouchableOpacity
-                  className="px-2.5 py-1 rounded-lg bg-primary"
+                  className={`px-2.5 py-1 rounded-lg ${studyMedium === 'English' ? 'bg-primary' : ''}`}
                   activeOpacity={0.8}
+                  onPress={async () => {
+                    setStudyMedium('English');
+                    try {
+                      await saveProfile({ medium: 'ENGLISH' });
+                    } catch {
+                      Alert.alert('Could not update', 'Failed to save study medium.');
+                    }
+                  }}
                 >
-                  <Text className="font-manrope-bold text-[11px] text-white">English</Text>
+                  <Text
+                    className={`font-manrope-bold text-[11px] ${studyMedium === 'English' ? 'text-white' : 'text-textSecondary'}`}
+                  >
+                    English
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="px-2.5 py-1 rounded-lg"
+                  className={`px-2.5 py-1 rounded-lg ${studyMedium === 'Telugu' ? 'bg-primary' : ''}`}
                   activeOpacity={0.8}
-                  onPress={() => Alert.alert('Telugu Medium', 'Telugu medium textbooks & bilingual summaries are enabled.')}
+                  onPress={async () => {
+                    setStudyMedium('Telugu');
+                    try {
+                      await saveProfile({ medium: 'TELUGU' });
+                    } catch {
+                      Alert.alert('Could not update', 'Failed to save study medium.');
+                    }
+                  }}
                 >
-                  <Text className="font-manrope-medium text-[11px] text-textSecondary">తెలుగు</Text>
+                  <Text
+                    className={`font-manrope-bold text-[11px] ${studyMedium === 'Telugu' ? 'text-white' : 'text-textSecondary'}`}
+                  >
+                    తెలుగు
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
