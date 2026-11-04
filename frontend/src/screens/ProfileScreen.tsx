@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
@@ -73,14 +74,27 @@ const ensureMediaPermission = async (kind: keyof typeof MEDIA_COPY): Promise<boo
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { user, logout } = useAuth();
-  const { profile, bookmarks, progressMap, saveProfile } = useLearningProgress();
+  const { profile, bookmarks, progressMap, saveProfile, refreshData } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const classes = getClasses();
 
+  useFocusEffect(
+    useCallback(() => {
+      void refreshData(true);
+    }, [refreshData])
+  );
+
   const completedCount = Object.values(progressMap).filter((p) => p.completed).length;
-  const activeClass = classes.find((c) => c.id === profile?.activeClassId);
+  const normalizedClassId = profile?.activeClassId?.startsWith('class-')
+    ? profile.activeClassId
+    : profile?.activeClassId
+    ? `class-${profile.activeClassId}`
+    : undefined;
+  const activeClass =
+    classes.find((c) => c.id === normalizedClassId) ||
+    classes.find((c) => c.id === profile?.activeClassId);
 
   const pickImageFromDevice = async () => {
     try {

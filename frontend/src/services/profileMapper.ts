@@ -65,6 +65,22 @@ export function normalizeProfile(api: Record<string, unknown> | null | undefined
   const displayName =
     name || [firstName, lastName].filter(Boolean).join(' ').trim();
 
+  const rawClassId = String(a.activeClassId ?? a.classId ?? '');
+  const normalizedClassId = rawClassId
+    ? rawClassId.startsWith('class-')
+      ? rawClassId
+      : `class-${rawClassId.replace(/\D/g, '')}`
+    : '';
+
+  const rawMedium = String(a.medium ?? '').toUpperCase();
+  const normalizedMedium = rawMedium.includes('TELUGU')
+    ? 'Telugu Medium'
+    : rawMedium.includes('URDU')
+    ? 'Urdu Medium'
+    : rawMedium.includes('ENGLISH')
+    ? 'English Medium'
+    : String(a.medium ?? '');
+
   return {
     ...DEFAULT_USER_PROFILE,
     ...(a as Partial<UserProfile>),
@@ -72,13 +88,13 @@ export function normalizeProfile(api: Record<string, unknown> | null | undefined
     firstName: firstName || undefined,
     lastName: lastName || undefined,
     dateOfBirth: String(a.dateOfBirth ?? a.dob ?? ''),
-    activeClassId: String(a.activeClassId ?? a.classId ?? ''),
+    activeClassId: normalizedClassId || rawClassId,
     location: String(a.location ?? a.villageCity ?? ''),
     schoolName: String(a.schoolName ?? ''),
     district: String(a.district ?? ''),
-    section: String(a.section ?? ''),
+    section: String(a.section ?? '').toUpperCase(),
     rollNumber: String(a.rollNumber ?? ''),
-    medium: String(a.medium ?? ''),
+    medium: normalizedMedium || String(a.medium ?? ''),
     fatherName: a.fatherName != null ? String(a.fatherName) : undefined,
     motherName: a.motherName != null ? String(a.motherName) : undefined,
     parentPhone: a.parentPhone != null ? String(a.parentPhone) : undefined,
@@ -101,7 +117,17 @@ export function toApiProfilePatch(
 
   if (updates.activeClassId !== undefined) {
     body.classId = updates.activeClassId;
+    const gradeMatch = String(updates.activeClassId).match(/\d+/);
+    if (gradeMatch) {
+      body.grade = gradeMatch[0];
+    }
     delete body.activeClassId;
+  }
+  if (updates.grade !== undefined) {
+    const gradeMatch = String(updates.grade).match(/\d+/);
+    if (gradeMatch) {
+      body.grade = gradeMatch[0];
+    }
   }
   if (updates.dateOfBirth !== undefined) {
     body.dob = toIsoDateOfBirth(String(updates.dateOfBirth)) || updates.dateOfBirth;
@@ -118,6 +144,15 @@ export function toApiProfilePatch(
   if (typeof updates.gender === 'string') {
     body.gender = updates.gender.toUpperCase();
   }
+  if (typeof updates.section === 'string') {
+    const s = updates.section.trim().toUpperCase();
+    const match = s.match(/[A-D]/);
+    body.section = match ? match[0] : s;
+  }
+  if (!body.parentPhone && updates.guardianPhone) {
+    body.parentPhone = updates.guardianPhone;
+  }
+  delete body.guardianPhone;
   // Not part of the student profile API schema
   delete body.displayName;
   delete body.academicYear;

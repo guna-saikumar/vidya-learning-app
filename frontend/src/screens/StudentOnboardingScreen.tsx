@@ -23,7 +23,11 @@ import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
 import { useAppDispatch } from '../store';
-import { submitOnboardingThunk } from '../store/slices/studentSlice';
+import {
+  submitOnboardingThunk,
+  updateProfileThunk,
+  fetchProfileThunk,
+} from '../store/slices/studentSlice';
 import { setIsOnboarded } from '../store/slices/authSlice';
 import {
   toIsoDateOfBirth,
@@ -176,6 +180,13 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
 
   // Multi-step state: 1: Student, 2: School & Location, 3: Class & Medium, 4: Parents
   const [currentStep, setCurrentStep] = useState<number>(route.params?.step || 1);
+
+  // Sync step parameter if navigated dynamically with step prop
+  useEffect(() => {
+    if (route.params?.step) {
+      setCurrentStep(route.params.step);
+    }
+  }, [route.params?.step]);
 
   // Step 1: Student Details (First Name & Last Name)
   const initialNames = (profile?.displayName || user?.name || '').split(' ');
@@ -349,14 +360,16 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         Alert.alert('Required Field', 'Please enter student last name.');
         return false;
       }
-      if (!dateOfBirth.trim()) {
-        Alert.alert('Required Field', 'Please select student date of birth.');
-        return false;
-      }
-      const dobResult = validateDateOfBirth(dateOfBirth);
-      if (!dobResult.valid) {
-        Alert.alert('Invalid Date of Birth', dobResult.error);
-        return false;
+      if (!isEdit || dateOfBirth.trim()) {
+        if (!dateOfBirth.trim()) {
+          Alert.alert('Required Field', 'Please select student date of birth.');
+          return false;
+        }
+        const dobResult = validateDateOfBirth(dateOfBirth);
+        if (!dobResult.valid) {
+          Alert.alert('Invalid Date of Birth', dobResult.error);
+          return false;
+        }
       }
       if (!gender) {
         Alert.alert('Required Field', 'Please select student gender.');
@@ -388,23 +401,31 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         Alert.alert('Required Field', 'Please choose your medium.');
         return false;
       }
-      if (!rollNumber.trim()) {
+      if (!rollNumber.trim() && !isEdit) {
         Alert.alert('Required Field', 'Please enter student roll number / ID.');
         return false;
       }
     } else if (step === 4) {
-      if (!fatherName.trim()) {
-        Alert.alert('Required Field', "Please enter father's name.");
-        return false;
-      }
-      if (!motherName.trim()) {
-        Alert.alert('Required Field', "Please enter mother's name.");
-        return false;
-      }
-      const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
-      if (cleanPhone.length !== 10) {
-        Alert.alert('Required Field', 'Please enter a 10-digit parent contact number.');
-        return false;
+      if (!isEdit) {
+        if (!fatherName.trim()) {
+          Alert.alert('Required Field', "Please enter father's name.");
+          return false;
+        }
+        if (!motherName.trim()) {
+          Alert.alert('Required Field', "Please enter mother's name.");
+          return false;
+        }
+        const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
+        if (cleanPhone.length !== 10) {
+          Alert.alert('Required Field', 'Please enter a 10-digit parent contact number.');
+          return false;
+        }
+      } else if (parentPhone.trim()) {
+        const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
+        if (cleanPhone.length !== 10) {
+          Alert.alert('Invalid Phone', 'Please enter a valid 10-digit parent contact number.');
+          return false;
+        }
       }
     }
     return true;
@@ -425,7 +446,104 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   };
 
   const handleSubmit = async () => {
-    // Validate all steps before submitting
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    const cleanPhone = parentPhone ? parentPhone.replace(/\D/g, '').slice(-10) : '';
+    const cleanClassId = normalizeClassId(activeClassId);
+    const cleanGrade = cleanClassId.replace(/\D/g, '') || '8';
+    const apiMedium = normalizeMediumApi(medium);
+    const apiGender = normalizeGenderApi(gender);
+    const apiSection = (section || 'A').toUpperCase();
+
+    let cleanDob: string | undefined = undefined;
+    if (dateOfBirth && dateOfBirth.trim()) {
+      const dobResult = validateDateOfBirth(dateOfBirth);
+      if (dobResult.valid) {
+        cleanDob = dobResult.iso;
+      } else if (!isEdit) {
+        setCurrentStep(1);
+        Alert.alert('Invalid Date of Birth', dobResult.error);
+        return;
+      }
+    } else if (profile?.dateOfBirth) {
+      cleanDob = toIsoDateOfBirth(profile.dateOfBirth) || undefined;
+    }
+
+    if (isEdit) {
+      // In edit mode, ensure at least academic steps are validated
+      if (!district.trim()) {
+        setCurrentStep(2);
+        Alert.alert('Required Field', 'Please select a district.');
+        return;
+      }
+      if (!location.trim()) {
+        setCurrentStep(2);
+        Alert.alert('Required Field', 'Please select a location / mandal.');
+        return;
+      }
+      if (!schoolName.trim()) {
+        setCurrentStep(2);
+        Alert.alert('Required Field', 'Please select or enter school name.');
+        return;
+      }
+      if (!activeClassId) {
+        setCurrentStep(3);
+        Alert.alert('Required Field', 'Please choose your enrolled class.');
+        return;
+      }
+      if (!section) {
+        setCurrentStep(3);
+        Alert.alert('Required Field', 'Please choose your section.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const patchPayload: Record<string, any> = {
+          schoolName: schoolName.trim(),
+          district: district.trim(),
+          location: location.trim(),
+          activeClassId: cleanClassId,
+          grade: cleanGrade,
+          section: apiSection,
+          medium: normalizeMediumUi(medium),
+          rollNumber: rollNumber.trim() || '1',
+          academicYear: getAcademicYear(),
+        };
+
+        if (firstName.trim()) patchPayload.firstName = firstName.trim();
+        if (lastName.trim()) patchPayload.lastName = lastName.trim();
+        if (fullName) patchPayload.displayName = fullName;
+        if (gender) patchPayload.gender = normalizeGenderUi(gender);
+        if (cleanDob) patchPayload.dateOfBirth = cleanDob;
+        if (fatherName.trim()) patchPayload.fatherName = fatherName.trim();
+        if (motherName.trim()) patchPayload.motherName = motherName.trim();
+        if (cleanPhone && cleanPhone.length === 10) {
+          patchPayload.parentPhone = cleanPhone;
+          patchPayload.guardianPhone = cleanPhone;
+        }
+
+        const updated = await dispatch(updateProfileThunk(patchPayload)).unwrap();
+        // Refresh Redux and local state with authoritative data from API
+        await dispatch(fetchProfileThunk()).unwrap().catch(() => updated);
+
+        Alert.alert(
+          'Profile Updated',
+          'Your academic details have been successfully saved.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+      } catch (err: any) {
+        const msg =
+          typeof err === 'string'
+            ? err
+            : err?.message || 'Failed to save student details. Please try again.';
+        Alert.alert('Could not save', msg);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // Initial onboarding flow (PUT)
     for (let s = 1; s <= 4; s++) {
       if (!validateStep(s)) {
         setCurrentStep(s);
@@ -433,21 +551,11 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       }
     }
 
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
-    const dobResult = validateDateOfBirth(dateOfBirth);
-
-    if (!dobResult.valid) {
+    if (!cleanDob) {
       setCurrentStep(1);
-      Alert.alert('Invalid Date of Birth', dobResult.error);
+      Alert.alert('Invalid Date of Birth', 'Please enter student date of birth (DD/MM/YYYY).');
       return;
     }
-    const cleanDob = dobResult.iso!;
-    const cleanClassId = normalizeClassId(activeClassId);
-    const cleanGrade = cleanClassId.replace(/\D/g, '') || '8';
-    const apiMedium = normalizeMediumApi(medium);
-    const apiGender = normalizeGenderApi(gender);
-    const apiSection = (section || 'A').toUpperCase();
 
     setIsSubmitting(true);
     try {
@@ -472,38 +580,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       ).unwrap();
       dispatch(setIsOnboarded(true));
 
-      // Keep local cache in sync (API is source of truth after unwrap).
-      await saveProfile({
-        displayName: fullName,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        dateOfBirth: cleanDob,
-        gender: normalizeGenderUi(gender),
-        schoolName: schoolName.trim(),
-        location: location.trim(),
-        district: district.trim(),
-        activeClassId: cleanClassId,
-        section: apiSection,
-        rollNumber: rollNumber.trim() || '1',
-        medium: normalizeMediumUi(medium),
-        fatherName: fatherName.trim(),
-        motherName: motherName.trim(),
-        guardianName: fatherName.trim() || motherName.trim(),
-        guardianPhone: cleanPhone,
-        parentPhone: cleanPhone,
-        academicYear: getAcademicYear(),
-        isOnboarded: true,
-      });
-
-      if (isEdit) {
-        Alert.alert(
-          'Profile Updated',
-          'Your academic details have been successfully saved.',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
-      } else {
-        navigation.navigate('Home');
-      }
+      navigation.navigate('Home');
     } catch (err: any) {
       const msg =
         typeof err === 'string'
@@ -1141,37 +1218,11 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         )}
 
         {/* Navigation Buttons (Back & Next / Submit) - Inline with form flow */}
-        <View className="flex-row items-center gap-3 pt-2 pb-8">
-          {/* Back Button */}
-          {(currentStep > 1 || isEdit) && (
+        <View className="gap-2.5 pt-2 pb-8">
+          {/* Primary Save Button in Edit Mode - Always accessible */}
+          {isEdit && (
             <TouchableOpacity
-              className="px-5 py-4 rounded-2xl bg-white border border-border items-center justify-center flex-row gap-1 shadow-xs"
-              onPress={handleBack}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="chevron-left" size={20} color={Colors.textSecondary} />
-              <Text className="font-manrope-bold text-xs text-textSecondary">Back</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Next or Submit Button */}
-          {currentStep < 4 ? (
-            <TouchableOpacity
-              className="flex-1 py-4 rounded-2xl bg-primary items-center justify-center flex-row gap-2 shadow-sm"
-              onPress={handleNext}
-              activeOpacity={0.85}
-            >
-              <Text className="font-manrope-bold text-sm text-white">
-                {`Next: ${
-                  currentStep === 1 ? 'School & Location' :
-                  currentStep === 2 ? 'Class & Medium' : 'Parent Details'
-                }`}
-              </Text>
-              <MaterialIcons name="chevron-right" size={20} color="#fff" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              className="flex-1 py-4 rounded-2xl bg-primary items-center justify-center flex-row gap-2 shadow-sm"
+              className="w-full py-4 rounded-2xl bg-primary items-center justify-center flex-row gap-2 shadow-sm"
               onPress={handleSubmit}
               disabled={isSubmitting}
               activeOpacity={0.85}
@@ -1182,12 +1233,81 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                 <>
                   <MaterialIcons name="check-circle" size={18} color="#fff" />
                   <Text className="font-manrope-bold text-sm text-white">
-                    {isEdit ? 'Save Academic Details' : 'Complete & Continue'}
+                    {currentStep === 2 || currentStep === 3
+                      ? 'Save Academic Details'
+                      : currentStep === 1
+                      ? 'Save Profile Details'
+                      : 'Save All Changes'}
                   </Text>
                 </>
               )}
             </TouchableOpacity>
           )}
+
+          <View className="flex-row items-center gap-3">
+            {/* Back Button */}
+            {(currentStep > 1 || isEdit) && (
+              <TouchableOpacity
+                className="px-5 py-3.5 rounded-2xl bg-white border border-border items-center justify-center flex-row gap-1 shadow-xs"
+                onPress={handleBack}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="chevron-left" size={20} color={Colors.textSecondary} />
+                <Text className="font-manrope-bold text-xs text-textSecondary">Back</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Next Step Navigation */}
+            {currentStep < 4 && (
+              <TouchableOpacity
+                className={`flex-1 py-3.5 rounded-2xl items-center justify-center flex-row gap-2 ${
+                  isEdit ? 'bg-palePeach border border-border' : 'bg-primary shadow-sm'
+                }`}
+                onPress={handleNext}
+                activeOpacity={0.85}
+              >
+                <Text
+                  className={`font-manrope-bold text-xs ${
+                    isEdit ? 'text-primaryDark' : 'text-white'
+                  }`}
+                >
+                  {`Next: ${
+                    currentStep === 1
+                      ? 'School & Location'
+                      : currentStep === 2
+                      ? 'Class & Medium'
+                      : 'Parent Details'
+                  }`}
+                </Text>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={18}
+                  color={isEdit ? Colors.primaryDark : '#fff'}
+                />
+              </TouchableOpacity>
+            )}
+
+            {/* Submit Button for Initial Onboarding (Step 4) */}
+            {!isEdit && currentStep === 4 && (
+              <TouchableOpacity
+                className="flex-1 py-4 rounded-2xl bg-primary items-center justify-center flex-row gap-2 shadow-sm"
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                activeOpacity={0.85}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <MaterialIcons name="check-circle" size={18} color="#fff" />
+                    <Text className="font-manrope-bold text-sm text-white">
+                      Complete & Continue
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </ScrollView>
 
