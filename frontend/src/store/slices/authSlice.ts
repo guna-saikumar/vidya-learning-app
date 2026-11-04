@@ -65,11 +65,30 @@ export const loginUserThunk = createAsyncThunk(
     } catch (err: any) {
       // Login wrote tokens before /me — clear orphans on any failure.
       await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, AUTH_USER_KEY]);
-      const msg =
-        err.response?.data?.error ||
+      const status = err.response?.status || err.status;
+      const rawMsg =
         err.response?.data?.message ||
+        err.response?.data?.error ||
         err.message ||
-        'Login failed';
+        '';
+
+      if (
+        status === 401 ||
+        rawMsg === 'Unauthorized' ||
+        (typeof rawMsg === 'string' &&
+          (rawMsg.toLowerCase().includes('credential') ||
+            rawMsg.toLowerCase().includes('invalid email') ||
+            rawMsg.toLowerCase().includes('invalid password') ||
+            rawMsg.toLowerCase().includes('unauthorized')))
+      ) {
+        return rejectWithValue('Invalid email address or password. Please check your credentials and try again.');
+      }
+
+      if (status === 403) {
+        return rejectWithValue('Account is not active. Please contact your school administrator.');
+      }
+
+      const msg = rawMsg || 'Login failed. Please check your network and try again.';
       return rejectWithValue(typeof msg === 'string' ? msg : 'Login failed');
     }
   }

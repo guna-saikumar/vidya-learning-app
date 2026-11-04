@@ -9,6 +9,8 @@ import {
 import {
   fetchProgressThunk,
   saveChapterProgressThunk,
+  toggleSectionCompletionThunk,
+  recordChapterVisit,
   fetchBookmarksThunk,
   addBookmarkThunk,
   deleteBookmarkThunk,
@@ -137,24 +139,49 @@ export const useLearningProgress = () => {
 
   // Toggle chapter completion.
   const handleToggleChapterCompletion = async (
-    _classId: string,
-    _subjectId: string,
+    classId: string,
+    subjectId: string,
     chapterId: string
   ) => {
     const current = progressMap[chapterId];
     const isCompleted = !current?.completed;
-
     const progressPercent = isCompleted ? 100 : 0;
 
     await dispatch(
       saveChapterProgressThunk({
         chapterId,
+        subjectId,
+        classId,
         progressPercent,
         completed: isCompleted,
       })
     ).unwrap();
 
     return isCompleted;
+  };
+
+  // Toggle topic/section completion. Optimistic & instant response.
+  const handleToggleSectionCompletion = async (
+    classId: string,
+    subjectId: string,
+    chapterId: string,
+    sectionId: string,
+    totalSectionsCount: number
+  ) => {
+    return await dispatch(
+      toggleSectionCompletionThunk({
+        classId,
+        subjectId,
+        chapterId,
+        sectionId,
+        totalSectionsCount,
+      })
+    ).unwrap();
+  };
+
+  // Record visit to chapter/topic to accurately power Continue Learning.
+  const recordVisit = (classId: string, subjectId: string, chapterId: string) => {
+    dispatch(recordChapterVisit({ classId, subjectId, chapterId }));
   };
 
   // Add or remove a bookmark. Redux is the only source of truth for the list;
@@ -198,13 +225,9 @@ export const useLearningProgress = () => {
     return true;
   };
 
-  // Remove bookmark from the Redux-managed list.
+  // Remove bookmark immediately with optimistic UI update.
   const removeBookmark = async (id: string) => {
-    if (deletingBookmarkIds.includes(id)) {
-      return;
-    }
-
-    await dispatch(deleteBookmarkThunk(id)).unwrap();
+    await dispatch(deleteBookmarkThunk(id));
   };
 
   return {
@@ -220,6 +243,8 @@ export const useLearningProgress = () => {
     selectActiveGrade,
     saveProfile,
     handleToggleChapterCompletion,
+    handleToggleSectionCompletion,
+    recordVisit,
     handleToggleBookmark,
     removeBookmark,
   };

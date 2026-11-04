@@ -638,6 +638,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       <HeaderBar
         showBack
         onBackPress={handleBack}
+        navigation={navigation}
         title={isEdit ? 'Edit Student Profile' : 'Student Setup'}
         subtitle={
           isEdit

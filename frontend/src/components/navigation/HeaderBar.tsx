@@ -21,6 +21,7 @@ interface HeaderBarProps {
   onProfilePress?: () => void;
   onNotificationPress?: () => void;
   rightAction?: React.ReactNode;
+  navigation?: any;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -35,9 +36,16 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onProfilePress,
   onNotificationPress,
   rightAction,
+  navigation: propNavigation,
 }) => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<any>();
+  let hookNavigation: any = null;
+  try {
+    hookNavigation = useNavigation<any>();
+  } catch {
+    hookNavigation = null;
+  }
+  const navigation = propNavigation || hookNavigation;
   const { profile } = useLearningProgress();
   // insets.top adapts across notches/islands and edge-to-edge status bars without double-padding.
   const topInset = insets.top;

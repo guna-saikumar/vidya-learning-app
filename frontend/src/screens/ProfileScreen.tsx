@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Modal,
   Linking,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -78,7 +79,30 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [offlineSync, setOfflineSync] = useState(true);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [selectedStudyGoal, setSelectedStudyGoal] = useState<string>('30 mins');
   const classes = getClasses();
+
+  useEffect(() => {
+    AsyncStorage.getItem('@vidya_daily_study_goal').then((stored) => {
+      if (stored) {
+        setSelectedStudyGoal(stored);
+      } else if (profile?.studyGoalMinutes) {
+        setSelectedStudyGoal(`${profile.studyGoalMinutes} mins`);
+      }
+    });
+  }, [profile?.studyGoalMinutes]);
+
+  const handleSelectStudyGoal = async (goal: string) => {
+    setSelectedStudyGoal(goal);
+    await AsyncStorage.setItem('@vidya_daily_study_goal', goal);
+    const mins = parseInt(goal, 10);
+    try {
+      await saveProfile({ studyGoalMinutes: mins });
+    } catch {
+      // Offline fallback persisted to AsyncStorage
+    }
+    Alert.alert('Study Goal Updated', `Your daily study goal has been set to ${goal}.`);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -482,16 +506,16 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               </View>
               <View className="flex-row gap-2 mt-1">
-                {['30 mins', '45 mins', '60 mins'].map((goal, idx) => {
-                  const isSelected = idx === 1; // 45 mins default
+                {['15 mins', '30 mins', '45 mins', '60 mins'].map((goal) => {
+                  const isSelected = selectedStudyGoal === goal;
                   return (
                     <TouchableOpacity
                       key={goal}
                       className={`flex-1 py-2 rounded-xl items-center border ${
-                        isSelected ? 'bg-primary border-primary' : 'bg-white border-border'
+                        isSelected ? 'bg-primary border-primary shadow-xs' : 'bg-white border-border'
                       }`}
                       activeOpacity={0.8}
-                      onPress={() => Alert.alert('Study Goal', `Daily study goal set to ${goal}`)}
+                      onPress={() => handleSelectStudyGoal(goal)}
                     >
                       <Text
                         className={`font-manrope-bold text-[11px] ${

@@ -23,46 +23,71 @@ export const LoginScreen: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [forgotPasswordNotice, setForgotPasswordNotice] = useState<string | null>(null);
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setEmailError('Student email address is required.');
+      isValid = false;
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setEmailError('Please enter a valid email address (e.g. student@school.gov.in).');
+      isValid = false;
+    } else {
+      setEmailError(null);
+    }
+
+    if (!password) {
+      setPasswordError('Password is required.');
+      isValid = false;
+    } else if (password.length < 4) {
+      setPasswordError('Password must be at least 4 characters.');
+      isValid = false;
+    } else {
+      setPasswordError(null);
+    }
+
+    return isValid;
+  };
+
   const handleLogin = async () => {
     if (loading) return;
 
+    if (!validateForm()) {
+      setErrorMessage('Please correct the highlighted fields before signing in.');
+      return;
+    }
+
     const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
-      setErrorMessage('Please enter both email and password.');
-      return;
-    }
-
-    // Basic email format check
-    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
-      setErrorMessage('Please enter a valid email address.');
-      return;
-    }
-
     setErrorMessage(null);
+    setEmailError(null);
+    setPasswordError(null);
     setForgotPasswordNotice(null);
     setLoading(true);
 
     try {
       await login(trimmedEmail, password);
     } catch (err: any) {
-      if (err instanceof ApiError) {
-        if (err.status === 401) {
-          setErrorMessage('Invalid email or password.');
-        } else if (err.status === 403) {
-          setErrorMessage('Account not active. Please contact the administrator.');
-        } else {
-          setErrorMessage(err.message || 'Server error. Please try again.');
-        }
-      } else if (err?.message) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Unable to connect to server. Please check your network.');
-      }
+      const msg =
+        err?.message ||
+        'Invalid email address or password. Please check your credentials and try again.';
+      setErrorMessage(msg);
+      setEmailError('Incorrect email or password');
+      setPasswordError('Incorrect email or password');
+      Alert.alert(
+        'Invalid Credentials',
+        'The email address or password you entered is incorrect. Please check your credentials and try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
@@ -136,12 +161,25 @@ export const LoginScreen: React.FC = () => {
 
         {/* Email Field */}
         <View className="mb-4">
-          <Text className="font-manrope-semibold text-xs text-textPrimary mb-1.5">Student Email</Text>
-          <View className="flex-row items-center h-12 px-3.5 rounded-xl border border-border bg-[#F9FAFB]">
-            <MaterialIcons name="mail-outline" size={20} color={Colors.textSecondary} />
+          <View className="flex-row items-center justify-between mb-1.5">
+            <Text className="font-manrope-semibold text-xs text-textPrimary">Student Email</Text>
+            {emailError && (
+              <Text className="font-manrope-bold text-[11px] text-red-600">{emailError}</Text>
+            )}
+          </View>
+          <View
+            className={`flex-row items-center h-12 px-3.5 rounded-xl border bg-[#F9FAFB] ${
+              emailError ? 'border-red-500 bg-red-50/20' : 'border-border'
+            }`}
+          >
+            <MaterialIcons
+              name="mail-outline"
+              size={20}
+              color={emailError ? '#DC2626' : Colors.textSecondary}
+            />
             <TextInput
               className="flex-1 ml-2.5 font-manrope-medium text-sm text-textPrimary"
-              placeholder="Enter your email"
+              placeholder="Enter your email (e.g. student@school.gov.in)"
               placeholderTextColor={Colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -149,6 +187,7 @@ export const LoginScreen: React.FC = () => {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
+                if (emailError) setEmailError(null);
                 if (errorMessage) setErrorMessage(null);
               }}
             />
@@ -157,9 +196,22 @@ export const LoginScreen: React.FC = () => {
 
         {/* Password Field */}
         <View className="mb-2">
-          <Text className="font-manrope-semibold text-xs text-textPrimary mb-1.5">Password</Text>
-          <View className="flex-row items-center h-12 px-3.5 rounded-xl border border-border bg-[#F9FAFB]">
-            <MaterialIcons name="lock-outline" size={20} color={Colors.textSecondary} />
+          <View className="flex-row items-center justify-between mb-1.5">
+            <Text className="font-manrope-semibold text-xs text-textPrimary">Password</Text>
+            {passwordError && (
+              <Text className="font-manrope-bold text-[11px] text-red-600">{passwordError}</Text>
+            )}
+          </View>
+          <View
+            className={`flex-row items-center h-12 px-3.5 rounded-xl border bg-[#F9FAFB] ${
+              passwordError ? 'border-red-500 bg-red-50/20' : 'border-border'
+            }`}
+          >
+            <MaterialIcons
+              name="lock-outline"
+              size={20}
+              color={passwordError ? '#DC2626' : Colors.textSecondary}
+            />
             <TextInput
               className="flex-1 ml-2.5 font-manrope-medium text-sm text-textPrimary"
               placeholder="••••••••"
@@ -169,6 +221,7 @@ export const LoginScreen: React.FC = () => {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
+                if (passwordError) setPasswordError(null);
                 if (errorMessage) setErrorMessage(null);
               }}
             />
@@ -179,7 +232,7 @@ export const LoginScreen: React.FC = () => {
               <MaterialIcons
                 name={showPassword ? 'visibility-off' : 'visibility'}
                 size={20}
-                color={Colors.textSecondary}
+                color={passwordError ? '#DC2626' : Colors.textSecondary}
               />
             </TouchableOpacity>
           </View>

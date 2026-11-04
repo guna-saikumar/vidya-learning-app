@@ -158,6 +158,71 @@ export const saveChapterProgressThunk = createAsyncThunk(
 );
 
 // --------------------------------------------------
+// TOGGLE SECTION (TOPIC) COMPLETION
+// --------------------------------------------------
+
+export interface ToggleSectionInput {
+  classId: string;
+  subjectId: string;
+  chapterId: string;
+  sectionId: string;
+  totalSectionsCount: number;
+}
+
+export const toggleSectionCompletionThunk = createAsyncThunk<
+  ChapterProgress,
+  ToggleSectionInput,
+  { state: RootState }
+>(
+  'progress/toggleSectionCompletion',
+  async (
+    { classId, subjectId, chapterId, sectionId, totalSectionsCount },
+    { getState }
+  ) => {
+    const state = getState();
+    const current = state.progress.progressMap[chapterId];
+    const completedSections = current?.completedSections || [];
+    const isAlreadyDone = completedSections.includes(sectionId);
+
+    const updatedSections = isAlreadyDone
+      ? completedSections.filter((s) => s !== sectionId)
+      : [...completedSections, sectionId];
+
+    const percent = Math.min(
+      100,
+      Math.round(
+        (updatedSections.length / Math.max(1, totalSectionsCount)) * 100
+      )
+    );
+    const completed = percent === 100;
+
+    const updated: ChapterProgress = {
+      chapterId,
+      subjectId: subjectId || current?.subjectId || '',
+      classId: classId || current?.classId || '',
+      progressPercent: percent,
+      completed,
+      lastAccessed: Date.now(),
+      completedSections: updatedSections,
+    };
+
+    // Non-blocking background sync
+    studentsApi
+      .updateProgress(chapterId, {
+        progressPercent: percent,
+        completed,
+        sectionId,
+      })
+      .catch((err) => console.warn('Background section progress update failed:', err));
+
+    const currentMap = { ...state.progress.progressMap, [chapterId]: updated };
+    AsyncStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(currentMap)).catch(() => {});
+
+    return updated;
+  }
+);
+
+// --------------------------------------------------
 // FETCH BOOKMARKS
 // --------------------------------------------------
 
@@ -362,6 +427,22 @@ const progressSlice = createSlice({
     ) => {
       state.progressMap = action.payload;
     },
+    recordChapterVisit: (
+      state,
+      action: PayloadAction<{ classId: string; subjectId: string; chapterId: string }>
+    ) => {
+      const { classId, subjectId, chapterId } = action.payload;
+      const existing = state.progressMap[chapterId];
+      state.progressMap[chapterId] = {
+        chapterId,
+        subjectId: subjectId || existing?.subjectId || '',
+        classId: classId || existing?.classId || '',
+        progressPercent: existing?.progressPercent || 0,
+        completed: existing?.completed || false,
+        lastAccessed: Date.now(),
+        completedSections: existing?.completedSections || [],
+      };
+    },
   },
 
   extraReducers: (builder) => {
@@ -385,6 +466,34 @@ const progressSlice = createSlice({
     builder.addCase(saveChapterProgressThunk.fulfilled, (state, action) => {
       state.progressMap[action.payload.chapterId] = action.payload;
     });
+
+    // Toggle section completion (instant optimistic update)
+    builder
+      .addCase(toggleSectionCompletionThunk.pending, (state, action) => {
+        const { chapterId, sectionId, totalSectionsCount, classId, subjectId } = action.meta.arg;
+        const current = state.progressMap[chapterId];
+        const completedSections = current?.completedSections || [];
+        const isAlreadyDone = completedSections.includes(sectionId);
+        const updatedSections = isAlreadyDone
+          ? completedSections.filter((s) => s !== sectionId)
+          : [...completedSections, sectionId];
+        const percent = Math.min(
+          100,
+          Math.round((updatedSections.length / Math.max(1, totalSectionsCount)) * 100)
+        );
+        state.progressMap[chapterId] = {
+          chapterId,
+          subjectId: subjectId || current?.subjectId || '',
+          classId: classId || current?.classId || '',
+          progressPercent: percent,
+          completed: percent === 100,
+          lastAccessed: Date.now(),
+          completedSections: updatedSections,
+        };
+      })
+      .addCase(toggleSectionCompletionThunk.fulfilled, (state, action) => {
+        state.progressMap[action.payload.chapterId] = action.payload;
+      });
 
     // Fetch bookmarks
     builder
@@ -436,31 +545,28 @@ const progressSlice = createSlice({
           'Failed to save bookmark.';
       });
 
-    // Delete bookmark
+    // Delete bookmark (optimistic removal so it disappears on the very first tap!)
     builder
       .addCase(deleteBookmarkThunk.pending, (state, action) => {
         state.bookmarksError = null;
         if (!state.deletingBookmarkIds.includes(action.meta.arg)) {
           state.deletingBookmarkIds.push(action.meta.arg);
         }
+        state.bookmarksRevision += 1;
+        state.bookmarks = state.bookmarks.filter(
+          (bookmark) => bookmark.id !== action.meta.arg
+        );
       })
       .addCase(deleteBookmarkThunk.fulfilled, (state, action) => {
         state.deletingBookmarkIds = state.deletingBookmarkIds.filter(
           (id) => id !== action.payload.id
         );
-
-        if (action.payload.status === 'deleted') {
-          state.bookmarksRevision += 1;
-          state.bookmarks = state.bookmarks.filter(
-            (bookmark) => bookmark.id !== action.payload.id
-          );
-          state.bookmarksSource = 'server';
-        }
-
+        state.bookmarks = state.bookmarks.filter(
+          (bookmark) => bookmark.id !== action.payload.id
+        );
         state.bookmarksError = null;
       })
       .addCase(deleteBookmarkThunk.rejected, (state, action) => {
-        // Keep the bookmark: the server still has it.
         state.deletingBookmarkIds = state.deletingBookmarkIds.filter(
           (id) => id !== action.meta.arg
         );
@@ -497,6 +603,6 @@ const progressSlice = createSlice({
   },
 });
 
-export const { setProgressLocal } = progressSlice.actions;
+export const { setProgressLocal, recordChapterVisit } = progressSlice.actions;
 
 export default progressSlice.reducer;
