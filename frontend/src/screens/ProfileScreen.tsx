@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
@@ -75,6 +76,24 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { user, logout } = useAuth();
   const { profile, bookmarks, progressMap, saveProfile } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
+  const [studyMedium, setStudyMedium] = useState<'English' | 'Telugu'>(
+    (profile?.medium || '').toUpperCase().includes('TELUGU') ? 'Telugu' : 'English'
+  );
+  const [dailyGoal, setDailyGoal] = useState('45 mins');
+
+  useEffect(() => {
+    if (profile?.medium) {
+      setStudyMedium(profile.medium.toUpperCase().includes('TELUGU') ? 'Telugu' : 'English');
+    }
+  }, [profile?.medium]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('@vidya_study_goal')
+      .then((value) => {
+        if (value) setDailyGoal(value);
+      })
+      .catch(() => {});
+  }, []);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const classes = getClasses();
@@ -443,17 +462,40 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               </View>
               <View className="flex-row gap-1 bg-[#F5F2EF] p-1 rounded-xl">
                 <TouchableOpacity
-                  className="px-2.5 py-1 rounded-lg bg-primary"
+                  className={`px-2.5 py-1 rounded-lg ${studyMedium === 'English' ? 'bg-primary' : ''}`}
                   activeOpacity={0.8}
+                  onPress={async () => {
+                    setStudyMedium('English');
+                    try {
+                      await saveProfile({ medium: 'ENGLISH' });
+                    } catch {
+                      Alert.alert('Could not update', 'Failed to save study medium.');
+                    }
+                  }}
                 >
-                  <Text className="font-manrope-bold text-[11px] text-white">English</Text>
+                  <Text
+                    className={`font-manrope-bold text-[11px] ${studyMedium === 'English' ? 'text-white' : 'text-textSecondary'}`}
+                  >
+                    English
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="px-2.5 py-1 rounded-lg"
+                  className={`px-2.5 py-1 rounded-lg ${studyMedium === 'Telugu' ? 'bg-primary' : ''}`}
                   activeOpacity={0.8}
-                  onPress={() => Alert.alert('Telugu Medium', 'Telugu medium textbooks & bilingual summaries are enabled.')}
+                  onPress={async () => {
+                    setStudyMedium('Telugu');
+                    try {
+                      await saveProfile({ medium: 'TELUGU' });
+                    } catch {
+                      Alert.alert('Could not update', 'Failed to save study medium.');
+                    }
+                  }}
                 >
-                  <Text className="font-manrope-medium text-[11px] text-textSecondary">తెలుగు</Text>
+                  <Text
+                    className={`font-manrope-bold text-[11px] ${studyMedium === 'Telugu' ? 'text-white' : 'text-textSecondary'}`}
+                  >
+                    తెలుగు
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -468,8 +510,8 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               </View>
               <View className="flex-row gap-2 mt-1">
-                {['30 mins', '45 mins', '60 mins'].map((goal, idx) => {
-                  const isSelected = idx === 1; // 45 mins default
+                {['30 mins', '45 mins', '60 mins'].map((goal) => {
+                  const isSelected = dailyGoal === goal;
                   return (
                     <TouchableOpacity
                       key={goal}
@@ -477,7 +519,14 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                         isSelected ? 'bg-primary border-primary' : 'bg-white border-border'
                       }`}
                       activeOpacity={0.8}
-                      onPress={() => Alert.alert('Study Goal', `Daily study goal set to ${goal}`)}
+                      onPress={async () => {
+                        setDailyGoal(goal);
+                        try {
+                          await AsyncStorage.setItem('@vidya_study_goal', goal);
+                        } catch {
+                          // Best-effort persistence; selection still works in-session.
+                        }
+                      }}
                     >
                       <Text
                         className={`font-manrope-bold text-[11px] ${

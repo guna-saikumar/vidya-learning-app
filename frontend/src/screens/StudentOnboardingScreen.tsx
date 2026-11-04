@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/colors';
 import { HeaderBar } from '../components/navigation';
 import { useLearningProgress } from '../hooks/useLearningProgress';
+import { getApiErrorMessage } from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
@@ -401,9 +402,9 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         Alert.alert('Required Field', "Please enter mother's name.");
         return false;
       }
-      const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
+      const cleanPhone = parentPhone.replace(/\D/g, '');
       if (cleanPhone.length !== 10) {
-        Alert.alert('Required Field', 'Please enter a 10-digit parent contact number.');
+        Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
         return false;
       }
     }
@@ -425,6 +426,14 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    const phoneDigits = parentPhone.replace(/\\D/g, '');
+    if (phoneDigits.length !== 10) {
+      Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
+      return;
+    }
+
     // Validate all steps before submitting
     for (let s = 1; s <= 4; s++) {
       if (!validateStep(s)) {
@@ -434,7 +443,12 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     }
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    const cleanPhone = parentPhone.replace(/\D/g, '').slice(-10);
+    const cleanPhone = parentPhone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
+      setIsSubmitting(false);
+      return;
+    }
     const dobResult = validateDateOfBirth(dateOfBirth);
 
     if (!dobResult.valid) {
@@ -498,18 +512,17 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       if (isEdit) {
         Alert.alert(
           'Profile Updated',
-          'Your academic details have been successfully saved.',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
+          'Your academic details have been successfully saved.'
         );
+        navigation.goBack();
       } else {
         navigation.navigate('Home');
       }
     } catch (err: any) {
-      const msg =
-        typeof err === 'string'
-          ? err
-          : err?.message || 'Failed to save student details. Please try again.';
-      Alert.alert('Could not save', msg);
+      Alert.alert(
+        'Could not save',
+        getApiErrorMessage(err, 'Failed to save student details. Please try again.')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1110,7 +1123,16 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
               <Text className="font-manrope-bold text-xs text-textSecondary">
                 Parent / Guardian Contact Mobile <Text className="text-primary">*</Text>
               </Text>
-              <View className="flex-row items-center bg-softWarm border border-border rounded-xl px-3.5 py-3">
+              <View
+                className="flex-row items-center bg-softWarm border rounded-xl px-3.5 py-3"
+                style={{
+                  borderColor:
+                    parentPhone.trim().length > 0 &&
+                    parentPhone.replace(/\D/g, '').length !== 10
+                      ? Colors.error
+                      : Colors.border,
+                }}
+              >
                 <MaterialIcons name="phone" size={18} color={Colors.textMuted} />
                 <TextInput
                   className="flex-1 ml-2.5 font-manrope-bold text-sm text-textPrimary"
@@ -1121,6 +1143,15 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                   keyboardType="phone-pad"
                 />
               </View>
+              {parentPhone.trim().length > 0 &&
+                parentPhone.replace(/\D/g, '').length !== 10 && (
+                  <Text
+                    className="font-manrope-medium text-xs"
+                    style={{ color: Colors.error }}
+                  >
+                    Mobile number must contain exactly 10 digits.
+                  </Text>
+                )}
             </View>
 
             {/* Summary Confirmation Note */}
