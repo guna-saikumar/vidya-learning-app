@@ -58,11 +58,39 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   // Get recent progress items for "Continue Learning"
   const recentProgress = useMemo(() => {
-    return Object.values(progressMap)
-      .filter((p) => !p.completed && p.progressPercent > 0)
-      .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))
-      .slice(0, 2);
-  }, [progressMap]);
+    // 1. Chapters with active learning progress or recorded visits that are not yet 100% completed
+    const inProgress = Object.values(progressMap)
+      .filter((p) => !p.completed && (p.progressPercent > 0 || (p.lastAccessed && p.lastAccessed > 0)))
+      .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+
+    if (inProgress.length > 0) {
+      return inProgress.slice(0, 2);
+    }
+
+    // 2. Default to the first uncompleted chapter in the student's enrolled class
+    if (activeClass?.subjects) {
+      for (const subj of activeClass.subjects) {
+        for (const ch of subj.chapters || []) {
+          const p = progressMap[ch.id];
+          if (!p || !p.completed) {
+            return [
+              {
+                chapterId: ch.id,
+                subjectId: subj.id,
+                classId: activeClass.id,
+                progressPercent: p?.progressPercent || 0,
+                completed: false,
+                lastAccessed: p?.lastAccessed || Date.now(),
+                completedSections: p?.completedSections || [],
+              },
+            ];
+          }
+        }
+      }
+    }
+
+    return [];
+  }, [progressMap, activeClass]);
 
   const handleOpenChapter = (classId: string, subjectId: string, chapterId: string) => {
     navigation.navigate('ChapterDetails', { classId, subjectId, chapterId });

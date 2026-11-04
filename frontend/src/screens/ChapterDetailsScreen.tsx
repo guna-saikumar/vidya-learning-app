@@ -28,6 +28,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
     bookmarks,
     handleToggleChapterCompletion,
     handleToggleBookmark,
+    recordVisit,
   } = useLearningProgress();
 
   const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
@@ -46,9 +47,9 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
 
   useEffect(() => {
     if (chapterId && classId && subjectId) {
-      recordChapterVisit(classId, subjectId, chapterId);
+      recordVisit(classId, subjectId, chapterId);
     }
-  }, [chapterId, classId, subjectId]);
+  }, [chapterId, classId, subjectId, recordVisit]);
 
   if (!chapter || !subject || !schoolClass) {
     return (
@@ -233,28 +234,47 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         </View>
 
         {/* Detailed Sections */}
-        {chapter.sections.map((section, idx) => (
-          <View key={section.id} className="bg-white rounded-[20px] p-5 border border-border gap-3.5 my-1 shadow-sm">
-            <TouchableOpacity
-              className="flex-row items-center gap-3"
-              onPress={() =>
-                navigation.navigate('SectionDetails', {
-                  classId,
-                  subjectId,
-                  chapterId,
-                  sectionId: section.id,
-                })
-              }
-              activeOpacity={0.8}
-            >
-              <View className="w-9 h-9 rounded-xl bg-palePeach items-center justify-center">
-                <Text className="font-manrope-extrabold text-xs text-primary">
-                  {chapter.order}.{idx + 1}
-                </Text>
-              </View>
-              <Text className="font-manrope-extrabold text-base text-textPrimary flex-1 tracking-tight">{section.title}</Text>
-              <MaterialIcons name="chevron-right" size={18} color={Colors.textMuted} />
-            </TouchableOpacity>
+        {chapter.sections.map((section, idx) => {
+          const isSecDone = currentProgress?.completedSections?.includes(section.id);
+          return (
+            <View key={section.id} className="bg-white rounded-[20px] p-5 border border-border gap-3.5 my-1 shadow-sm">
+              <TouchableOpacity
+                className="flex-row items-center gap-3"
+                onPress={() =>
+                  navigation.navigate('SectionDetails', {
+                    classId,
+                    subjectId,
+                    chapterId,
+                    sectionId: section.id,
+                  })
+                }
+                activeOpacity={0.8}
+              >
+                <View
+                  className={`w-9 h-9 rounded-xl items-center justify-center ${
+                    isSecDone ? 'bg-emerald-50 border border-emerald-200' : 'bg-palePeach'
+                  }`}
+                >
+                  {isSecDone ? (
+                    <MaterialIcons name="check" size={18} color="#059669" />
+                  ) : (
+                    <Text className="font-manrope-extrabold text-xs text-primary">
+                      {chapter.order}.{idx + 1}
+                    </Text>
+                  )}
+                </View>
+                <View className="flex-1">
+                  <Text className="font-manrope-extrabold text-base text-textPrimary tracking-tight">
+                    {section.title}
+                  </Text>
+                  {isSecDone && (
+                    <Text className="font-manrope-bold text-[11px] text-emerald-600 mt-0.5">
+                      Topic Completed
+                    </Text>
+                  )}
+                </View>
+                <MaterialIcons name="chevron-right" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
 
             <Text className="font-manrope-medium text-sm text-textSecondary leading-[22px]">{section.content}</Text>
 
@@ -272,7 +292,8 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               />
             )}
           </View>
-        ))}
+          );
+        })}
 
         {/* Core Algebraic Properties Bento Card */}
         <View className="my-2 gap-3">

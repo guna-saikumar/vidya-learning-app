@@ -9,6 +9,8 @@ import {
 import {
   fetchProgressThunk,
   saveChapterProgressThunk,
+  toggleSectionCompletionThunk,
+  recordChapterVisit,
   fetchBookmarksThunk,
   addBookmarkThunk,
   deleteBookmarkThunk,
@@ -137,18 +139,19 @@ export const useLearningProgress = () => {
 
   // Toggle chapter completion.
   const handleToggleChapterCompletion = async (
-    _classId: string,
-    _subjectId: string,
+    classId: string,
+    subjectId: string,
     chapterId: string
   ) => {
     const current = progressMap[chapterId];
     const isCompleted = !current?.completed;
-
     const progressPercent = isCompleted ? 100 : 0;
 
     await dispatch(
       saveChapterProgressThunk({
         chapterId,
+        subjectId,
+        classId,
         progressPercent,
         completed: isCompleted,
       })
@@ -156,6 +159,30 @@ export const useLearningProgress = () => {
 
     return isCompleted;
   };
+
+  // Toggle topic/section completion. Optimistic & instant response.
+  const handleToggleSectionCompletion = async (
+    classId: string,
+    subjectId: string,
+    chapterId: string,
+    sectionId: string,
+    totalSectionsCount: number
+  ) => {
+    return await dispatch(
+      toggleSectionCompletionThunk({
+        classId,
+        subjectId,
+        chapterId,
+        sectionId,
+        totalSectionsCount,
+      })
+    ).unwrap();
+  };
+
+  // Record visit to chapter/topic to accurately power Continue Learning.
+  const recordVisit = useCallback((classId: string, subjectId: string, chapterId: string) => {
+    dispatch(recordChapterVisit({ classId, subjectId, chapterId }));
+  }, [dispatch]);
 
   // Add or remove a bookmark. Redux is the only source of truth for the list;
   // the server call must succeed before local state changes.
@@ -198,7 +225,8 @@ export const useLearningProgress = () => {
     return true;
   };
 
-  // Remove bookmark from the Redux-managed list.
+  // Remove bookmark only after the server confirms. Optimistic removal makes
+  // deleteBookmarkThunk think the bookmark is already gone and skip the API call.
   const removeBookmark = async (id: string) => {
     if (deletingBookmarkIds.includes(id)) {
       return;
@@ -220,6 +248,8 @@ export const useLearningProgress = () => {
     selectActiveGrade,
     saveProfile,
     handleToggleChapterCompletion,
+    handleToggleSectionCompletion,
+    recordVisit,
     handleToggleBookmark,
     removeBookmark,
   };

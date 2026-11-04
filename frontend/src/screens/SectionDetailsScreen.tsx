@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,6 @@ import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
 import { getSectionById } from '../services/curriculumService';
-import { markSectionCompleted } from '../services/progressService';
 import { getApiErrorMessage } from '../services/apiClient';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
@@ -22,7 +21,19 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SectionDetails'>;
 
 export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { classId, subjectId, chapterId, sectionId } = route.params;
-  const { progressMap, refreshData, bookmarks, handleToggleBookmark } = useLearningProgress();
+  const {
+    progressMap,
+    bookmarks,
+    handleToggleBookmark,
+    handleToggleSectionCompletion,
+    recordVisit,
+  } = useLearningProgress();
+
+  useEffect(() => {
+    if (classId && subjectId && chapterId) {
+      recordVisit(classId, subjectId, chapterId);
+    }
+  }, [classId, subjectId, chapterId]);
 
   const result = getSectionById(sectionId);
   const section = result?.section;
@@ -76,14 +87,17 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   };
 
   const handleMarkSectionDone = async () => {
-    await markSectionCompleted(
-      classId,
-      subjectId,
-      chapterId,
-      sectionId,
-      chapter.sections.length
-    );
-    await refreshData();
+    try {
+      await handleToggleSectionCompletion(
+        classId,
+        subjectId,
+        chapterId,
+        sectionId,
+        chapter.sections.length
+      );
+    } catch (error) {
+      console.warn('Could not update section progress:', error);
+    }
   };
 
   return (
@@ -157,7 +171,7 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
           onPress={handleMarkSectionDone}
           activeOpacity={0.88}
         >
-          <MaterialIcons name="check" size={19} color={Colors.white} />
+          <MaterialIcons name={isSectionDone ? "check-circle" : "check"} size={19} color={Colors.white} />
           <Text className="font-manrope-bold text-[13px] text-white">
             {isSectionDone ? 'Topic Completed' : 'Mark topic as completed'}
           </Text>

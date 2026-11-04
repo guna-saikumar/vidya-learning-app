@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,8 +11,10 @@ import {
   Modal,
   Linking,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
@@ -74,12 +75,12 @@ const ensureMediaPermission = async (kind: keyof typeof MEDIA_COPY): Promise<boo
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { user, logout } = useAuth();
-  const { profile, bookmarks, progressMap, saveProfile } = useLearningProgress();
+  const { profile, bookmarks, progressMap, saveProfile, refreshData } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
   const [studyMedium, setStudyMedium] = useState<'English' | 'Telugu'>(
     (profile?.medium || '').toUpperCase().includes('TELUGU') ? 'Telugu' : 'English'
   );
-  const [dailyGoal, setDailyGoal] = useState('45 mins');
+  const [selectedStudyGoal, setSelectedStudyGoal] = useState('45 mins');
 
   useEffect(() => {
     if (profile?.medium) {
@@ -90,16 +91,44 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     AsyncStorage.getItem('@vidya_study_goal')
       .then((value) => {
-        if (value) setDailyGoal(value);
+        if (value) {
+          setSelectedStudyGoal(value);
+          return;
+        }
+        if (profile?.studyGoalMinutes) {
+          setSelectedStudyGoal(`${profile.studyGoalMinutes} mins`);
+        }
       })
       .catch(() => {});
-  }, []);
+  }, [profile?.studyGoalMinutes]);
+
+  const handleSelectStudyGoal = async (goal: string) => {
+    setSelectedStudyGoal(goal);
+    try {
+      await AsyncStorage.setItem('@vidya_study_goal', goal);
+    } catch {
+      Alert.alert('Could not update', 'Failed to save daily study goal.');
+    }
+  };
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const classes = getClasses();
 
+  useFocusEffect(
+    useCallback(() => {
+      void refreshData(true);
+    }, [refreshData])
+  );
+
   const completedCount = Object.values(progressMap).filter((p) => p.completed).length;
-  const activeClass = classes.find((c) => c.id === profile?.activeClassId);
+  const normalizedClassId = profile?.activeClassId?.startsWith('class-')
+    ? profile.activeClassId
+    : profile?.activeClassId
+    ? `class-${profile.activeClassId}`
+    : undefined;
+  const activeClass =
+    classes.find((c) => c.id === normalizedClassId) ||
+    classes.find((c) => c.id === profile?.activeClassId);
 
   const pickImageFromDevice = async () => {
     try {
@@ -510,23 +539,16 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               </View>
               <View className="flex-row gap-2 mt-1">
-                {['30 mins', '45 mins', '60 mins'].map((goal) => {
-                  const isSelected = dailyGoal === goal;
+                {['15 mins', '30 mins', '45 mins', '60 mins'].map((goal) => {
+                  const isSelected = selectedStudyGoal === goal;
                   return (
                     <TouchableOpacity
                       key={goal}
                       className={`flex-1 py-2 rounded-xl items-center border ${
-                        isSelected ? 'bg-primary border-primary' : 'bg-white border-border'
+                        isSelected ? 'bg-primary border-primary shadow-xs' : 'bg-white border-border'
                       }`}
                       activeOpacity={0.8}
-                      onPress={async () => {
-                        setDailyGoal(goal);
-                        try {
-                          await AsyncStorage.setItem('@vidya_study_goal', goal);
-                        } catch {
-                          // Best-effort persistence; selection still works in-session.
-                        }
-                      }}
+                      onPress={() => handleSelectStudyGoal(goal)}
                     >
                       <Text
                         className={`font-manrope-bold text-[11px] ${

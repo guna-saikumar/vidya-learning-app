@@ -293,6 +293,10 @@ export class StudentsService {
         throw new BadRequestException({ error: "Unknown classId" });
       }
       values.activeClassId = classId;
+      if (values.grade === undefined) {
+        const gradeMatch = classId.match(/\d+/);
+        if (gradeMatch) values.grade = gradeMatch[0];
+      }
     } else if (raw.classId === null) {
       values.activeClassId = null;
     } else if (typeof values.grade === "string") {

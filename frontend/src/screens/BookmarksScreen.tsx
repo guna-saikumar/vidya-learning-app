@@ -271,15 +271,18 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      className="p-1"
+                      className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200"
                       onPress={() => handleRemove(bm.id)}
                       disabled={isDeleting}
+                      activeOpacity={0.7}
                       hitSlop={{
-                        top: 8,
-                        bottom: 8,
-                        left: 8,
-                        right: 8,
+                        top: 12,
+                        bottom: 12,
+                        left: 12,
+                        right: 12,
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove bookmark ${bm.title}`}
                     >
                       {isDeleting ? (
                         <ActivityIndicator
@@ -287,11 +290,16 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
                           color={Colors.error}
                         />
                       ) : (
-                        <MaterialIcons
-                          name="bookmark-remove"
-                          size={18}
-                          color={Colors.error}
-                        />
+                        <>
+                          <MaterialIcons
+                            name="bookmark-remove"
+                            size={16}
+                            color={Colors.error}
+                          />
+                          <Text className="font-manrope-bold text-xs text-red-600">
+                            Remove
+                          </Text>
+                        </>
                       )}
                     </TouchableOpacity>
                   </View>
