@@ -13,7 +13,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@vidya/*": ["./packages/*/src"]
+      "@vidya/api-client": ["./frontend/src/api-client"],
+      "@vidya/auth": ["./frontend/src/types/auth"]
     }
   }
 }

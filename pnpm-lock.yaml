@@ -38,7 +38,7 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
-  apps/api:
+  backend:
     dependencies:
       '@fastify/multipart':
         specifier: ^10.1.6
@@ -114,7 +114,32 @@ importers:
         specifier: ^5.0.4
         version: 5.0.5(@types/node@26.6.5)(vite@8.3.4)
 
-  apps/student-mobile:
+  backend/db:
+    dependencies:
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
+      pg:
+        specifier: ^8.16.3
+        version: 8.23.1
+    devDependencies:
+      '@types/bcrypt':
+        specifier: ^6.0.0
+        version: 6.0.0
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+      '@types/pg':
+        specifier: ^8.15.5
+        version: 8.23.1
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+
+  frontend:
     dependencies:
       '@expo-google-fonts/inter':
         specifier: ^0.4.2
@@ -143,12 +168,6 @@ importers:
       '@reduxjs/toolkit':
         specifier: ^2.13.0
         version: 2.13.0(react-redux@9.3.0)(react@19.2.3)
-      '@vidya/api-client':
-        specifier: workspace:*
-        version: link:../../packages/api-client
-      '@vidya/auth':
-        specifier: workspace:*
-        version: link:../../packages/auth
       axios:
         specifier: ^1.20.0
         version: 1.20.0
@@ -216,58 +235,6 @@ importers:
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
-
-  packages/api-client:
-    dependencies:
-      '@vidya/auth':
-        specifier: workspace:*
-        version: link:../auth
-
-  packages/auth:
-    dependencies:
-      zod:
-        specifier: ^4.6.7
-        version: 4.6.7
-    devDependencies:
-      '@types/node':
-        specifier: ^26.6.5
-        version: 26.6.5
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
-
-  packages/config: {}
-
-  packages/curriculum: {}
-
-  packages/db:
-    dependencies:
-      bcrypt:
-        specifier: ^6.0.0
-        version: 6.0.0
-      pg:
-        specifier: ^8.16.3
-        version: 8.23.1
-    devDependencies:
-      '@types/bcrypt':
-        specifier: ^6.0.0
-        version: 6.0.0
-      '@types/node':
-        specifier: ^26.6.5
-        version: 26.6.5
-      '@types/pg':
-        specifier: ^8.15.5
-        version: 8.23.1
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
-      typescript:
-        specifier: ~6.0.3
-        version: 6.0.3
-
-  packages/design-tokens: {}
-
-  packages/ui: {}
 
 packages:
 

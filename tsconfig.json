@@ -7,9 +7,9 @@
     "useDefineForClassFields": false
   },
   "include": [
-    "apps/student-mobile/**/*",
-    "apps/api/**/*",
+    "frontend/**/*",
+    "backend/**/*",
     "packages/**/*"
   ],
-  "exclude": ["packages/db/sql/seed.ts", "packages/db/sql/migrate.ts"]
+  "exclude": ["backend/db/sql/seed.ts", "backend/db/sql/migrate.ts"]
 }
