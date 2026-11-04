@@ -437,49 +437,15 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     }
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => Math.max(prev - 1, 1));
-    } else if (navigation.canGoBack()) {
+    } else if (isEdit && navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      Alert.alert(
-        'Leave Setup?',
-        'You can explore Vidya Learning and complete your academic details later in Profile.',
-        [
-          { text: 'Stay Here', style: 'cancel' },
-          {
-            text: 'Go to Home',
-            onPress: () => {
-              dispatch(setIsOnboarded(true));
-              navigation.navigate('Home');
-            },
-          },
-          {
-            text: 'Sign Out',
-            style: 'destructive',
-            onPress: () => logout(),
-          },
-        ]
-      );
+      // First-time onboarding after login: going back redirects to login / sign in page
+      await logout();
     }
-  };
-
-  const handleSkipOrHome = () => {
-    Alert.alert(
-      'Skip Setup for Now?',
-      'You can explore the curriculum and complete your school & class details anytime in Profile.',
-      [
-        { text: 'Stay Here', style: 'cancel' },
-        {
-          text: 'Go to Home',
-          onPress: () => {
-            dispatch(setIsOnboarded(true));
-            navigation.navigate('Home');
-          },
-        },
-      ]
-    );
   };
 
   const handleSubmit = async () => {
@@ -677,17 +643,6 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
           isEdit
             ? 'Update student, school, and parent details'
             : 'Personalize your class, medium & school'
-        }
-        rightAction={
-          !isEdit ? (
-            <TouchableOpacity
-              onPress={handleSkipOrHome}
-              className="px-3 py-1.5 rounded-full bg-palePeach border border-border"
-              activeOpacity={0.8}
-            >
-              <Text className="font-manrope-bold text-xs text-primary">Skip</Text>
-            </TouchableOpacity>
-          ) : undefined
         }
       />
 
@@ -1356,19 +1311,6 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
               </TouchableOpacity>
             )}
           </View>
-
-          {/* Quick exit option for first-time onboarding */}
-          {!isEdit && (
-            <TouchableOpacity
-              className="items-center py-2"
-              onPress={handleSkipOrHome}
-              activeOpacity={0.7}
-            >
-              <Text className="font-manrope-medium text-xs text-textSecondary underline">
-                Skip setup for now & explore Dashboard
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
       </ScrollView>
 
