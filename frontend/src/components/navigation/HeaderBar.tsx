@@ -3,8 +3,9 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { fetchNotificationsThunk } from '../../store/slices/notificationsSlice';
 import Colors from '../../constants/colors';
-import { getUnreadCount } from '../../services/notificationService';
 import { useLearningProgress } from '../../hooks/useLearningProgress';
 
 interface HeaderBarProps {
@@ -49,19 +50,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   const { profile } = useLearningProgress();
   // insets.top adapts across notches/islands and edge-to-edge status bars without double-padding.
   const topInset = insets.top;
-  const [unreadCount, setUnreadCount] = useState(0);
+  const dispatch = useAppDispatch();
+  const unreadCount = useAppSelector((state) => state.notifications.unreadCount);
 
   useEffect(() => {
-    const loadUnread = async () => {
-      try {
-        const count = await getUnreadCount();
-        setUnreadCount(count);
-      } catch {
-        setUnreadCount(0);
-      }
-    };
-    loadUnread();
-  }, []);
+    dispatch(fetchNotificationsThunk());
+  }, [dispatch]);
 
   const handleNotificationPress = () => {
     if (onNotificationPress) {

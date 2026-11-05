@@ -15,6 +15,7 @@ import {
   addBookmarkThunk,
   deleteBookmarkThunk,
 } from '../store/slices/progressSlice';
+import { fetchNotificationsThunk } from '../store/slices/notificationsSlice';
 
 import { BookmarkItem, UserProfile } from '../types/curriculum';
 
@@ -95,6 +96,7 @@ export const useLearningProgress = () => {
           dispatch(fetchProfileThunk()).unwrap(),
           dispatch(fetchProgressThunk()).unwrap(),
           dispatch(fetchBookmarksThunk()).unwrap(),
+          dispatch(fetchNotificationsThunk()).unwrap(),
         ]);
 
         // Allow another fetch if one of the requests failed.
