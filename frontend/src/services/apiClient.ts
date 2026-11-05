@@ -167,8 +167,14 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = (originalRequest?.url || '').toLowerCase();
+    const isAuthRoute =
+      requestUrl.includes('/api/v1/auth/login') ||
+      requestUrl.includes('/auth/login') ||
+      requestUrl.includes('/api/v1/auth/refresh') ||
+      requestUrl.includes('/auth/refresh');
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
