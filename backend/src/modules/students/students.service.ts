@@ -94,7 +94,10 @@ type ProfileRow = {
   language: string;
   notificationsEnabled: boolean;
   isOnboarded: boolean;
-} & Record<(typeof FIELD_COLUMNS)[number], string | null>;
+} & Record<
+  Exclude<(typeof FIELD_COLUMNS)[number], "studyGoalMinutes">,
+  string | null
+>;
 
 type ProgressRow = {
   chapterId: string;
@@ -288,6 +291,14 @@ export class StudentsService {
       let val = raw[col];
       if (col === "villageCity" && rawLocation !== undefined) val = rawLocation;
       if (col === "dob" && rawDob !== undefined) val = rawDob;
+
+      // Column is NOT NULL. A full onboarding replace omits this field, and
+      // `null` would fail the write. Missing or null resets to the default.
+      if (col === "studyGoalMinutes") {
+        if (typeof val === "number") values[col] = val;
+        else if (replace || val === null) values[col] = 30;
+        continue;
+      }
 
       if (val !== undefined) values[col] = clean(val);
       else if (replace) values[col] = null;
@@ -584,7 +595,7 @@ export class StudentsService {
     );
     return {
       success: true,
-      updatedProgress: { chapterId: chapter.id, ...toProgressDto(rows[0]!) },
+      updatedProgress: toProgressDto(rows[0]!),
     };
   }
 
