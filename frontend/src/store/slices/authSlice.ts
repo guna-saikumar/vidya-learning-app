@@ -81,7 +81,11 @@ export const loginUserThunk = createAsyncThunk(
             rawMsg.toLowerCase().includes('invalid password') ||
             rawMsg.toLowerCase().includes('unauthorized')))
       ) {
-        return rejectWithValue(err.response?.data?.message || 'Invalid email or password');
+        return rejectWithValue(
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          'Invalid email or password'
+        );
       }
 
       if (status === 403) {

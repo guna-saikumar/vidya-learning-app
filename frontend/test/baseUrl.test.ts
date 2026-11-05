@@ -14,6 +14,50 @@ describe("resolveApiBaseUrl", () => {
     );
   });
 
+  it("uses localhost for web even if expoDevHost is provided", () => {
+    assert.equal(
+      resolveApiBaseUrl({
+        platformOS: "web",
+        expoDevHost: "192.168.0.126",
+      }),
+      "http://localhost:4000"
+    );
+  });
+
+  it("uses window.location.hostname in browser web environment", () => {
+    (globalThis as unknown as { window: { location: { hostname: string } } }).window = {
+      location: { hostname: "192.168.0.103" },
+    };
+    try {
+      assert.equal(
+        resolveApiBaseUrl({
+          envUrl: "http://192.168.0.109:4000",
+          platformOS: "web",
+        }),
+        "http://192.168.0.103:4000"
+      );
+    } finally {
+      delete (globalThis as unknown as { window?: unknown }).window;
+    }
+  });
+
+  it("preserves external HTTPS production URL on web", () => {
+    (globalThis as unknown as { window: { location: { hostname: string } } }).window = {
+      location: { hostname: "localhost" },
+    };
+    try {
+      assert.equal(
+        resolveApiBaseUrl({
+          envUrl: "https://api.vidya.org",
+          platformOS: "web",
+        }),
+        "https://api.vidya.org"
+      );
+    } finally {
+      delete (globalThis as unknown as { window?: unknown }).window;
+    }
+  });
+
   it("ignores loopback env URL on native and uses Expo LAN host", () => {
     assert.equal(
       resolveApiBaseUrl({
