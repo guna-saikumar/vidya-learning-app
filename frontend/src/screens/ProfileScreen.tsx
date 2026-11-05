@@ -75,7 +75,7 @@ const ensureMediaPermission = async (kind: keyof typeof MEDIA_COPY): Promise<boo
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { user, logout } = useAuth();
-  const { profile, bookmarks, progressMap, saveProfile, refreshData } = useLearningProgress();
+  const { profile, progressMap, saveProfile, refreshData } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
   const [studyMedium, setStudyMedium] = useState<'English' | 'Telugu'>(
     (profile?.medium || '').toUpperCase().includes('TELUGU') ? 'Telugu' : 'English'
@@ -104,8 +104,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSelectStudyGoal = async (goal: string) => {
     setSelectedStudyGoal(goal);
+    const minutes = parseInt(goal, 10) || 30;
     try {
       await AsyncStorage.setItem('@vidya_study_goal', goal);
+      await saveProfile({ studyGoalMinutes: minutes });
     } catch {
       Alert.alert('Could not update', 'Failed to save daily study goal.');
     }
@@ -120,7 +122,12 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     }, [refreshData])
   );
 
-  const completedCount = Object.values(progressMap).filter((p) => p.completed).length;
+  const completedChaptersCount = Object.values(progressMap).filter((p) => p.completed).length;
+  const completedTopicsCount = Object.values(progressMap).reduce(
+    (total, p) => total + (p.completedSections?.length || 0),
+    0
+  );
+  const streakDays = profile?.streakDays || 0;
   const normalizedClassId = profile?.activeClassId?.startsWith('class-')
     ? profile.activeClassId
     : profile?.activeClassId
@@ -453,24 +460,32 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Profile Statistics */}
+        {/* Profile Statistics / Achievements */}
         <View className="gap-2">
           <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Achievements</Text>
           <View className="flex-row gap-2.5 mt-1">
             <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
-              <View className="w-[34px] h-[34px] rounded-[10px] bg-palePeach items-center justify-center mb-2">
-                <MaterialIcons name="bookmark" size={20} color={Colors.primary} />
+              <View className="w-[34px] h-[34px] rounded-[10px] bg-amber-50 items-center justify-center mb-2">
+                <MaterialIcons name="local-fire-department" size={20} color="#D97706" />
               </View>
-              <Text className="font-manrope-extrabold text-lg text-textPrimary">{bookmarks.length}</Text>
-              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Bookmarks</Text>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{streakDays}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Day Streak</Text>
+            </View>
+
+            <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
+              <View className="w-[34px] h-[34px] rounded-[10px] bg-emerald-50 items-center justify-center mb-2">
+                <MaterialIcons name="check-circle" size={20} color="#059669" />
+              </View>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{completedTopicsCount}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Topics Done</Text>
             </View>
 
             <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
               <View className="w-[34px] h-[34px] rounded-[10px] bg-palePeach items-center justify-center mb-2">
-                <MaterialIcons name="check" size={20} color={Colors.primary} />
+                <MaterialIcons name="emoji-events" size={20} color={Colors.primary} />
               </View>
-              <Text className="font-manrope-extrabold text-lg text-textPrimary">{completedCount}</Text>
-              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Completed</Text>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{completedChaptersCount}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Chapters Done</Text>
             </View>
           </View>
         </View>

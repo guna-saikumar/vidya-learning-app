@@ -81,7 +81,11 @@ export const loginUserThunk = createAsyncThunk(
             rawMsg.toLowerCase().includes('invalid password') ||
             rawMsg.toLowerCase().includes('unauthorized')))
       ) {
-        return rejectWithValue('Invalid email address or password. Please check your credentials and try again.');
+        return rejectWithValue(
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          'Invalid email or password'
+        );
       }
 
       if (status === 403) {
@@ -196,9 +200,8 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // login
+    // login - keep state.loading false so LoginScreen stays mounted during login attempts
     builder.addCase(loginUserThunk.pending, (state) => {
-      state.loading = true;
       state.error = null;
     });
     builder.addCase(loginUserThunk.fulfilled, (state, action) => {

@@ -80,6 +80,7 @@ const FIELD_COLUMNS = [
   "fatherName",
   "motherName",
   "parentPhone",
+  "studyGoalMinutes",
 ] as const;
 
 type ProfileRow = {
@@ -88,15 +89,22 @@ type ProfileRow = {
   name: string;
   activeClassId: string | null;
   streakDays: number;
+  studyGoalMinutes: number | null;
   avatarUrl: string;
   language: string;
   notificationsEnabled: boolean;
   isOnboarded: boolean;
-} & Record<(typeof FIELD_COLUMNS)[number], string | null>;
+} & Record<
+  Exclude<(typeof FIELD_COLUMNS)[number], "studyGoalMinutes">,
+  string | null
+>;
 
 type ProgressRow = {
   chapterId: string;
+  subjectId?: string;
+  classId?: string;
   completed: boolean;
+  completedSections: string[];
   progressPercent: number;
   lastAccessed: Date;
   lastSectionId: string | null;
@@ -133,13 +141,14 @@ const PROFILE_SELECT = `
          sp."villageCity", sp."district", sp."schoolName",
          sp."grade", sp."section", sp."medium", sp."rollNumber",
          sp."fatherName", sp."motherName", sp."parentPhone",
+         sp."studyGoalMinutes",
          sp."language", sp."notificationsEnabled", sp."isOnboarded",
          u."email", u."name"
     FROM "StudentProfile" sp
     JOIN "User" u ON u."id" = sp."userId"
    WHERE sp."userId" = $1`;
 
-const PROGRESS_COLUMNS = `"chapterId", "completed", "progressPercent", "lastAccessed", "lastSectionId"`;
+const PROGRESS_COLUMNS = `"chapterId", "completed", "completedSections", "progressPercent", "lastAccessed", "lastSectionId", "subjectId", "classId"`;
 
 const BOOKMARK_SELECT = `
   SELECT
@@ -196,6 +205,7 @@ const toProfileDto = (p: ProfileRow) => ({
   fatherName: p.fatherName,
   motherName: p.motherName,
   parentPhone: p.parentPhone,
+  studyGoalMinutes: p.studyGoalMinutes ?? 30,
   avatarUrl: p.avatarUrl ? p.avatarUrl : null,
   streakDays: p.streakDays,
   language: p.language,
@@ -204,9 +214,13 @@ const toProfileDto = (p: ProfileRow) => ({
 });
 
 const toProgressDto = (p: ProgressRow) => ({
+  chapterId: p.chapterId,
+  subjectId: p.subjectId,
+  classId: p.classId,
   progressPercent: p.progressPercent,
   completed: p.completed,
-  lastAccessedAt: p.lastAccessed.toISOString(),
+  completedSections: p.completedSections || [],
+  lastAccessedAt: p.lastAccessed ? new Date(p.lastAccessed).toISOString() : new Date().toISOString(),
   lastSectionId: p.lastSectionId,
 });
 
@@ -277,6 +291,14 @@ export class StudentsService {
       let val = raw[col];
       if (col === "villageCity" && rawLocation !== undefined) val = rawLocation;
       if (col === "dob" && rawDob !== undefined) val = rawDob;
+
+      // Column is NOT NULL. A full onboarding replace omits this field, and
+      // `null` would fail the write. Missing or null resets to the default.
+      if (col === "studyGoalMinutes") {
+        if (typeof val === "number") values[col] = val;
+        else if (replace || val === null) values[col] = 30;
+        continue;
+      }
 
       if (val !== undefined) values[col] = clean(val);
       else if (replace) values[col] = null;
@@ -514,6 +536,30 @@ export class StudentsService {
       });
     }
 
+    if (input.completedSections) {
+      for (const sId of input.completedSections) {
+        if (!chapter.sectionIds.includes(sId)) {
+          throw new BadRequestException({
+            error: `sectionId ${sId} does not belong to this chapter`,
+          });
+        }
+      }
+    }
+
+    let completedSections: string[] = [];
+    let hasExplicitSections = false;
+
+    if (input.completedSections !== undefined) {
+      completedSections = input.completedSections;
+      hasExplicitSections = true;
+    } else if (input.completed) {
+      completedSections = chapter.sectionIds;
+      hasExplicitSections = true;
+    } else if (input.sectionId) {
+      completedSections = [input.sectionId];
+      hasExplicitSections = false;
+    }
+
     const progressPercent = input.completed ? 100 : input.progressPercent;
     const { rows } = await this.db.query<ProgressRow>(
       `INSERT INTO "ChapterProgress"
@@ -523,10 +569,13 @@ export class StudentsService {
        ON CONFLICT ("userId", "chapterId") DO UPDATE SET
          "completed" = EXCLUDED."completed",
          "progressPercent" = EXCLUDED."progressPercent",
-         "completedSections" = (
-           SELECT COALESCE(array_agg(DISTINCT s), ARRAY[]::text[])
-             FROM unnest("ChapterProgress"."completedSections" || EXCLUDED."completedSections") AS s
-         ),
+         "completedSections" = CASE
+           WHEN $10::boolean THEN EXCLUDED."completedSections"
+           ELSE (
+             SELECT COALESCE(array_agg(DISTINCT s), ARRAY[]::text[])
+               FROM unnest("ChapterProgress"."completedSections" || EXCLUDED."completedSections") AS s
+           )
+         END,
          "lastSectionId" = COALESCE(EXCLUDED."lastSectionId", "ChapterProgress"."lastSectionId"),
          "lastAccessed" = EXCLUDED."lastAccessed",
          "updatedAt" = EXCLUDED."updatedAt"
@@ -538,14 +587,15 @@ export class StudentsService {
         chapter.subjectId,
         chapter.classId,
         input.completed,
-        input.sectionId ? [input.sectionId] : [],
+        completedSections,
         progressPercent,
         input.sectionId ?? null,
+        hasExplicitSections,
       ]
     );
     return {
       success: true,
-      updatedProgress: { chapterId: chapter.id, ...toProgressDto(rows[0]!) },
+      updatedProgress: toProgressDto(rows[0]!),
     };
   }
 

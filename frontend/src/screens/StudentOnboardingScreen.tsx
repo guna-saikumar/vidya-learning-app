@@ -531,11 +531,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         const updated = await dispatch(updateProfileThunk(patchPayload as Partial<UserProfile>)).unwrap();
         await dispatch(fetchProfileThunk()).unwrap().catch(() => updated);
 
-        Alert.alert(
-          'Profile Updated',
-          'Your academic details have been successfully saved.',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
+        navigation.goBack();
       } catch (err: unknown) {
         Alert.alert(
           'Could not save',

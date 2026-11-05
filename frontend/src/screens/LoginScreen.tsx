@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   Platform,
   ScrollView,
   Image,
-  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 export const LoginScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
+  const passwordInputRef = useRef<TextInput>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,7 +62,7 @@ export const LoginScreen: React.FC = () => {
     if (loading) return;
 
     if (!validateForm()) {
-      setErrorMessage('Please correct the highlighted fields before signing in.');
+      setErrorMessage('Please enter a valid student email address and password.');
       return;
     }
 
@@ -79,17 +79,8 @@ export const LoginScreen: React.FC = () => {
       const msg =
         err instanceof Error && err.message
           ? err.message
-          : 'Unable to sign in. Please try again.';
-      const isCredentialError =
-        /credential|email or password|unauthorized|invalid email|invalid password/i.test(msg);
+          : 'Invalid email or password';
       setErrorMessage(msg);
-      if (isCredentialError) {
-        setEmailError('Incorrect email or password');
-        setPasswordError('Incorrect email or password');
-        Alert.alert('Invalid Credentials', msg, [{ text: 'OK' }]);
-      } else {
-        Alert.alert('Could not sign in', msg, [{ text: 'OK' }]);
-      }
     } finally {
       setLoading(false);
     }
@@ -98,7 +89,6 @@ export const LoginScreen: React.FC = () => {
   const handleForgotPassword = () => {
     const copy = 'Please contact the administrator to reset your password.';
     setForgotPasswordNotice(copy);
-    Alert.alert('Reset Password', copy, [{ text: 'OK' }]);
   };
 
   return (
@@ -186,6 +176,8 @@ export const LoginScreen: React.FC = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
@@ -215,11 +207,14 @@ export const LoginScreen: React.FC = () => {
               color={passwordError ? '#DC2626' : Colors.textSecondary}
             />
             <TextInput
+              ref={passwordInputRef}
               className="flex-1 ml-2.5 font-manrope-medium text-sm text-textPrimary"
               placeholder="••••••••"
               placeholderTextColor={Colors.textMuted}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              returnKeyType="go"
+              onSubmitEditing={handleLogin}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);

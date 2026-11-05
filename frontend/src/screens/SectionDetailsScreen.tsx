@@ -93,7 +93,8 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         subjectId,
         chapterId,
         sectionId,
-        chapter.sections.length
+        chapter.sections.length,
+        !isSectionDone
       );
     } catch (error) {
       console.warn('Could not update section progress:', error);

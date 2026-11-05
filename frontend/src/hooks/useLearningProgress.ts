@@ -166,7 +166,8 @@ export const useLearningProgress = () => {
     subjectId: string,
     chapterId: string,
     sectionId: string,
-    totalSectionsCount: number
+    totalSectionsCount: number,
+    completed?: boolean
   ) => {
     return await dispatch(
       toggleSectionCompletionThunk({
@@ -175,6 +176,7 @@ export const useLearningProgress = () => {
         chapterId,
         sectionId,
         totalSectionsCount,
+        completed,
       })
     ).unwrap();
   };
