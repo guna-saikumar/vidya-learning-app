@@ -3,8 +3,12 @@ import { ApiClient } from "../client";
 export type StudentLanguage = "en" | "te";
 
 export type ChapterProgressEntry = {
+  chapterId?: string;
+  subjectId?: string;
+  classId?: string;
   progressPercent: number;
   completed: boolean;
+  completedSections?: string[];
   lastAccessedAt: string;
   lastSectionId: string | null;
 };
@@ -51,7 +55,12 @@ export class StudentsApi {
 
   putChapterProgress<T = unknown>(
     chapterId: string,
-    body: { progressPercent: number; completed: boolean; sectionId?: string }
+    body: {
+      progressPercent: number;
+      completed: boolean;
+      sectionId?: string;
+      completedSections?: string[];
+    }
   ) {
     return this.client.put<T>(
       `/api/v1/students/me/progress/${encodeURIComponent(chapterId)}`,

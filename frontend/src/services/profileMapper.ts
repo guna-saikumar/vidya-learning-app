@@ -103,6 +103,7 @@ export function normalizeProfile(api: Record<string, unknown> | null | undefined
     streakDays: Number(a.streakDays ?? 0) || 0,
     isOnboarded: Boolean(a.isOnboarded),
     gender: a.gender != null ? String(a.gender) : undefined,
+    studyGoalMinutes: typeof a.studyGoalMinutes === 'number' ? a.studyGoalMinutes : (Number(a.studyGoalMinutes) || 30),
   };
 }
 
@@ -153,10 +154,12 @@ export function toApiProfilePatch(
     body.parentPhone = updates.guardianPhone;
   }
   delete body.guardianPhone;
+  if (updates.studyGoalMinutes !== undefined) {
+    body.studyGoalMinutes = Number(updates.studyGoalMinutes);
+  }
   // Not part of the student profile API schema
   delete body.displayName;
   delete body.academicYear;
-  delete body.studyGoalMinutes;
   delete body.guardianName;
   delete body.streakDays;
   delete body.isOnboarded;

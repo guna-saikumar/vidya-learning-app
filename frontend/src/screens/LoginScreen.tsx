@@ -81,8 +81,6 @@ export const LoginScreen: React.FC = () => {
           ? err.message
           : 'Invalid email or password';
       setErrorMessage(msg);
-      setEmailError('Invalid email or password');
-      setPasswordError('Invalid email or password');
     } finally {
       setLoading(false);
     }

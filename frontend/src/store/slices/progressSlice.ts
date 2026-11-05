@@ -75,7 +75,19 @@ export const fetchProgressThunk = createAsyncThunk(
     try {
       const res = await studentsApi.getProgress();
 
-      const progress = res?.chapters ?? res ?? {};
+      const rawChapters: Record<string, any> = res?.chapters ?? res ?? {};
+      const progress: Record<string, ChapterProgress> = {};
+      for (const [chId, data] of Object.entries(rawChapters)) {
+        progress[chId] = {
+          chapterId: chId,
+          subjectId: data?.subjectId || '',
+          classId: data?.classId || '',
+          progressPercent: typeof data?.progressPercent === 'number' ? data.progressPercent : 0,
+          completed: !!data?.completed,
+          completedSections: Array.isArray(data?.completedSections) ? data.completedSections : [],
+          lastAccessed: data?.lastAccessedAt ? new Date(data.lastAccessedAt).getTime() : Date.now(),
+        };
+      }
 
       await AsyncStorage.setItem(
         STORAGE_KEYS.PROGRESS,
@@ -167,6 +179,7 @@ export interface ToggleSectionInput {
   chapterId: string;
   sectionId: string;
   totalSectionsCount: number;
+  completed?: boolean;
 }
 
 export const toggleSectionCompletionThunk = createAsyncThunk<
@@ -176,17 +189,14 @@ export const toggleSectionCompletionThunk = createAsyncThunk<
 >(
   'progress/toggleSectionCompletion',
   async (
-    { classId, subjectId, chapterId, sectionId, totalSectionsCount },
+    { classId, subjectId, chapterId, sectionId, totalSectionsCount, completed: targetCompleted },
     { getState }
   ) => {
     const state = getState();
     const current = state.progress.progressMap[chapterId];
-    const completedSections = current?.completedSections || [];
-    const isAlreadyDone = completedSections.includes(sectionId);
-
-    const updatedSections = isAlreadyDone
-      ? completedSections.filter((s) => s !== sectionId)
-      : [...completedSections, sectionId];
+    const updatedSections = current?.completedSections ?? (
+      targetCompleted === true ? [sectionId] : []
+    );
 
     const percent = Math.min(
       100,
@@ -212,6 +222,7 @@ export const toggleSectionCompletionThunk = createAsyncThunk<
         progressPercent: percent,
         completed,
         sectionId,
+        completedSections: updatedSections,
       })
       .catch((err) => console.warn('Background section progress update failed:', err));
 
@@ -470,13 +481,14 @@ const progressSlice = createSlice({
     // Toggle section completion (instant optimistic update)
     builder
       .addCase(toggleSectionCompletionThunk.pending, (state, action) => {
-        const { chapterId, sectionId, totalSectionsCount, classId, subjectId } = action.meta.arg;
+        const { chapterId, sectionId, totalSectionsCount, classId, subjectId, completed: targetCompleted } = action.meta.arg;
         const current = state.progressMap[chapterId];
         const completedSections = current?.completedSections || [];
         const isAlreadyDone = completedSections.includes(sectionId);
-        const updatedSections = isAlreadyDone
-          ? completedSections.filter((s) => s !== sectionId)
-          : [...completedSections, sectionId];
+        const willBeDone = targetCompleted !== undefined ? targetCompleted : !isAlreadyDone;
+        const updatedSections = willBeDone
+          ? Array.from(new Set([...completedSections, sectionId]))
+          : completedSections.filter((s) => s !== sectionId);
         const percent = Math.min(
           100,
           Math.round((updatedSections.length / Math.max(1, totalSectionsCount)) * 100)

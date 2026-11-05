@@ -104,8 +104,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSelectStudyGoal = async (goal: string) => {
     setSelectedStudyGoal(goal);
+    const minutes = parseInt(goal, 10) || 30;
     try {
       await AsyncStorage.setItem('@vidya_study_goal', goal);
+      await saveProfile({ studyGoalMinutes: minutes });
     } catch {
       Alert.alert('Could not update', 'Failed to save daily study goal.');
     }

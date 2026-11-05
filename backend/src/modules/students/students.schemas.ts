@@ -94,6 +94,7 @@ const onboardingShape = {
   fatherName: optText(120),
   motherName: optText(120),
   parentPhone: mobile10,
+  studyGoalMinutes: z.number().int().min(1).max(360).nullish(),
 } as const;
 
 export const updateOnboardingSchema = z.object(onboardingShape);
@@ -115,6 +116,7 @@ export const upsertProgressSchema = z.object({
   progressPercent: z.number().int().min(0).max(100),
   completed: z.boolean(),
   sectionId: id.optional(),
+  completedSections: z.array(id).optional(),
 });
 
 export const bookmarkTypeSchema = z.enum(["chapter", "section", "formula"]);

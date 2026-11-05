@@ -311,7 +311,12 @@ export const studentsApi = {
   },
   updateProgress: async (
     chapterId: string,
-    body: { progressPercent: number; completed: boolean; sectionId?: string }
+    body: {
+      progressPercent: number;
+      completed: boolean;
+      sectionId?: string;
+      completedSections?: string[];
+    }
   ) => {
     const res = await axiosInstance.put(`/api/v1/students/me/progress/${chapterId}`, body);
     return res.data;

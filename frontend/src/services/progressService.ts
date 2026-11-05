@@ -272,6 +272,7 @@ export const markSectionCompleted = async (
     progressPercent: percent,
     completed,
     sectionId,
+    completedSections: updatedSections,
   });
 
   await AsyncStorage.setItem(
