@@ -588,6 +588,34 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Help & Support Group */}
+        <View className="gap-2">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Help & Support</Text>
+
+          <View className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+            <TouchableOpacity
+              className="flex-row items-center justify-between p-4"
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('ContactUs')}
+              accessibilityRole="button"
+              accessibilityLabel="Contact us and school help desk"
+            >
+              <View className="flex-row items-center gap-3 flex-1">
+                <View className="w-9 h-9 rounded-xl bg-palePeach items-center justify-center">
+                  <MaterialIcons name="support-agent" size={20} color={Colors.primary} />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Contact Us & Help Desk</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">
+                    File a complaint, report app issues or contact the school office
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Account Actions / Sign Out */}
         <View className="gap-2">
           <TouchableOpacity

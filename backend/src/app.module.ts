@@ -9,6 +9,7 @@ import { HealthModule } from "./modules/health/health.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { SchoolsModule } from "./modules/schools/schools.module";
 import { StudentsModule } from "./modules/students/students.module";
+import { SupportModule } from "./modules/support/support.module";
 
 loadRootEnv();
 
@@ -33,6 +34,7 @@ loadRootEnv();
     SchoolsModule,
     CurriculumModule,
     NotificationsModule,
+    SupportModule,
   ],
 })
 export class AppModule {}

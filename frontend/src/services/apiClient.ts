@@ -402,4 +402,42 @@ export const notificationsApi = {
   },
 };
 
+export interface ComplaintPayload {
+  full_name: string;
+  class_grade: number;
+  section?: string;
+  roll_number?: string;
+  email?: string;
+  phone?: string;
+  category: string;
+  subject: string;
+  message: string;
+  source?: 'mobile' | 'web';
+}
+
+export interface SupportConfig {
+  supportEmail: string;
+  supportPhone: string;
+  supportHours: string;
+}
+
+export const supportApi = {
+  getSupportConfig: async (): Promise<SupportConfig> => {
+    const res = await axiosInstance.get('/api/v1/support/config');
+    return res.data;
+  },
+  fileComplaint: async (payload: ComplaintPayload) => {
+    const res = await axiosInstance.post('/api/v1/support/complaints', payload);
+    return res.data;
+  },
+  getMyComplaints: async () => {
+    const res = await axiosInstance.get('/api/v1/support/my-complaints');
+    return res.data;
+  },
+  getComplaintByRef: async (ticketRef: string) => {
+    const res = await axiosInstance.get(`/api/v1/support/complaints/${ticketRef}`);
+    return res.data;
+  },
+};
+
 export default axiosInstance;

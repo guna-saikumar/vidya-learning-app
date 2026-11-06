@@ -7,4 +7,6 @@ export * from "./schools/schools.module";
 export * from "./schools/schools.service";
 export * from "./students/students.module";
 export * from "./students/students.service";
+export * from "./support/support.module";
+export * from "./support/support.service";
 

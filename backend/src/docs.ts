@@ -14,7 +14,7 @@ export function setupApiDocs(app: NestFastifyApplication): void {
         "credentials (no self-registration), JWT access + rotating refresh tokens. " +
         "Modules: auth, students (onboarding, profile, avatar, settings, reading progress, " +
         "bookmarks), schools directory, curriculum (classes → subjects → chapters → sections), " +
-        "and notifications. Health checks at /health and /health/db."
+        "notifications, and support complaints. Health checks at /health and /health/db."
     )
     .setVersion("0.1.0")
     .addBearerAuth()
