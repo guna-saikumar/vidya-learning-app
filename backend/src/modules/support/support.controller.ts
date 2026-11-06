@@ -101,7 +101,7 @@ export class SupportController {
 
   @Get("config")
   @ApiOperation({ summary: "Support desk contact details & operating hours" })
-  config() {
+  getConfig() {
     return {
       supportEmail: process.env.SUPPORT_EMAIL ?? "support@vidya.school",
       supportPhone: process.env.SUPPORT_PHONE ?? "+91 98765 43210",

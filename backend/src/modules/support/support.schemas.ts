@@ -35,7 +35,7 @@ export const createComplaintSchema = z
       .regex(/^[+]?[0-9\s()-]{7,20}$/, "Enter a valid phone number")
       .optional()
       .or(z.literal("")),
-    category: z.enum(CATEGORIES, { errorMap: () => ({ message: "Choose a valid category" }) }),
+    category: z.enum(CATEGORIES, { message: "Choose a valid category" }),
     subject: z.string().trim().min(4, "Subject must have at least 4 characters").max(200),
     message: z.string().trim().min(10, "Message must have at least 10 characters").max(5000),
     source: z.enum(["web", "mobile"]).optional().default("mobile"),
