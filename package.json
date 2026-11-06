@@ -16,6 +16,8 @@
     "dev:frontend": "cd frontend && npx expo start --lan",
     "dev:backend": "cd backend && pnpm dev",
     "dev:student-mobile": "cd frontend && npx expo start --lan",
+    "dev:student-web": "pnpm --dir apps/student-web dev",
+    "build:student-web": "pnpm --dir apps/student-web build",
     "dev:api": "cd backend && pnpm dev",
     "docker:up": "bash backend/scripts/dev-up.sh",
     "docker:down": "bash backend/scripts/dev-down.sh",
