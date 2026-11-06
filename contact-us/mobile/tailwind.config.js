@@ -1,0 +1,51 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './App.{js,jsx,ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}',
+  ],
+  presets: [require('nativewind/preset')],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#b95d3f',
+        primaryDark: '#91452f',
+        primaryLight: '#f3d9cc',
+        palePeach: '#fbece3',
+        softWarm: '#faf5f2',
+        surfaceSoft: '#fdf9f7',
+        border: '#ede1d8',
+        borderSecondary: '#e6d6ce',
+        borderHover: '#e2c8bb',
+        borderAccent: '#e4beaa',
+        textPrimary: '#3a2d29',
+        textSecondary: '#79675f',
+        textLead: '#51423d',
+        textMuted: '#9b8981',
+        textPlaceholder: '#a99a93',
+        success: '#24845d',
+        successBg: '#e7f3ed',
+        accentGold: '#d6a84f',
+        accentGoldBg: '#fdf8ec',
+        error: '#b84040',
+        errorBg: '#ffdad6',
+      },
+      borderRadius: {
+        lg: '14px',
+        xl: '18px',
+        pill: '9999px',
+      },
+      fontFamily: {
+        inter: ['Inter_400Regular'],
+        'inter-medium': ['Inter_500Medium'],
+        'inter-semibold': ['Inter_600SemiBold'],
+        manrope: ['Manrope_400Regular'],
+        'manrope-medium': ['Manrope_500Medium'],
+        'manrope-semibold': ['Manrope_600SemiBold'],
+        'manrope-bold': ['Manrope_700Bold'],
+        'manrope-extrabold': ['Manrope_800ExtraBold'],
+      },
+    },
+  },
+  plugins: [],
+};

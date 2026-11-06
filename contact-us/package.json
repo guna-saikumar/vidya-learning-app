@@ -1,0 +1,22 @@
+{
+  "name": "@vidya-contact/root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Complaints & Help module for Vidya Learning. React Native app + NestJS/Fastify API + PostgreSQL.",
+  "scripts": {
+    "install:all": "npm --prefix api install && npm --prefix mobile install",
+    "db:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup-db.ps1",
+    "db:setup:sh": "bash scripts/setup-db.sh",
+    "start": "concurrently -k -n api,mobile \"npm --prefix api start\" \"npm --prefix mobile run web\"",
+    "start:api": "npm --prefix api start",
+    "dev:api": "npm --prefix api run dev",
+    "start:mobile": "npm --prefix mobile start",
+    "start:web": "npm --prefix mobile run web",
+    "typecheck:api": "npm --prefix api run typecheck",
+    "typecheck:mobile": "npm --prefix mobile run typecheck",
+    "typecheck": "npm run typecheck:api && npm run typecheck:mobile"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
