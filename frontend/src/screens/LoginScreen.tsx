@@ -18,7 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 export const LoginScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
-  const passwordInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<React.ElementRef<typeof TextInput>>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

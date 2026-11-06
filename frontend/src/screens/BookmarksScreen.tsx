@@ -112,11 +112,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle="dark-content" />
 
       <HeaderBar
         title="Bookmarks"
