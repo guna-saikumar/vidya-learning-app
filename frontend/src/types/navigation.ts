@@ -13,4 +13,5 @@ export type RootStackParamList = {
   SectionDetails: { classId: string; subjectId: string; chapterId: string; sectionId: string };
   Notifications: undefined;
   NotificationDetail: { notificationId: string };
+  ContactUs: undefined;
 };

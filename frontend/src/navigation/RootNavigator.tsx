@@ -21,6 +21,7 @@ import { SectionDetailsScreen } from '../screens/SectionDetailsScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { NotificationDetailScreen } from '../screens/NotificationDetailScreen';
 import { StudentOnboardingScreen } from '../screens/StudentOnboardingScreen';
+import { ContactUsScreen } from '../screens/ContactUsScreen';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -97,6 +98,9 @@ export const RootNavigator: React.FC = () => {
             {/* Notifications */}
             <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} options={{ animation: 'slide_from_right' }} />
+
+            {/* Support & Contact Us */}
+            <Stack.Screen name="ContactUs" component={ContactUsScreen} options={{ animation: 'slide_from_right' }} />
           </Stack.Group>
         )}
       </Stack.Navigator>
