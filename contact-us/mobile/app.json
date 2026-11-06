@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Vidya Complaints",
+    "slug": "vidya-complaints-demo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "permissions": []
+    },
+    "plugins": [
+      "expo-font",
+      "expo-status-bar"
+    ]
+  }
+}
