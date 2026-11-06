@@ -127,7 +127,6 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     (total, p) => total + (p.completedSections?.length || 0),
     0
   );
-  const streakDays = profile?.streakDays || 0;
   const normalizedClassId = profile?.activeClassId?.startsWith('class-')
     ? profile.activeClassId
     : profile?.activeClassId
@@ -464,14 +463,6 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View className="gap-2">
           <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Achievements</Text>
           <View className="flex-row gap-2.5 mt-1">
-            <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
-              <View className="w-[34px] h-[34px] rounded-[10px] bg-amber-50 items-center justify-center mb-2">
-                <MaterialIcons name="local-fire-department" size={20} color="#D97706" />
-              </View>
-              <Text className="font-manrope-extrabold text-lg text-textPrimary">{streakDays}</Text>
-              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Day Streak</Text>
-            </View>
-
             <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
               <View className="w-[34px] h-[34px] rounded-[10px] bg-emerald-50 items-center justify-center mb-2">
                 <MaterialIcons name="check-circle" size={20} color="#059669" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,32 +11,34 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro } from '../components/common';
-import {
-  getAllNotifications,
-  markAsRead,
-  markAllAsRead,
-  initializeNotificationsIfNeeded,
-} from '../services/notificationService';
 import { RootStackParamList } from '../types/navigation';
-import { Notification } from '../types/curriculum';
+import { useAppDispatch, useAppSelector } from '../store';
+import {
+  fetchNotificationsThunk,
+  markNotificationReadThunk,
+  markAllNotificationsReadThunk,
+  NotificationItem,
+} from '../store/slices/notificationsSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Notifications'>;
 
-const typeConfig = {
+const typeConfig: Record<string, { color: string; bg: string }> = {
   announcement: { color: Colors.primary, bg: Colors.palePeach },
   reminder: { color: Colors.accentGold, bg: Colors.accentGoldBg },
   achievement: { color: Colors.success, bg: Colors.successBg },
   update: { color: Colors.textSecondary, bg: Colors.surfaceSoft },
+  system: { color: Colors.primary, bg: Colors.palePeach },
 };
 
-const formatTime = (timestamp: number): string => {
+const formatTime = (timestamp: number | string): string => {
+  const time = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
   const now = Date.now();
-  const diff = now - timestamp;
+  const diff = now - time;
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'Just now';
+  if (isNaN(diff) || minutes < 1) return 'Just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days === 1) return 'Yesterday';
@@ -44,31 +46,25 @@ const formatTime = (timestamp: number): string => {
 };
 
 export const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const loadNotifications = useCallback(async () => {
-    await initializeNotificationsIfNeeded();
-    const data = await getAllNotifications();
-    setNotifications(data);
-  }, []);
+  const dispatch = useAppDispatch();
+  const { items: notifications, unreadCount } = useAppSelector(
+    (state) => state.notifications
+  );
 
   useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+    dispatch(fetchNotificationsThunk());
+  }, [dispatch]);
 
-  const handleNotificationPress = async (notif: Notification) => {
-    if (!notif.read) {
-      await markAsRead(notif.id);
-      await loadNotifications();
+  const handleNotificationPress = async (notif: NotificationItem) => {
+    if (!notif.isRead && !notif.read) {
+      await dispatch(markNotificationReadThunk(notif.id));
     }
     // Navigate to open the notification in full view
     navigation.navigate('NotificationDetail', { notificationId: notif.id });
   };
 
   const handleMarkAllRead = async () => {
-    await markAllAsRead();
-    await loadNotifications();
+    await dispatch(markAllNotificationsReadThunk());
   };
 
   return (
@@ -101,14 +97,17 @@ export const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </View>
+
         {notifications.length > 0 ? (
           notifications.map((notif) => {
-            const config = typeConfig[notif.type];
+            const config = typeConfig[notif.type] || typeConfig.update;
+            const isRead = Boolean(notif.isRead ?? notif.read);
+
             return (
               <TouchableOpacity
                 key={notif.id}
                 className={`rounded-[18px] p-4 border shadow-sm ${
-                  notif.read ? 'bg-white border-border' : 'bg-softWarm border-borderAccent'
+                  isRead ? 'bg-white border-border' : 'bg-softWarm border-borderAccent'
                 }`}
                 onPress={() => handleNotificationPress(notif)}
                 activeOpacity={0.85}
@@ -131,13 +130,13 @@ export const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
                     <View className="flex-row items-center justify-between">
                       <Text
                         className={`font-manrope-extrabold text-[13px] text-textPrimary flex-1 ${
-                          !notif.read ? '' : 'opacity-70'
+                          !isRead ? '' : 'opacity-70'
                         }`}
                         numberOfLines={1}
                       >
                         {notif.title}
                       </Text>
-                      {!notif.read && (
+                      {!isRead && (
                         <View className="w-2 h-2 rounded-full bg-primary ml-2" />
                       )}
                     </View>
@@ -146,7 +145,7 @@ export const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
                       className="font-manrope-medium text-xs text-textSecondary leading-4"
                       numberOfLines={2}
                     >
-                      {notif.message}
+                      {notif.message || notif.body}
                     </Text>
 
                     <Text className="font-manrope-medium text-[11px] text-textMuted mt-1">

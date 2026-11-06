@@ -11,40 +11,81 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
-import { getNotificationById, markAsRead } from '../services/notificationService';
 import { RootStackParamList } from '../types/navigation';
-import { Notification } from '../types/curriculum';
+import { useAppDispatch, useAppSelector } from '../store';
+import {
+  markNotificationReadThunk,
+  NotificationItem,
+} from '../store/slices/notificationsSlice';
+import { notificationsApi } from '../services/apiClient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NotificationDetail'>;
 
-const typeConfig = {
+const typeConfig: Record<string, { label: string; color: string; bg: string; icon: keyof typeof MaterialIcons.glyphMap }> = {
   announcement: { label: 'Official Announcement', color: Colors.primary, bg: Colors.palePeach, icon: 'campaign' },
   reminder: { label: 'Study Reminder', color: Colors.accentGoldDark, bg: Colors.accentGoldBg, icon: 'alarm' },
   achievement: { label: 'Milestone & Badge', color: Colors.success, bg: Colors.successBg, icon: 'emoji-events' },
   update: { label: 'Curriculum Update', color: Colors.primaryDark, bg: Colors.surfaceSoft, icon: 'auto-stories' },
+  system: { label: 'System Notice', color: Colors.primary, bg: Colors.palePeach, icon: 'school' },
 };
 
 export const NotificationDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { notificationId } = route.params;
-  const [notification, setNotification] = useState<Notification | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const reduxItems = useAppSelector((state) => state.notifications.items);
+  const existingItem = reduxItems.find((n) => n.id === notificationId);
+
+  const [notification, setNotification] = useState<NotificationItem | null>(existingItem || null);
+  const [loading, setLoading] = useState(!existingItem);
 
   useEffect(() => {
-    const fetchDetail = async () => {
+    let isMounted = true;
+    const fetchAndMark = async () => {
       try {
-        const item = await getNotificationById(notificationId);
-        if (item) {
-          setNotification(item);
-          if (!item.read) {
-            await markAsRead(item.id);
+        let currentItem = existingItem;
+        if (!currentItem) {
+          const fetched: any = await notificationsApi.getNotificationById(notificationId);
+          if (fetched && isMounted) {
+            const isRead = Boolean(fetched.isRead ?? fetched.read);
+            currentItem = {
+              id: String(fetched.id),
+              title: fetched.title || '',
+              message: fetched.body || fetched.message || '',
+              body: fetched.body || fetched.message || '',
+              detailedBody: fetched.detailedBody || fetched.detail || fetched.body || '',
+              type: fetched.type || 'update',
+              isRead,
+              read: isRead,
+              createdAt:
+                typeof fetched.createdAt === 'string'
+                  ? new Date(fetched.createdAt).getTime()
+                  : (fetched.createdAt || Date.now()),
+              icon: fetched.icon || 'campaign',
+              actionRoute: fetched.actionRoute,
+              actionLabel: fetched.actionLabel,
+            };
+            setNotification(currentItem);
           }
+        } else {
+          setNotification(currentItem);
         }
+
+        const isRead = currentItem ? (currentItem.isRead || currentItem.read) : false;
+        if (!isRead) {
+          await dispatch(markNotificationReadThunk(notificationId));
+        }
+      } catch {
+        // ignore
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-    fetchDetail();
-  }, [notificationId]);
+
+    fetchAndMark();
+    return () => {
+      isMounted = false;
+    };
+  }, [notificationId, existingItem, dispatch]);
 
   if (loading) {
     return (
@@ -80,8 +121,9 @@ export const NotificationDetailScreen: React.FC<Props> = ({ route, navigation })
     }
   };
 
-  const formatDate = (timestamp: number) => {
-    const d = new Date(timestamp);
+  const formatDate = (timestamp: number | string) => {
+    const time = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+    const d = new Date(time);
     return d.toLocaleDateString('en-IN', {
       weekday: 'long',
       year: 'numeric',
@@ -115,7 +157,7 @@ export const NotificationDetailScreen: React.FC<Props> = ({ route, navigation })
               style={{ backgroundColor: config.bg }}
             >
               <MaterialIcons
-                name={(notification.icon as keyof typeof MaterialIcons.glyphMap) || (config.icon as any)}
+                name={(notification.icon as keyof typeof MaterialIcons.glyphMap) || config.icon}
                 size={16}
                 color={config.color}
               />
@@ -151,7 +193,7 @@ export const NotificationDetailScreen: React.FC<Props> = ({ route, navigation })
           </Text>
 
           <Text className="font-manrope-semibold text-sm text-textPrimary leading-6">
-            {notification.message}
+            {notification.message || notification.body}
           </Text>
 
           {notification.detailedBody && (

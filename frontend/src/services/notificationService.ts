@@ -98,8 +98,12 @@ export const getNotificationById = async (id: string): Promise<Notification | un
 
 export const markAsRead = async (notificationId: string): Promise<void> => {
   try {
-    notificationsApi.markRead(notificationId).catch(() => {});
-    const all = await getAllNotifications();
+    try {
+      await notificationsApi.markRead(notificationId);
+    } catch {
+      // offline fallback
+    }
+    const all = await getAllNotifications(true);
     const updated = all.map((n) => {
       if (n.id === notificationId) {
         return { ...n, read: true };
@@ -115,8 +119,12 @@ export const markAsRead = async (notificationId: string): Promise<void> => {
 
 export const markAllAsRead = async (): Promise<void> => {
   try {
-    notificationsApi.markAllRead().catch(() => {});
-    const all = await getAllNotifications();
+    try {
+      await notificationsApi.markAllRead();
+    } catch {
+      // offline fallback
+    }
+    const all = await getAllNotifications(true);
     const updated = all.map((n) => ({ ...n, read: true }));
     memoryNotifications = updated;
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

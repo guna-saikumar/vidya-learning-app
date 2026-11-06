@@ -1,16 +1,20 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notificationsApi } from '../../services/apiClient';
-import { MOCK_NOTIFICATIONS } from '../../data/notifications';
+import { logoutUserThunk, forceLogout } from './authSlice';
 
 export interface NotificationItem {
   id: string;
   title: string;
+  message: string;
   body: string;
   detailedBody?: string;
-  type?: string;
-  isRead?: boolean;
-  createdAt?: string;
-  timestamp?: number;
+  type: 'announcement' | 'reminder' | 'achievement' | 'update' | 'system';
+  isRead: boolean;
+  read: boolean;
+  createdAt: number;
+  icon: string;
+  actionRoute?: string;
+  actionLabel?: string;
 }
 
 export interface NotificationsState {
@@ -21,46 +25,73 @@ export interface NotificationsState {
 }
 
 const initialState: NotificationsState = {
-  items: MOCK_NOTIFICATIONS as any,
-  unreadCount: (MOCK_NOTIFICATIONS as any).filter((n: any) => !n.read && !n.isRead).length,
+  items: [],
+  unreadCount: 0,
   loading: false,
   error: null,
 };
 
-export const fetchNotificationsThunk = createAsyncThunk(
+export const fetchNotificationsThunk = createAsyncThunk<NotificationItem[]>(
   'notifications/fetchNotifications',
-  async (_, { rejectWithValue }) => {
+  async () => {
     try {
       const data = await notificationsApi.getNotifications();
       if (Array.isArray(data) && data.length > 0) {
-        return data;
+        return data.map((n: any): NotificationItem => {
+          const isRead = Boolean(n.isRead ?? n.read);
+          return {
+            id: String(n.id),
+            title: n.title || '',
+            message: n.body || n.message || '',
+            body: n.body || n.message || '',
+            detailedBody: n.detailedBody || n.detail || n.body || n.message || '',
+            type: n.type || 'update',
+            isRead,
+            read: isRead,
+            createdAt:
+              typeof n.createdAt === 'string'
+                ? new Date(n.createdAt).getTime()
+                : (n.createdAt || Date.now()),
+            icon:
+              n.icon ||
+              (n.type === 'reminder'
+                ? 'alarm'
+                : n.type === 'achievement'
+                ? 'emoji-events'
+                : n.type === 'system'
+                ? 'school'
+                : 'campaign'),
+            actionRoute: n.actionRoute,
+            actionLabel: n.actionLabel,
+          };
+        });
       }
-      return MOCK_NOTIFICATIONS as any;
+      return [];
     } catch {
-      return MOCK_NOTIFICATIONS as any;
+      return [];
     }
   }
 );
 
-export const markNotificationReadThunk = createAsyncThunk(
+export const markNotificationReadThunk = createAsyncThunk<string, string>(
   'notifications/markRead',
   async (id: string) => {
     try {
       await notificationsApi.markRead(id);
-    } catch (e) {
-      // ignore
+    } catch {
+      // offline / optimistic fallback
     }
     return id;
   }
 );
 
-export const markAllNotificationsReadThunk = createAsyncThunk(
+export const markAllNotificationsReadThunk = createAsyncThunk<void, void>(
   'notifications/markAllRead',
   async () => {
     try {
       await notificationsApi.markAllRead();
-    } catch (e) {
-      // ignore
+    } catch {
+      // offline / optimistic fallback
     }
   }
 );
@@ -68,26 +99,41 @@ export const markAllNotificationsReadThunk = createAsyncThunk(
 const notificationsSlice = createSlice({
   name: 'notifications',
   initialState,
-  reducers: {},
+  reducers: {
+    clearNotifications: () => initialState,
+  },
   extraReducers: (builder) => {
+    builder.addCase(fetchNotificationsThunk.pending, (state) => {
+      state.loading = true;
+    });
     builder.addCase(fetchNotificationsThunk.fulfilled, (state, action) => {
+      state.loading = false;
       state.items = action.payload;
-      state.unreadCount = action.payload.filter((n: any) => !n.isRead).length;
+      state.unreadCount = action.payload.filter((n) => !n.isRead).length;
+    });
+    builder.addCase(fetchNotificationsThunk.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to fetch notifications';
     });
     builder.addCase(markNotificationReadThunk.fulfilled, (state, action) => {
       const item = state.items.find((n) => n.id === action.payload);
       if (item && !item.isRead) {
         item.isRead = true;
+        item.read = true;
         state.unreadCount = Math.max(0, state.unreadCount - 1);
       }
     });
     builder.addCase(markAllNotificationsReadThunk.fulfilled, (state) => {
       state.items.forEach((n) => {
         n.isRead = true;
+        n.read = true;
       });
       state.unreadCount = 0;
     });
+    builder.addCase(logoutUserThunk.fulfilled, () => initialState);
+    builder.addCase(forceLogout, () => initialState);
   },
 });
 
+export const { clearNotifications } = notificationsSlice.actions;
 export default notificationsSlice.reducer;
