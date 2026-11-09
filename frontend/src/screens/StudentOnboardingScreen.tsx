@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   StatusBar,
   Image,
   Modal,
@@ -20,6 +19,7 @@ import Colors from '../constants/colors';
 import { HeaderBar } from '../components/navigation';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { getApiErrorMessage } from '../services/apiClient';
+import { showAlert } from '../utils/dialog';
 import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
@@ -181,14 +181,8 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   const classes = getClasses();
 
   // Multi-step state: 1: Student, 2: School & Location, 3: Class & Medium, 4: Parents
+  // The initial step comes from the navigation params (e.g. "Edit Details" opens step 2).
   const [currentStep, setCurrentStep] = useState<number>(route.params?.step || 1);
-
-  // Sync step parameter if navigated dynamically with step prop
-  useEffect(() => {
-    if (route.params?.step) {
-      setCurrentStep(route.params.step);
-    }
-  }, [route.params?.step]);
 
   // Step 1: Student Details (First Name & Last Name)
   const initialNames = (profile?.displayName || user?.name || '').split(' ');
@@ -235,28 +229,8 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     profile?.parentPhone || profile?.guardianPhone || ''
   );
 
-  // Sync state if profile loads asynchronously
-  useEffect(() => {
-    if (profile) {
-      if (profile.firstName) setFirstName(profile.firstName);
-      if (profile.lastName) setLastName(profile.lastName);
-      if (profile.dateOfBirth) setDateOfBirth(formatUiDateOfBirth(profile.dateOfBirth));
-      if (profile.gender) setGender(normalizeGenderUi(profile.gender));
-      if (profile.district) setDistrict(profile.district);
-      if (profile.location) setLocation(profile.location);
-      if (profile.schoolName) setSchoolName(profile.schoolName);
-      if (profile.activeClassId) setActiveClassId(normalizeClassId(profile.activeClassId));
-      if (profile.section) setSection(profile.section.toUpperCase());
-      if (profile.medium) setMedium(normalizeMediumUi(profile.medium));
-      if (profile.rollNumber) setRollNumber(profile.rollNumber);
-      if (profile.fatherName) setFatherName(profile.fatherName);
-      if (profile.motherName) setMotherName(profile.motherName);
-      if (profile.parentPhone || profile.guardianPhone) {
-        setParentPhone(profile.parentPhone || profile.guardianPhone || '');
-      }
-    }
-  }, [profile]);
-
+  // Initial form values are read from the loaded profile. The screen is only
+  // reachable once the profile is available, so no post-mount sync is needed.
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calendar Modal Picker State
@@ -320,7 +294,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     const formatted = `${calDay.toString().padStart(2, '0')}/${(calMonth + 1).toString().padStart(2, '0')}/${calYear}`;
     const result = validateDateOfBirth(formatted);
     if (!result.valid) {
-      Alert.alert('Invalid Date of Birth', result.error);
+      showAlert('Invalid Date of Birth', result.error);
       return;
     }
     setDateOfBirth(formatted);
@@ -355,73 +329,73 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
   const validateStep = (step: number): boolean => {
     if (step === 1) {
       if (!firstName.trim()) {
-        Alert.alert('Required Field', 'Please enter student first name.');
+        showAlert('Required Field', 'Please enter student first name.');
         return false;
       }
       if (!lastName.trim()) {
-        Alert.alert('Required Field', 'Please enter student last name.');
+        showAlert('Required Field', 'Please enter student last name.');
         return false;
       }
       if (!isEdit || dateOfBirth.trim()) {
         if (!dateOfBirth.trim()) {
-          Alert.alert('Required Field', 'Please select student date of birth.');
+          showAlert('Required Field', 'Please select student date of birth.');
           return false;
         }
         const dobResult = validateDateOfBirth(dateOfBirth);
         if (!dobResult.valid) {
-          Alert.alert('Invalid Date of Birth', dobResult.error);
+          showAlert('Invalid Date of Birth', dobResult.error);
           return false;
         }
       }
       if (!gender) {
-        Alert.alert('Required Field', 'Please select student gender.');
+        showAlert('Required Field', 'Please select student gender.');
         return false;
       }
     } else if (step === 2) {
       if (!district.trim()) {
-        Alert.alert('Required Field', 'Please select a district.');
+        showAlert('Required Field', 'Please select a district.');
         return false;
       }
       if (!location.trim()) {
-        Alert.alert('Required Field', 'Please select a location / mandal.');
+        showAlert('Required Field', 'Please select a location / mandal.');
         return false;
       }
       if (!schoolName.trim()) {
-        Alert.alert('Required Field', 'Please select or enter school name.');
+        showAlert('Required Field', 'Please select or enter school name.');
         return false;
       }
     } else if (step === 3) {
       if (!activeClassId) {
-        Alert.alert('Required Field', 'Please choose your enrolled class.');
+        showAlert('Required Field', 'Please choose your enrolled class.');
         return false;
       }
       if (!section) {
-        Alert.alert('Required Field', 'Please choose your section.');
+        showAlert('Required Field', 'Please choose your section.');
         return false;
       }
       if (!medium) {
-        Alert.alert('Required Field', 'Please choose your medium.');
+        showAlert('Required Field', 'Please choose your medium.');
         return false;
       }
       if (!rollNumber.trim() && !isEdit) {
-        Alert.alert('Required Field', 'Please enter student roll number / ID.');
+        showAlert('Required Field', 'Please enter student roll number / ID.');
         return false;
       }
     } else if (step === 4) {
       if (!isEdit) {
         if (!fatherName.trim()) {
-          Alert.alert('Required Field', "Please enter father's name.");
+          showAlert('Required Field', "Please enter father's name.");
           return false;
         }
         if (!motherName.trim()) {
-          Alert.alert('Required Field', "Please enter mother's name.");
+          showAlert('Required Field', "Please enter mother's name.");
           return false;
         }
       }
       const cleanPhone = parentPhone.replace(/\D/g, '');
       const phoneRequired = !isEdit || parentPhone.trim().length > 0;
       if (phoneRequired && cleanPhone.length !== 10) {
-        Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
+        showAlert('Validation Error', 'Mobile number must contain exactly 10 digits.');
         return false;
       }
     }
@@ -463,7 +437,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         cleanDob = dobResult.iso;
       } else if (!isEdit) {
         setCurrentStep(1);
-        Alert.alert('Invalid Date of Birth', dobResult.error);
+        showAlert('Invalid Date of Birth', dobResult.error);
         return;
       }
     } else if (profile?.dateOfBirth) {
@@ -473,32 +447,32 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
     if (isEdit) {
       if (!district.trim()) {
         setCurrentStep(2);
-        Alert.alert('Required Field', 'Please select a district.');
+        showAlert('Required Field', 'Please select a district.');
         return;
       }
       if (!location.trim()) {
         setCurrentStep(2);
-        Alert.alert('Required Field', 'Please select a location / mandal.');
+        showAlert('Required Field', 'Please select a location / mandal.');
         return;
       }
       if (!schoolName.trim()) {
         setCurrentStep(2);
-        Alert.alert('Required Field', 'Please select or enter school name.');
+        showAlert('Required Field', 'Please select or enter school name.');
         return;
       }
       if (!activeClassId) {
         setCurrentStep(3);
-        Alert.alert('Required Field', 'Please choose your enrolled class.');
+        showAlert('Required Field', 'Please choose your enrolled class.');
         return;
       }
       if (!section) {
         setCurrentStep(3);
-        Alert.alert('Required Field', 'Please choose your section.');
+        showAlert('Required Field', 'Please choose your section.');
         return;
       }
       if (parentPhone.trim() && cleanPhone.length !== 10) {
         setCurrentStep(4);
-        Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
+        showAlert('Validation Error', 'Mobile number must contain exactly 10 digits.');
         return;
       }
 
@@ -533,7 +507,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
 
         navigation.goBack();
       } catch (err: unknown) {
-        Alert.alert(
+        showAlert(
           'Could not save',
           getApiErrorMessage(err, 'Failed to save student details. Please try again.')
         );
@@ -552,13 +526,13 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
 
     if (!cleanDob) {
       setCurrentStep(1);
-      Alert.alert('Invalid Date of Birth', 'Please enter student date of birth (DD/MM/YYYY).');
+      showAlert('Invalid Date of Birth', 'Please enter student date of birth (DD/MM/YYYY).');
       return;
     }
 
     if (cleanPhone.length !== 10) {
       setCurrentStep(4);
-      Alert.alert('Validation Error', 'Mobile number must contain exactly 10 digits.');
+      showAlert('Validation Error', 'Mobile number must contain exactly 10 digits.');
       return;
     }
 
@@ -586,7 +560,7 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
       dispatch(setIsOnboarded(true));
       navigation.navigate('Home');
     } catch (err: unknown) {
-      Alert.alert(
+      showAlert(
         'Could not save',
         getApiErrorMessage(err, 'Failed to save student details. Please try again.')
       );

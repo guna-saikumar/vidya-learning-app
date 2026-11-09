@@ -56,8 +56,9 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     init();
   }, []);
 
-  // Get recent progress items for "Continue Learning"
-  const recentProgress = useMemo(() => {
+  // Get recent progress items for "Continue Learning". This is a cheap
+  // calculation, so it runs directly instead of through manual memoization.
+  const recentProgress = (() => {
     // 1. Chapters with active learning progress or recorded visits that are not yet 100% completed
     const inProgress = Object.values(progressMap)
       .filter((p) => !p.completed && (p.progressPercent > 0 || (p.lastAccessed && p.lastAccessed > 0)))
@@ -80,7 +81,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
                 classId: activeClass.id,
                 progressPercent: p?.progressPercent || 0,
                 completed: false,
-                lastAccessed: p?.lastAccessed || Date.now(),
+                lastAccessed: p?.lastAccessed || 0,
                 completedSections: p?.completedSections || [],
               },
             ];
@@ -90,7 +91,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     return [];
-  }, [progressMap, activeClass]);
+  })();
 
   const handleOpenChapter = (classId: string, subjectId: string, chapterId: string) => {
     navigation.navigate('ChapterDetails', { classId, subjectId, chapterId });
@@ -258,7 +259,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         {/* Continue Learning Section - Dynamic */}
         <View className="flex-row items-center justify-between">
           <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Continue Learning</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Learn')}>
+          <TouchableOpacity onPress={() => navigation.navigate('MyLearning')}>
             <Text className="font-manrope-bold text-[13px] text-primary">View All</Text>
           </TouchableOpacity>
         </View>

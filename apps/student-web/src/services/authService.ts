@@ -10,7 +10,7 @@ export async function loginStudent(email: string, password: string): Promise<{
     email,
     password,
   });
-  const { accessToken, refreshToken, user } = res.data;
+  const { accessToken, refreshToken } = res.data;
   storage.setAccessToken(accessToken);
   storage.setRefreshToken(refreshToken);
 
@@ -27,7 +27,7 @@ export async function validateSession(): Promise<AuthUser | null> {
     const meRes = await apiClient.get<MeResponse>('/api/v1/auth/me');
     storage.setUser(meRes.data.user);
     return meRes.data.user;
-  } catch (err) {
+  } catch {
     // try refresh once
     const refreshToken = storage.getRefreshToken();
     if (refreshToken) {

@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Alert,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
@@ -21,6 +20,7 @@ import { PageIntro, HoverCard } from '../components/common';
 
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { getApiErrorMessage } from '../services/apiClient';
+import { showAlert } from '../utils/dialog';
 
 import { RootStackParamList } from '../types/navigation';
 import { BookmarkItem } from '../types/curriculum';
@@ -58,7 +58,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await removeBookmark(id);
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Could not remove bookmark',
         getApiErrorMessage(
           error,
@@ -72,7 +72,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
   // bookmark can never be routed to SectionDetails (or vice versa).
   const handleOpenBookmark = (bm: BookmarkItem) => {
     if (!bm.classId || !bm.subjectId || !bm.chapterId) {
-      Alert.alert(
+      showAlert(
         'Unable to open bookmark',
         'Some required bookmark information is missing.'
       );
@@ -81,7 +81,7 @@ export const BookmarksScreen: React.FC<Props> = ({ navigation }) => {
 
     if (bm.type === 'section') {
       if (!bm.sectionId) {
-        Alert.alert(
+        showAlert(
           'Unable to open bookmark',
           'This section bookmark is missing its section id.'
         );

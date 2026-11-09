@@ -5,7 +5,6 @@ import { useProfile } from '../hooks/useProfile';
 import { apiClient } from '../lib/apiClient';
 import { resolveAvatarUrl } from '../lib/avatar';
 import { uploadAvatar } from '../services/profileService';
-import type { StudentProfile } from '../types/profile';
 import { ProfileEditForm } from '../components/profile/ProfileEditForm';
 import { Button } from '../components/ui/Button';
 import { AlertBanner } from '../components/ui/AlertBanner';
@@ -222,7 +221,6 @@ export const ProfilePage: React.FC = () => {
   const activeClass =
     profile.grade ? `Class ${profile.grade}` : profile.activeClassId || profile.classId || 'Class not set';
   const classSection = profile.section ? `${activeClass} — Section ${profile.section}` : activeClass;
-  const course = profile.grade ? `Grade ${profile.grade}` : profile.activeClassId || profile.classId || 'Not available';
   const mobile = profile.parentPhone || '—';
   const address = [profile.location || profile.villageCity, profile.district].filter(Boolean).join(', ') || '—';
 

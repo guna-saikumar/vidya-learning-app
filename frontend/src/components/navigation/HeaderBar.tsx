@@ -40,12 +40,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   navigation: propNavigation,
 }) => {
   const insets = useSafeAreaInsets();
-  let hookNavigation: any = null;
-  try {
-    hookNavigation = useNavigation<any>();
-  } catch {
-    hookNavigation = null;
-  }
+  // Hooks must be called unconditionally, so the navigation hook always runs;
+  // callers that already have a navigation object can still override it.
+  const hookNavigation = useNavigation<any>();
   const navigation = propNavigation || hookNavigation;
   const { profile } = useLearningProgress();
   // insets.top adapts across notches/islands and edge-to-edge status bars without double-padding.

@@ -7,9 +7,9 @@ import {
   StatusBar,
   Image,
   Switch,
-  Alert,
   Modal,
   Linking,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
@@ -22,6 +22,7 @@ import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { useAuth } from '../hooks/useAuth';
 import { getClasses } from '../services/curriculumService';
+import { showAlert } from '../utils/dialog';
 import { RootStackParamList } from '../types/navigation';
 import { useAppDispatch } from '../store';
 import {
@@ -59,14 +60,20 @@ const ensureMediaPermission = async (kind: keyof typeof MEDIA_COPY): Promise<boo
   if (perm.granted) return true;
 
   const { title, message } = MEDIA_COPY[kind];
-  Alert.alert(
+  showAlert(
     title,
     message,
-    perm.canAskAgain
+    perm.canAskAgain || Platform.OS === 'web'
       ? [{ text: 'OK' }]
       : [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              // react-native-web's Linking has no openSettings implementation.
+              if (Platform.OS !== 'web') Linking.openSettings();
+            },
+          },
         ]
   );
   return false;
@@ -77,16 +84,17 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { user, logout } = useAuth();
   const { profile, progressMap, saveProfile, refreshData } = useLearningProgress();
   const [offlineSync, setOfflineSync] = useState(true);
-  const [studyMedium, setStudyMedium] = useState<'English' | 'Telugu'>(
-    (profile?.medium || '').toUpperCase().includes('TELUGU') ? 'Telugu' : 'English'
-  );
+  // Derived from the profile so the UI updates when the profile loads or
+  // changes, without synchronising state inside an effect.
+  const [studyMediumOverride, setStudyMediumOverride] = useState<'English' | 'Telugu' | null>(null);
+  const profileStudyMedium: 'English' | 'Telugu' = (profile?.medium || '')
+    .toUpperCase()
+    .includes('TELUGU')
+    ? 'Telugu'
+    : 'English';
+  const studyMedium = studyMediumOverride ?? profileStudyMedium;
+  const setStudyMedium = setStudyMediumOverride;
   const [selectedStudyGoal, setSelectedStudyGoal] = useState('45 mins');
-
-  useEffect(() => {
-    if (profile?.medium) {
-      setStudyMedium(profile.medium.toUpperCase().includes('TELUGU') ? 'Telugu' : 'English');
-    }
-  }, [profile?.medium]);
 
   useEffect(() => {
     AsyncStorage.getItem('@vidya_study_goal')
@@ -109,7 +117,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       await AsyncStorage.setItem('@vidya_study_goal', goal);
       await saveProfile({ studyGoalMinutes: minutes });
     } catch {
-      Alert.alert('Could not update', 'Failed to save daily study goal.');
+      showAlert('Could not update', 'Failed to save daily study goal.');
     }
   };
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -155,15 +163,15 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         try {
           await dispatch(uploadAvatarThunk(selectedUri)).unwrap();
-          Alert.alert('Profile Photo Updated', 'Your profile picture has been updated from your device.');
+          showAlert('Profile Photo Updated', 'Your profile picture has been updated from your device.');
         } catch (uploadErr: any) {
           dispatch(setProfileAvatar(previousAvatar));
-          Alert.alert('Upload Failed', uploadErr || 'Could not upload profile picture. Please try again.');
+          showAlert('Upload Failed', uploadErr || 'Could not upload profile picture. Please try again.');
         }
       }
     } catch (err) {
       console.error('Error picking image from device:', err);
-      Alert.alert('Error', 'Could not open photo library. Please try again.');
+      showAlert('Error', 'Could not open photo library. Please try again.');
     }
   };
 
@@ -185,15 +193,15 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         try {
           await dispatch(uploadAvatarThunk(selectedUri)).unwrap();
-          Alert.alert('Profile Photo Updated', 'Your new photo has been saved as your profile picture.');
+          showAlert('Profile Photo Updated', 'Your new photo has been saved as your profile picture.');
         } catch (uploadErr: any) {
           dispatch(setProfileAvatar(previousAvatar));
-          Alert.alert('Upload Failed', uploadErr || 'Could not upload photo. Please try again.');
+          showAlert('Upload Failed', uploadErr || 'Could not upload photo. Please try again.');
         }
       }
     } catch (err) {
       console.error('Error taking photo with camera:', err);
-      Alert.alert('Error', 'Could not open camera. Please try again.');
+      showAlert('Error', 'Could not open camera. Please try again.');
     }
   };
 
@@ -203,10 +211,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       setShowAvatarModal(false);
       dispatch(setProfileAvatar(''));
       await dispatch(removeAvatarThunk()).unwrap();
-      Alert.alert('Default Restored', 'Profile picture reset to default student icon.');
+      showAlert('Default Restored', 'Profile picture reset to default student icon.');
     } catch (err: any) {
       dispatch(setProfileAvatar(previousAvatar));
-      Alert.alert('Error', err || 'Failed to reset profile picture.');
+      showAlert('Error', err || 'Failed to reset profile picture.');
     }
   };
 
@@ -504,7 +512,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     try {
                       await saveProfile({ medium: 'ENGLISH' });
                     } catch {
-                      Alert.alert('Could not update', 'Failed to save study medium.');
+                      showAlert('Could not update', 'Failed to save study medium.');
                     }
                   }}
                 >
@@ -522,7 +530,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     try {
                       await saveProfile({ medium: 'TELUGU' });
                     } catch {
-                      Alert.alert('Could not update', 'Failed to save study medium.');
+                      showAlert('Could not update', 'Failed to save study medium.');
                     }
                   }}
                 >
