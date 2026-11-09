@@ -1,6 +1,10 @@
 import './global.css';
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'ImageBackground is deprecated',
+]);
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import {
