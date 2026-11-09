@@ -12,7 +12,7 @@ interface HoverCardProps {
   disabled?: boolean;
 }
 
-export const HoverCard: React.FC<HoverCardProps> = ({
+export const HoverCard: React.FC<HoverCardProps> = React.memo(({
   className,
   style,
   hoverStyle,
@@ -22,32 +22,34 @@ export const HoverCard: React.FC<HoverCardProps> = ({
   disabled = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const isWeb = Platform.OS === 'web';
 
   return (
     <Pressable
       className={className}
       onPress={onPress}
       disabled={disabled || !onPress}
-      onHoverIn={() => setIsHovered(true)}
-      onHoverOut={() => setIsHovered(false)}
+      onHoverIn={isWeb ? () => setIsHovered(true) : undefined}
+      onHoverOut={isWeb ? () => setIsHovered(false) : undefined}
       accessibilityRole={onPress ? 'button' : undefined}
-      style={[
+      style={({ pressed }) => [
         style,
-        Platform.OS === 'web' && ({
-          transitionDuration: '220ms',
+        isWeb && ({
+          transitionDuration: '180ms',
           transitionProperty: 'transform, box-shadow, border-color',
           transitionTimingFunction: 'cubic-bezier(0.2, 0, 0, 1)',
           cursor: onPress ? 'pointer' : 'default',
         } as any),
-        isHovered && [
+        (isHovered || (!isWeb && pressed)) && [
           {
-            transform: [{ translateY: lift }],
+            transform: [{ translateY: isWeb ? lift : -1 }],
             shadowColor: 'rgba(58, 45, 41, 0.14)',
-            shadowOffset: { width: 0, height: 8 },
+            shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.14,
-            shadowRadius: 16,
-            elevation: 6,
+            shadowRadius: 12,
+            elevation: 4,
             borderColor: Colors.borderHover,
+            opacity: !isWeb && pressed ? 0.92 : 1,
           },
           hoverStyle,
         ],
@@ -56,4 +58,4 @@ export const HoverCard: React.FC<HoverCardProps> = ({
       {children}
     </Pressable>
   );
-};
+});

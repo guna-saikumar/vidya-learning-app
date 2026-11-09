@@ -11,7 +11,7 @@ interface BottomNavProps {
   navigation: any;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', navigation }) => {
+export const BottomNav: React.FC<BottomNavProps> = React.memo(({ activeTab = 'Home', navigation }) => {
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 18 : 8);
 
@@ -41,6 +41,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
             className="flex-1 items-center justify-center py-0.5"
             onPress={() => handleTabPress(tab.key)}
             activeOpacity={0.7}
+            delayPressIn={0}
             accessibilityRole="button"
             accessibilityLabel={tab.label}
           >
@@ -57,4 +58,4 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'Home', naviga
       })}
     </View>
   );
-};
+});

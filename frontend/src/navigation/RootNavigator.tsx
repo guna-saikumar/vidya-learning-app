@@ -3,6 +3,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
+import { useAppSelector } from '../store';
 import Colors from '../constants/colors';
 
 // Auth Screen
@@ -22,7 +23,6 @@ import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { NotificationDetailScreen } from '../screens/NotificationDetailScreen';
 import { StudentOnboardingScreen } from '../screens/StudentOnboardingScreen';
 import { ContactUsScreen } from '../screens/ContactUsScreen';
-import { useLearningProgress } from '../hooks/useLearningProgress';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -34,12 +34,13 @@ const LoadingScreen: React.FC = () => (
 
 export const RootNavigator: React.FC = () => {
   const { isAuthenticated, isOnboarded, loading: authLoading } = useAuth();
-  // Only hydrate learning state after auth — avoids 401 spam on the login screen.
-  const { profile, loading: profileLoading } = useLearningProgress();
+  const profileIsOnboarded = useAppSelector((state) => state.student.profile?.isOnboarded);
+  const studentLoading = useAppSelector((state) => state.student.loading);
+  const hasProfile = useAppSelector((state) => Boolean(state.student.profile));
 
-  const isLoading = authLoading || (isAuthenticated && profileLoading);
-  const needsOnboarding =
-    isAuthenticated && !(profile?.isOnboarded ?? isOnboarded);
+  // Only show full loading gate on initial cold start when auth is checking
+  const isLoading = authLoading || (isAuthenticated && studentLoading && !hasProfile);
+  const needsOnboarding = isAuthenticated && !(profileIsOnboarded ?? isOnboarded);
 
   return (
     <Stack.Navigator
@@ -47,6 +48,7 @@ export const RootNavigator: React.FC = () => {
         headerShown: false,
         contentStyle: { backgroundColor: Colors.surface },
         animation: 'slide_from_right',
+        animationDuration: 200,
       }}
     >
       {isLoading ? (
@@ -61,7 +63,7 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="Login"
               component={LoginScreen}
-              options={{ animation: 'fade' }}
+              options={{ animation: 'none' }}
             />
           </Stack.Group>
         ) : needsOnboarding ? (
@@ -70,37 +72,37 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="StudentOnboarding"
               component={StudentOnboardingScreen}
-              options={{ animation: 'fade' }}
+              options={{ animation: 'fade', animationDuration: 180 }}
             />
             <Stack.Screen name="Home" component={DashboardScreen} />
           </Stack.Group>
         ) : (
           // Authenticated Stack: Gated protected routes
           <Stack.Group>
-            {/* 3 Main Bottom Tab Screens */}
-            <Stack.Screen name="Home" component={DashboardScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Learn" component={LearnScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Profile" component={ProfileScreen} options={{ animation: 'fade' }} />
+            {/* 3 Main Bottom Tab Screens - Instant 0ms switching */}
+            <Stack.Screen name="Home" component={DashboardScreen} options={{ animation: 'none' }} />
+            <Stack.Screen name="Learn" component={LearnScreen} options={{ animation: 'none' }} />
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ animation: 'none' }} />
 
             {/* Secondary Screens */}
-            <Stack.Screen name="MyLearning" component={MyLearningScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ animation: 'fade' }} />
+            <Stack.Screen name="MyLearning" component={MyLearningScreen} options={{ animation: 'none' }} />
+            <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ animation: 'none' }} />
 
             {/* Student Onboarding & Academic Details Editor */}
-            <Stack.Screen name="StudentOnboarding" component={StudentOnboardingScreen} options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="StudentOnboarding" component={StudentOnboardingScreen} options={{ animation: 'slide_from_bottom', animationDuration: 220 }} />
 
-            {/* Curriculum Screens */}
-            <Stack.Screen name="ClassSubjects" component={ClassSubjectsScreen} options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="SubjectIndex" component={SubjectIndexScreen} options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="ChapterDetails" component={ChapterDetailsScreen} options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="SectionDetails" component={SectionDetailsScreen} options={{ animation: 'slide_from_right' }} />
+            {/* Curriculum Screens - Snappy hardware-accelerated transitions */}
+            <Stack.Screen name="ClassSubjects" component={ClassSubjectsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="SubjectIndex" component={SubjectIndexScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="ChapterDetails" component={ChapterDetailsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="SectionDetails" component={SectionDetailsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
 
             {/* Notifications */}
-            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
 
             {/* Support & Contact Us */}
-            <Stack.Screen name="ContactUs" component={ContactUsScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="ContactUs" component={ContactUsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
           </Stack.Group>
         )}
       </Stack.Navigator>
