@@ -118,7 +118,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      void refreshData(true);
+      void refreshData();
     }, [refreshData])
   );
 

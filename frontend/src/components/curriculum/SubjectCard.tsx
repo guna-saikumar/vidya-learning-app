@@ -12,7 +12,7 @@ interface SubjectCardProps {
   onPress: () => void;
 }
 
-export const SubjectCard: React.FC<SubjectCardProps> = ({
+const SubjectCardComponent: React.FC<SubjectCardProps> = ({
   subject,
   progressPercent = 0,
   onPress,
@@ -65,3 +65,5 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     </HoverCard>
   );
 };
+
+export const SubjectCard = React.memo(SubjectCardComponent);
