@@ -89,13 +89,13 @@ export const RootNavigator: React.FC = () => {
               component={StudentOnboardingScreen}
               options={{ animation: 'fade', animationDuration: 180 }}
             />
-            <Stack.Screen name="Home" component={MainTabs} />
+            <Stack.Screen name="MainTabs" component={MainTabs} />
           </Stack.Group>
         ) : (
           // Authenticated Stack: Gated protected routes
           <Stack.Group>
             {/* Main Tabs Container: Home, Learn, Profile pre-mounted in memory */}
-            <Stack.Screen name="Home" component={MainTabs} options={{ animation: 'none' }} />
+            <Stack.Screen name="MainTabs" component={MainTabs} options={{ animation: 'none' }} />
 
             {/* Secondary Screens */}
             <Stack.Screen name="MyLearning" component={MyLearningScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
