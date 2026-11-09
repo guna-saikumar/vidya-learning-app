@@ -126,6 +126,14 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 });
 
+export const setApiAccessToken = (token: string | null) => {
+  if (token) {
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+  } else {
+    delete axiosInstance.defaults.headers.common.Authorization;
+  }
+};
+
 // Attach bearer token to outgoing requests
 axiosInstance.interceptors.request.use(
   async (config) => {

@@ -27,6 +27,12 @@ let lastFetchedAt = 0;
 let lastFetchedUserId: string | null = null;
 let inFlightRefresh: Promise<void> | null = null;
 
+export const resetLearningProgressCache = () => {
+  lastFetchedAt = 0;
+  lastFetchedUserId = null;
+  inFlightRefresh = null;
+};
+
 export const useLearningProgress = () => {
   const dispatch = useAppDispatch();
 
@@ -72,7 +78,7 @@ export const useLearningProgress = () => {
       const now = Date.now();
       const userChanged = lastFetchedUserId !== userId;
       const isStale =
-        force || userChanged || now - lastFetchedAt > CACHE_TTL_MS;
+        force || userChanged || !profile || now - lastFetchedAt > CACHE_TTL_MS;
 
       if (!isStale) {
         return;
