@@ -35,11 +35,7 @@ const LoadingScreen: React.FC = () => (
 export const RootNavigator: React.FC = () => {
   const { isAuthenticated, isOnboarded, loading: authLoading } = useAuth();
   const profileIsOnboarded = useAppSelector((state) => state.student.profile?.isOnboarded);
-  const studentLoading = useAppSelector((state) => state.student.loading);
-  const hasProfile = useAppSelector((state) => Boolean(state.student.profile));
 
-  // Only show full loading gate on initial cold start when auth is checking
-  const isLoading = authLoading || (isAuthenticated && studentLoading && !hasProfile);
   const needsOnboarding = isAuthenticated && !(profileIsOnboarded ?? isOnboarded);
 
   return (
@@ -51,7 +47,7 @@ export const RootNavigator: React.FC = () => {
         animationDuration: 200,
       }}
     >
-      {isLoading ? (
+      {authLoading ? (
         <Stack.Screen
           name="Loading"
           component={LoadingScreen}
