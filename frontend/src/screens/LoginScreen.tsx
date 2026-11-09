@@ -245,7 +245,11 @@ export const LoginScreen: React.FC = () => {
 
             {/* Forgot Password Link */}
             <View className="items-end mb-5">
-              <TouchableOpacity onPress={handleForgotPassword} activeOpacity={0.7} delayPressIn={0}>
+              <TouchableOpacity
+                onPress={handleForgotPassword}
+                activeOpacity={0.7}
+                delayPressIn={Platform.OS === 'web' ? undefined : 0}
+              >
                 <Text className="font-manrope-semibold text-xs text-primary">Forgot Password?</Text>
               </TouchableOpacity>
             </View>
@@ -256,7 +260,7 @@ export const LoginScreen: React.FC = () => {
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.85}
-              delayPressIn={0}
+              delayPressIn={Platform.OS === 'web' ? undefined : 0}
             >
               {loading ? (
                 <ActivityIndicator color={Colors.white} size="small" />

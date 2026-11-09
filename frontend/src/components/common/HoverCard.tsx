@@ -12,7 +12,7 @@ interface HoverCardProps {
   disabled?: boolean;
 }
 
-export const HoverCard: React.FC<HoverCardProps> = React.memo(({
+const HoverCardComponent: React.FC<HoverCardProps> = ({
   className,
   style,
   hoverStyle,
@@ -58,4 +58,6 @@ export const HoverCard: React.FC<HoverCardProps> = React.memo(({
       {children}
     </Pressable>
   );
-});
+};
+
+export const HoverCard = React.memo(HoverCardComponent);

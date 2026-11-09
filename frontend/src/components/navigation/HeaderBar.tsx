@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -23,7 +23,7 @@ interface HeaderBarProps {
   navigation?: any;
 }
 
-export const HeaderBar: React.FC<HeaderBarProps> = React.memo(({
+const HeaderBarComponent: React.FC<HeaderBarProps> = ({
   title,
   eyebrow,
   subtitle,
@@ -79,7 +79,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = React.memo(({
           className="flex-row items-center gap-2.5"
           onPress={handleHomePress}
           activeOpacity={0.7}
-          delayPressIn={0}
+          delayPressIn={Platform.OS === 'web' ? undefined : 0}
           accessibilityRole="button"
           accessibilityLabel="Go to Home"
         >
@@ -111,7 +111,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = React.memo(({
             className="w-10 h-10 rounded-full border border-border items-center justify-center bg-white"
             onPress={handleNotificationPress}
             activeOpacity={0.7}
-            delayPressIn={0}
+            delayPressIn={Platform.OS === 'web' ? undefined : 0}
             accessibilityRole="button"
             accessibilityLabel="Notifications"
           >
@@ -130,7 +130,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = React.memo(({
             className="w-10 h-10 rounded-full border border-border bg-white items-center justify-center overflow-hidden shadow-sm"
             onPress={handleProfilePress}
             activeOpacity={0.8}
-            delayPressIn={0}
+            delayPressIn={Platform.OS === 'web' ? undefined : 0}
             accessibilityRole="button"
             accessibilityLabel="Student profile"
           >
@@ -154,7 +154,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = React.memo(({
             className="w-10 h-10 rounded-xl border border-border bg-white items-center justify-center shadow-sm"
             onPress={onBackPress}
             activeOpacity={0.7}
-            delayPressIn={0}
+            delayPressIn={Platform.OS === 'web' ? undefined : 0}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
@@ -207,4 +207,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = React.memo(({
       )}
     </View>
   );
-});
+};
+
+export const HeaderBar = React.memo(HeaderBarComponent);
