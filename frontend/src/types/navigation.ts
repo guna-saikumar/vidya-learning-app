@@ -2,7 +2,6 @@ export type RootStackParamList = {
   Loading?: undefined;
   Login: undefined;
   StudentOnboarding: { isEdit?: boolean; step?: number } | undefined;
-  MainTabs?: undefined;
   Home: undefined;
   Learn: undefined;
   Profile: undefined;

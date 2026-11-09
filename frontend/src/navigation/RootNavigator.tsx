@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useAppSelector } from '../store';
@@ -26,24 +25,6 @@ import { StudentOnboardingScreen } from '../screens/StudentOnboardingScreen';
 import { ContactUsScreen } from '../screens/ContactUsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator();
-
-const MainTabs: React.FC = () => {
-  return (
-    <Tab.Navigator
-      tabBar={() => null}
-      screenOptions={{
-        headerShown: false,
-        lazy: false, // Pre-renders all 3 main tabs into memory for instant 0ms switching!
-        animation: 'none',
-      }}
-    >
-      <Tab.Screen name="Home">{(props) => <DashboardScreen {...(props as any)} />}</Tab.Screen>
-      <Tab.Screen name="Learn">{(props) => <LearnScreen {...(props as any)} />}</Tab.Screen>
-      <Tab.Screen name="Profile">{(props) => <ProfileScreen {...(props as any)} />}</Tab.Screen>
-    </Tab.Navigator>
-  );
-};
 
 const LoadingScreen: React.FC = () => (
   <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
@@ -89,13 +70,15 @@ export const RootNavigator: React.FC = () => {
               component={StudentOnboardingScreen}
               options={{ animation: 'fade', animationDuration: 180 }}
             />
-            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="Home" component={DashboardScreen} />
           </Stack.Group>
         ) : (
           // Authenticated Stack: Gated protected routes
           <Stack.Group>
-            {/* Main Tabs Container: Home, Learn, Profile pre-mounted in memory */}
-            <Stack.Screen name="MainTabs" component={MainTabs} options={{ animation: 'none' }} />
+            {/* 3 Main Bottom Tab Screens - Instant 0ms switching */}
+            <Stack.Screen name="Home" component={DashboardScreen} options={{ animation: 'none' }} />
+            <Stack.Screen name="Learn" component={LearnScreen} options={{ animation: 'none' }} />
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ animation: 'none' }} />
 
             {/* Secondary Screens */}
             <Stack.Screen name="MyLearning" component={MyLearningScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
