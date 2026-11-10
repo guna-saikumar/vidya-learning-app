@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -14,6 +13,7 @@ import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
 import { getSectionById } from '../services/curriculumService';
 import { getApiErrorMessage } from '../services/apiClient';
+import { showAlert } from '../utils/dialog';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
 
@@ -79,7 +79,7 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         previewText: section.content || section.summaryPoint,
       });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Could not update bookmark',
         getApiErrorMessage(error, 'Please try again.')
       );

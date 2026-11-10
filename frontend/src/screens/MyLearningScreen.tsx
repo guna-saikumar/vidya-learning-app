@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { PageIntro, HoverCard } from '../components/common';
 import { useLearningProgress } from '../hooks/useLearningProgress';
-import { getChapterById, getCurriculumStats } from '../services/curriculumService';
+import { getChapterById, getEnrolledClassStats } from '../services/curriculumService';
 import { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MyLearning'>;
@@ -20,9 +20,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'MyLearning'>;
 type TabFilter = 'all' | 'in-progress' | 'completed';
 
 export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
-  const { progressMap } = useLearningProgress();
+  const { progressMap, profile } = useLearningProgress();
   const [selectedTab, setSelectedTab] = useState<TabFilter>('all');
-  const stats = getCurriculumStats();
+  const stats = getEnrolledClassStats(profile?.activeClassId);
 
   const progressList = Object.values(progressMap);
   const completedList = progressList.filter((p) => p.completed);
@@ -36,11 +36,20 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
 
   displayedList.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
 
-  const totalCompleted = completedList.length;
-  const overallPercent = Math.min(
-    100,
-    Math.round((totalCompleted / Math.max(1, stats.totalChapters)) * 100)
-  );
+  // Same calculation as the dashboard and the API `overallPercent`: average
+  // chapter progress across the enrolled class, including partial chapters.
+  const overallPercent = useMemo(() => {
+    const chapterIds = stats.schoolClass.subjects.flatMap((subject) =>
+      subject.chapters.map((chapter) => chapter.id)
+    );
+    if (chapterIds.length === 0) return 0;
+    const totalProgress = chapterIds.reduce((sum, id) => {
+      const entry = progressMap[id];
+      if (!entry) return sum;
+      return sum + (entry.completed ? 100 : entry.progressPercent || 0);
+    }, 0);
+    return Math.min(100, Math.round(totalProgress / chapterIds.length));
+  }, [progressMap, stats.schoolClass]);
 
   return (
     <View className="flex-1 bg-white">
@@ -79,7 +88,7 @@ export const MyLearningScreen: React.FC<Props> = ({ navigation }) => {
           <View className="w-[78px] h-[78px] rounded-full bg-accentGoldLight items-center justify-center">
             <View className="w-[62px] h-[62px] rounded-full bg-primaryDark items-center justify-center">
               <Text className="font-manrope-extrabold text-sm text-white">
-                {overallPercent > 0 ? `${overallPercent}%` : '68%'}
+                {overallPercent}%
               </Text>
             </View>
           </View>

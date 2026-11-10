@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Linking,
   Platform,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -19,6 +18,7 @@ import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { supportApi, SupportConfig, ComplaintPayload } from '../services/apiClient';
+import { showAlert } from '../utils/dialog';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ContactUs'>;
 
@@ -48,13 +48,20 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
 
   const [activeTab, setActiveTab] = useState<'form' | 'office' | 'history'>('form');
 
-  // Form state
-  const [fullName, setFullName] = useState('');
-  const [classGrade, setClassGrade] = useState<number | null>(null);
-  const [section, setSection] = useState('');
-  const [rollNumber, setRollNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  // Form state, prefilled from the student's profile (the screen is opened
+  // after the profile has loaded).
+  const profileGrade = (() => {
+    const match = profile?.activeClassId?.match(/\d+/);
+    const grade = match ? parseInt(match[0], 10) : null;
+    return grade && grade >= 6 && grade <= 10 ? grade : null;
+  })();
+
+  const [fullName, setFullName] = useState(profile?.displayName || user?.name || '');
+  const [classGrade, setClassGrade] = useState<number | null>(profileGrade);
+  const [section, setSection] = useState(profile?.section || '');
+  const [rollNumber, setRollNumber] = useState(profile?.rollNumber || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(profile?.guardianPhone || profile?.parentPhone || '');
   const [category, setCategory] = useState<string | null>(null);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -73,28 +80,6 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
   const [myTickets, setMyTickets] = useState<any[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
 
-  // Auto-fill student details on mount
-  useEffect(() => {
-    if (profile) {
-      if (profile.displayName) setFullName(profile.displayName);
-      else if (user?.name) setFullName(user.name);
-
-      if (profile.activeClassId) {
-        const match = profile.activeClassId.match(/\d+/);
-        if (match) {
-          const grade = parseInt(match[0], 10);
-          if (grade >= 6 && grade <= 10) setClassGrade(grade);
-        }
-      }
-
-      if (profile.section) setSection(profile.section);
-      if (profile.rollNumber) setRollNumber(profile.rollNumber);
-      if (profile.guardianPhone) setPhone(profile.guardianPhone);
-      else if (profile.parentPhone) setPhone(profile.parentPhone);
-    }
-    if (user?.email) setEmail(user.email);
-  }, [profile, user]);
-
   // Load support configuration
   useEffect(() => {
     supportApi.getSupportConfig()
@@ -106,15 +91,25 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
 
   // Load student ticket history when tab is opened
   useEffect(() => {
-    if (activeTab === 'history') {
+    if (activeTab !== 'history') return;
+
+    let cancelled = false;
+    const loadTickets = async () => {
       setLoadingTickets(true);
-      supportApi.getMyComplaints()
-        .then((data) => {
-          if (Array.isArray(data)) setMyTickets(data);
-        })
-        .catch(() => {})
-        .finally(() => setLoadingTickets(false));
-    }
+      try {
+        const data = await supportApi.getMyComplaints();
+        if (!cancelled && Array.isArray(data)) setMyTickets(data);
+      } catch {
+        // Keep the previously loaded list when the request fails.
+      } finally {
+        if (!cancelled) setLoadingTickets(false);
+      }
+    };
+
+    loadTickets();
+    return () => {
+      cancelled = true;
+    };
   }, [activeTab]);
 
   const resetForm = () => {
@@ -164,13 +159,13 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
   const handleCall = () => {
     const cleaned = config.supportPhone.replace(/[^\d+]/g, '');
     Linking.openURL(`tel:${cleaned}`).catch(() => {
-      Alert.alert('Helpline', config.supportPhone);
+      showAlert('Helpline', config.supportPhone);
     });
   };
 
   const handleEmail = () => {
     Linking.openURL(`mailto:${config.supportEmail}?subject=Vidya%20Student%20Support`).catch(() => {
-      Alert.alert('Support Email', config.supportEmail);
+      showAlert('Support Email', config.supportEmail);
     });
   };
 
@@ -201,7 +196,7 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </View>
           <Text className="mt-2 font-manrope-extrabold text-[20px] text-white leading-6">
-            We're here to help you.
+            {"We're here to help you."}
           </Text>
           <Text className="mt-1 font-manrope-medium text-xs text-primaryLight leading-5">
             Facing problems with textbooks, recorded classes, login, or attendance? Send us your grievance or reach our helpline.

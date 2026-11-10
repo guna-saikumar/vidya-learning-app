@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StatusBar,
   Image,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,6 +15,7 @@ import { CalloutCard } from '../components/common';
 import { getChapterById } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { getApiErrorMessage } from '../services/apiClient';
+import { showAlert } from '../utils/dialog';
 import { recordChapterVisit } from '../services/progressService';
 import { RootStackParamList } from '../types/navigation';
 
@@ -87,7 +87,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         previewText: chapter.description || chapter.title,
       });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Could not update bookmark',
         getApiErrorMessage(error, 'Please try again.')
       );

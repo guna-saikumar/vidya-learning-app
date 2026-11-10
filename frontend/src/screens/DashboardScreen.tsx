@@ -207,7 +207,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         {/* Continue Learning Section - Dynamic */}
         <View className="flex-row items-center justify-between">
           <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Continue Learning</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Learn')}>
+          <TouchableOpacity onPress={() => navigation.navigate('MyLearning')}>
             <Text className="font-manrope-bold text-[13px] text-primary">View All</Text>
           </TouchableOpacity>
         </View>
