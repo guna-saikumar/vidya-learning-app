@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,41 +12,26 @@ import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { StatCard } from '../components/home';
 import { HoverCard, CalloutCard } from '../components/common';
-import { getEnrolledClassStats, getChapterById } from '../services/curriculumService';
+import { getChapterById } from '../services/curriculumService';
 import { initializeNotificationsIfNeeded } from '../services/notificationService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
+import { useAppSelector, selectEnrolledCurriculumStats } from '../store';
 import { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
-  const { profile, bookmarks, progressMap } = useLearningProgress();
+  const { profile, bookmarks } = useLearningProgress();
 
-  const activeClassId = profile?.activeClassId;
-  const enrolledStats = useMemo(() => getEnrolledClassStats(activeClassId), [activeClassId]);
-  const activeClass = enrolledStats.schoolClass;
-
-  const { enrolledCompletedChaptersCount, overallProgressPercent } = useMemo(() => {
-    if (!activeClass) {
-      return { enrolledCompletedChaptersCount: 0, overallProgressPercent: 0 };
-    }
-    const completedCount = Object.values(progressMap).filter(
-      (p) => p.completed && activeClass?.subjects?.some((s) => s.chapters?.some((ch) => ch.id === p.chapterId))
-    ).length;
-
-    const chapterIds = activeClass?.subjects?.flatMap((s) => s.chapters?.map((c) => c.id) || []) || [];
-    const totalProgress = chapterIds.reduce((sum, chId) => {
-      const p = progressMap[chId];
-      if (!p) return sum;
-      return sum + (p.completed ? 100 : (p.progressPercent || 0));
-    }, 0);
-    const percent = chapterIds.length > 0 ? Math.round(totalProgress / chapterIds.length) : 0;
-
-    return {
-      enrolledCompletedChaptersCount: completedCount,
-      overallProgressPercent: percent,
-    };
-  }, [activeClass, progressMap]);
+  const {
+    schoolClass: activeClass,
+    grade: enrolledGrade,
+    totalSubjects: enrolledTotalSubjects,
+    totalChapters: enrolledTotalChapters,
+    completedChapters: enrolledCompletedChaptersCount,
+    progressPercent: overallProgressPercent,
+    recentProgress,
+  } = useAppSelector(selectEnrolledCurriculumStats);
 
   // Initialize services on mount
   useEffect(() => {
@@ -55,43 +40,6 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     };
     init();
   }, []);
-
-  // Get recent progress items for "Continue Learning". This is a cheap
-  // calculation, so it runs directly instead of through manual memoization.
-  const recentProgress = (() => {
-    // 1. Chapters with active learning progress or recorded visits that are not yet 100% completed
-    const inProgress = Object.values(progressMap)
-      .filter((p) => !p.completed && (p.progressPercent > 0 || (p.lastAccessed && p.lastAccessed > 0)))
-      .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
-
-    if (inProgress.length > 0) {
-      return inProgress.slice(0, 2);
-    }
-
-    // 2. Default to the first uncompleted chapter in the student's enrolled class
-    if (activeClass?.subjects) {
-      for (const subj of activeClass.subjects) {
-        for (const ch of subj.chapters || []) {
-          const p = progressMap[ch.id];
-          if (!p || !p.completed) {
-            return [
-              {
-                chapterId: ch.id,
-                subjectId: subj.id,
-                classId: activeClass.id,
-                progressPercent: p?.progressPercent || 0,
-                completed: false,
-                lastAccessed: p?.lastAccessed || 0,
-                completedSections: p?.completedSections || [],
-              },
-            ];
-          }
-        }
-      }
-    }
-
-    return [];
-  })();
 
   const handleOpenChapter = (classId: string, subjectId: string, chapterId: string) => {
     navigation.navigate('ChapterDetails', { classId, subjectId, chapterId });
@@ -106,7 +54,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" />
       <HeaderBar
         onProfilePress={() => navigation.navigate('Profile')}
         onNotificationPress={() => navigation.navigate('Notifications')}
@@ -214,7 +162,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           <View>
             <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Overview</Text>
             <Text className="font-manrope-medium text-xs text-textSecondary mt-0.5">
-              Class {enrolledStats.grade} Academic Stats
+              Class {enrolledGrade} Academic Stats
             </Text>
           </View>
           <TouchableOpacity
@@ -222,7 +170,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.navigate('Learn')}
             activeOpacity={0.8}
           >
-            <Text className="font-manrope-bold text-[11px] text-primary">Class {enrolledStats.grade}</Text>
+            <Text className="font-manrope-bold text-[11px] text-primary">Class {enrolledGrade}</Text>
             <MaterialIcons name="chevron-right" size={14} color={Colors.primary} />
           </TouchableOpacity>
         </View>
@@ -231,12 +179,12 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           <View className="flex-row gap-3">
             <StatCard
               label="Subjects"
-              value={enrolledStats.totalSubjects}
+              value={enrolledTotalSubjects}
               iconName="auto-stories"
             />
             <StatCard
               label="Chapters"
-              value={enrolledStats.totalChapters}
+              value={enrolledTotalChapters}
               iconName="menu-book"
             />
           </View>

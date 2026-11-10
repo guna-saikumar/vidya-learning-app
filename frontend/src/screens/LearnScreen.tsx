@@ -12,41 +12,29 @@ import Colors from '../constants/colors';
 import { HeaderBar, BottomNav } from '../components/navigation';
 import { SearchBar, PageIntro } from '../components/common';
 import { SubjectCard, LearningProgressCard } from '../components/curriculum';
-import { getClassById, getSubjectsByClass } from '../services/curriculumService';
+import { getSubjectsByClass } from '../services/curriculumService';
 import { useLearningProgress } from '../hooks/useLearningProgress';
+import { useAppSelector, selectEnrolledCurriculumStats } from '../store';
 import { RootStackParamList } from '../types/navigation';
 import { SubjectCategory } from '../types/curriculum';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Learn'>;
 
 export const LearnScreen: React.FC<Props> = ({ navigation }) => {
-  const { profile, progressMap } = useLearningProgress();
+  const { profile } = useLearningProgress();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SubjectCategory>('all');
 
   const activeClassId = profile?.activeClassId ?? '';
-  const activeClass = getClassById(activeClassId);
-  const subjects = getSubjectsByClass(activeClassId);
+  const subjects = useMemo(() => getSubjectsByClass(activeClassId), [activeClassId]);
 
-  const { totalChapters, completedChapters, progressPercent } = useMemo(() => {
-    if (!activeClass) return { totalChapters: 0, completedChapters: 0, progressPercent: 0 };
-    let total = 0;
-    let completed = 0;
-    activeClass.subjects.forEach((s) => {
-      s.chapters.forEach((ch) => {
-        total++;
-        if (progressMap[ch.id]?.completed) {
-          completed++;
-        }
-      });
-    });
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return {
-      totalChapters: total,
-      completedChapters: completed,
-      progressPercent: percent,
-    };
-  }, [activeClass, progressMap]);
+  const {
+    schoolClass: activeClass,
+    totalChapters,
+    completedChapters,
+    progressPercent,
+    subjectProgressMap,
+  } = useAppSelector(selectEnrolledCurriculumStats);
 
   const filteredSubjects = useMemo(() => {
     return subjects.filter((s) => {
@@ -59,28 +47,9 @@ export const LearnScreen: React.FC<Props> = ({ navigation }) => {
     });
   }, [subjects, selectedCategory, searchQuery]);
 
-  const getSubjectProgress = (chapters: any[]) => {
-    if (chapters.length === 0) return { percent: 0, completed: 0 };
-    let completedCount = 0;
-    let totalPercentSum = 0;
-
-    chapters.forEach((ch) => {
-      const p = progressMap[ch.id];
-      if (p) {
-        if (p.completed) completedCount++;
-        totalPercentSum += p.progressPercent || 0;
-      }
-    });
-
-    return {
-      percent: Math.round(totalPercentSum / chapters.length),
-      completed: completedCount,
-    };
-  };
-
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" />
       <HeaderBar
         onProfilePress={() => navigation.navigate('Profile')}
       />
@@ -226,13 +195,13 @@ export const LearnScreen: React.FC<Props> = ({ navigation }) => {
 
           {filteredSubjects.length > 0 ? (
             filteredSubjects.map((subject) => {
-              const { percent, completed } = getSubjectProgress(subject.chapters);
+              const stats = subjectProgressMap[subject.id];
               return (
                 <SubjectCard
                   key={subject.id}
                   subject={subject}
-                  progressPercent={percent}
-                  completedChaptersCount={completed}
+                  progressPercent={stats?.percent || 0}
+                  completedChaptersCount={stats?.completed || 0}
                   onPress={() =>
                     navigation.navigate('SubjectIndex', {
                       classId: activeClassId,

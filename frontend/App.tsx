@@ -3,10 +3,16 @@ import React from 'react';
 import {
   View,
   ActivityIndicator,
+  LogBox,
   Platform,
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
+
+LogBox.ignoreLogs([
+  'ImageBackground is deprecated',
+  'Found screens with the same name nested inside one another',
+]);
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import {

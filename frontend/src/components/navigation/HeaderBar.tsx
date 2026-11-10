@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, Image, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { fetchNotificationsThunk } from '../../store/slices/notificationsSlice';
+import { useAppSelector } from '../../store';
 import Colors from '../../constants/colors';
-import { useLearningProgress } from '../../hooks/useLearningProgress';
 
 interface HeaderBarProps {
   title?: string;
@@ -25,7 +23,7 @@ interface HeaderBarProps {
   navigation?: any;
 }
 
-export const HeaderBar: React.FC<HeaderBarProps> = ({
+const HeaderBarComponent: React.FC<HeaderBarProps> = ({
   title,
   eyebrow,
   subtitle,
@@ -44,15 +42,10 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   // callers that already have a navigation object can still override it.
   const hookNavigation = useNavigation<any>();
   const navigation = propNavigation || hookNavigation;
-  const { profile } = useLearningProgress();
+  const avatarUrl = useAppSelector((state) => state.student.profile?.avatarUrl);
   // insets.top adapts across notches/islands and edge-to-edge status bars without double-padding.
   const topInset = insets.top;
-  const dispatch = useAppDispatch();
   const unreadCount = useAppSelector((state) => state.notifications.unreadCount);
-
-  useEffect(() => {
-    dispatch(fetchNotificationsThunk());
-  }, [dispatch]);
 
   const handleNotificationPress = () => {
     if (onNotificationPress) {
@@ -83,6 +76,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           className="flex-row items-center gap-2.5"
           onPress={handleHomePress}
           activeOpacity={0.7}
+          delayPressIn={Platform.OS === 'web' ? undefined : 0}
           accessibilityRole="button"
           accessibilityLabel="Go to Home"
         >
@@ -114,6 +108,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             className="w-10 h-10 rounded-full border border-border items-center justify-center bg-white"
             onPress={handleNotificationPress}
             activeOpacity={0.7}
+            delayPressIn={Platform.OS === 'web' ? undefined : 0}
             accessibilityRole="button"
             accessibilityLabel="Notifications"
           >
@@ -132,13 +127,14 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             className="w-10 h-10 rounded-full border border-border bg-white items-center justify-center overflow-hidden shadow-sm"
             onPress={handleProfilePress}
             activeOpacity={0.8}
+            delayPressIn={Platform.OS === 'web' ? undefined : 0}
             accessibilityRole="button"
             accessibilityLabel="Student profile"
           >
             <Image
               source={
-                profile?.avatarUrl
-                  ? { uri: profile.avatarUrl }
+                avatarUrl
+                  ? { uri: avatarUrl }
                   : require('../../../assets/app-images/avatar.png')
               }
               className="w-8 h-8 rounded-full"
@@ -155,6 +151,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             className="w-10 h-10 rounded-xl border border-border bg-white items-center justify-center shadow-sm"
             onPress={onBackPress}
             activeOpacity={0.7}
+            delayPressIn={Platform.OS === 'web' ? undefined : 0}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
@@ -208,3 +205,5 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     </View>
   );
 };
+
+export const HeaderBar = React.memo(HeaderBarComponent);

@@ -7,6 +7,10 @@ import {
   logoutUserThunk,
   forceLogout,
 } from '../store/slices/authSlice';
+import { fetchProfileThunk } from '../store/slices/studentSlice';
+import { fetchProgressThunk, fetchBookmarksThunk } from '../store/slices/progressSlice';
+import { fetchNotificationsThunk } from '../store/slices/notificationsSlice';
+import { resetLearningProgressCache } from './useLearningProgress';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -29,7 +33,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const initSession = useCallback(async () => {
-    await dispatch(checkSessionThunk());
+    const res = await dispatch(checkSessionThunk());
+    if (checkSessionThunk.fulfilled.match(res) && res.payload) {
+      void Promise.allSettled([
+        dispatch(fetchProfileThunk()),
+        dispatch(fetchProgressThunk()),
+        dispatch(fetchBookmarksThunk()),
+        dispatch(fetchNotificationsThunk()),
+      ]);
+    }
   }, [dispatch]);
 
   useEffect(() => {
@@ -37,13 +49,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [initSession]);
 
   const login = async (email: string, pass: string) => {
+    resetLearningProgressCache();
     const result = await dispatch(loginUserThunk({ email, pass }));
     if (loginUserThunk.rejected.match(result)) {
       throw new Error((result.payload as string) || 'Login failed');
     }
+    await Promise.allSettled([
+      dispatch(fetchProfileThunk()),
+      dispatch(fetchProgressThunk()),
+      dispatch(fetchBookmarksThunk()),
+      dispatch(fetchNotificationsThunk()),
+    ]);
   };
 
   const logout = async () => {
+    resetLearningProgressCache();
     dispatch(forceLogout());
     await dispatch(logoutUserThunk());
   };

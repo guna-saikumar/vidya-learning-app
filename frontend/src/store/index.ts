@@ -79,5 +79,6 @@ export * from './slices/studentSlice';
 export * from './slices/curriculumSlice';
 export * from './slices/progressSlice';
 export * from './slices/notificationsSlice';
+export * from './selectors';
 
 export default store;

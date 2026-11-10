@@ -126,16 +126,31 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 });
 
+let inMemoryAccessToken: string | null = null;
+
+export const setApiAccessToken = (token: string | null) => {
+  inMemoryAccessToken = token;
+  if (token) {
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+  } else {
+    delete axiosInstance.defaults.headers.common.Authorization;
+  }
+};
+
 // Attach bearer token to outgoing requests
 axiosInstance.interceptors.request.use(
   async (config) => {
-    try {
-      const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+    let token = inMemoryAccessToken;
+    if (!token) {
+      try {
+        token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+        if (token) inMemoryAccessToken = token;
+      } catch (e) {
+        // ignore storage read failure
       }
-    } catch (e) {
-      // ignore storage read failure
+    }
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

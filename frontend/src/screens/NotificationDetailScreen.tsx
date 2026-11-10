@@ -136,7 +136,7 @@ export const NotificationDetailScreen: React.FC<Props> = ({ route, navigation })
 
   return (
     <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" />
       <HeaderBar
         showBack
         onBackPress={() => navigation.goBack()}

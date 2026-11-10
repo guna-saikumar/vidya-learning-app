@@ -38,7 +38,8 @@
           "cameraPermission": "Vidya needs camera access so you can take a photo for your student profile picture.",
           "photosPermission": "Vidya needs photo library access so you can choose a profile picture from your device."
         }
-      ]
+      ],
+      "expo-status-bar"
     ]
   }
 }

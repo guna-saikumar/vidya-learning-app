@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   authApi,
+  setApiAccessToken,
   AUTH_TOKEN_KEY,
   AUTH_REFRESH_TOKEN_KEY,
   AUTH_USER_KEY,
@@ -48,6 +49,7 @@ export const loginUserThunk = createAsyncThunk(
       if (refreshToken) {
         await AsyncStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
       }
+      setApiAccessToken(accessToken);
 
       const meRes = await authApi.me();
       const stored: StoredAuthUser = {
@@ -103,8 +105,10 @@ export const checkSessionThunk = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
+      setApiAccessToken(null);
       return null;
     }
+    setApiAccessToken(token);
 
     const refresh = await AsyncStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
     const storedRaw = await AsyncStorage.getItem(AUTH_USER_KEY);
@@ -136,6 +140,7 @@ export const checkSessionThunk = createAsyncThunk(
       const status = err?.response?.status as number | undefined;
       // Only clear credentials on definitive auth failures — not flaky network.
       if (status === 401 || status === 403) {
+        setApiAccessToken(null);
         await AsyncStorage.multiRemove([
           AUTH_TOKEN_KEY,
           AUTH_REFRESH_TOKEN_KEY,
@@ -165,6 +170,7 @@ export const logoutUserThunk = createAsyncThunk('auth/logoutUser', async () => {
   } catch (e) {
     console.warn('Backend logout failed, continuing with local cleanup:', e);
   } finally {
+    setApiAccessToken(null);
     await AsyncStorage.multiRemove([
       AUTH_TOKEN_KEY,
       AUTH_REFRESH_TOKEN_KEY,
