@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  type TextInputInstance,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,7 +19,7 @@ import { useAuth } from '../hooks/useAuth';
 export const LoginScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
-  const passwordInputRef = useRef<React.ElementRef<typeof TextInput>>(null);
+  const passwordInputRef = useRef<TextInputInstance | null>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
