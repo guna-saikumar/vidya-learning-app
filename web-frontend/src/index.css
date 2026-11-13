@@ -1,0 +1,96 @@
+:root {
+  --primary: #b95d3f;
+  --primary-dark: #91452f;
+  --primary-light: #f3d9cc;
+  --pale-peach: #fbece3;
+  --pale-peach-hover: #f5dcd0;
+  --soft-warm: #faf5f2;
+  --surface-soft: #fdf9f7;
+  --white: #ffffff;
+  --border: #ede1d8;
+  --border-secondary: #e6d6ce;
+  --border-accent: #e4beaa;
+  --text-primary: #3a2d29;
+  --text-secondary: #79675f;
+  --text-muted: #9b8981;
+  --text-placeholder: #a99a93;
+  --success: #24845d;
+  --success-bg: #e7f3ed;
+  --accent-gold: #d6a84f;
+  --accent-gold-bg: #fdf8ec;
+  --error: #b84040;
+  --error-bg: #ffdad6;
+
+  --shadow-xs: 0 1px 2px rgba(58, 45, 41, 0.05);
+  --shadow-sm: 0 1px 3px rgba(58, 45, 41, 0.06), 0 1px 2px rgba(58, 45, 41, 0.04);
+  --shadow-md: 0 4px 12px rgba(58, 45, 41, 0.08);
+  --shadow-lg: 0 10px 25px -3px rgba(58, 45, 41, 0.1), 0 4px 6px -2px rgba(58, 45, 41, 0.05);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 22px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  --font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--surface-soft);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Custom scrollbars matching warm theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-soft);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-accent);
+}

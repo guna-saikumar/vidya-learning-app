@@ -1,0 +1,538 @@
+/* ========================================================
+   CONTACT & SUPPORT PAGE (Matching Dashboard Design)
+======================================================== */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* =========================================
+   WELCOME HERO BANNER (Matches Dashboard)
+========================================= */
+.welcomeBanner {
+  background: linear-gradient(135deg, rgba(251, 243, 236, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 30px 32px;
+  box-shadow: 0 4px 20px rgba(58, 45, 41, 0.04);
+}
+
+.welcomeContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcomePillRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.welcomePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(185, 93, 63, 0.1);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 750;
+  border: 1px solid rgba(185, 93, 63, 0.18);
+}
+
+.welcomePillNeutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #ffffff;
+  color: var(--text-secondary);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 650;
+  border: 1px solid var(--border);
+}
+
+.welcomeTitle {
+  font-size: 28px;
+  font-weight: 850;
+  color: #2b201c;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  margin: 0 0 8px 0;
+}
+
+.welcomeTitlePrimary {
+  color: var(--primary);
+}
+
+.welcomeSubtitle {
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  max-width: 680px;
+  margin: 0 0 20px 0;
+}
+
+.filterPillsRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border);
+}
+
+.filterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterPill:hover {
+  border-color: rgba(185, 93, 63, 0.4);
+  color: var(--primary);
+}
+
+.filterPillActive {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(185, 93, 63, 0.25);
+}
+
+.filterPillActive:hover {
+  color: #ffffff;
+}
+
+.countBadge {
+  padding: 1px 7px;
+  background: var(--pale-peach);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.filterPillActive .countBadge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* =========================================
+   SUCCESS BANNER
+========================================= */
+.successBanner {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.successLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.successTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #065f46;
+  margin: 0;
+}
+
+.successText {
+  font-size: 13px;
+  color: #047857;
+  margin: 2px 0 0 0;
+}
+
+.dismissBtn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =========================================
+   FORM CARD
+========================================= */
+.formCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(58, 45, 41, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 850;
+  color: #2b201c;
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.formContent {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.studentInfoStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+
+.stripItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stripLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stripValue {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #2b201c;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 750;
+  color: #2b201c;
+}
+
+.categoriesBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.categoryBtn {
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.categoryBtn:hover {
+  border-color: rgba(185, 93, 63, 0.4);
+  color: var(--primary);
+}
+
+.categoryBtnActive {
+  background: var(--pale-peach);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.formInput,
+.formTextarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #2b201c;
+  background: #ffffff;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(185, 93, 63, 0.12);
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 750;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(185, 93, 63, 0.25);
+  transition: all 0.2s ease;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(185, 93, 63, 0.35);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   OFFICE CARDS GRID
+========================================= */
+.officeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.officeCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(58, 45, 41, 0.03);
+}
+
+.officeIconCircle {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: var(--pale-peach);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(185, 93, 63, 0.2);
+}
+
+.officeCardTitle {
+  font-size: 17px;
+  font-weight: 800;
+  color: #2b201c;
+  margin: 0;
+}
+
+.officeCardDesc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.contactValueBox {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.contactValue {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.contactSub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* =========================================
+   HISTORY LIST
+========================================= */
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ticketList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ticketCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 3px 12px rgba(58, 45, 41, 0.03);
+}
+
+.ticketHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ticketMetaGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ticketId {
+  font-size: 13px;
+  font-weight: 850;
+  color: var(--primary);
+}
+
+.ticketCategory {
+  padding: 2px 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.ticketStatusBadge {
+  padding: 3px 10px;
+  background: #ecfdf5;
+  color: #059669;
+  border-radius: var(--radius-full);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.ticketSubject {
+  font-size: 16px;
+  font-weight: 800;
+  color: #2b201c;
+  margin: 2px 0 0 0;
+}
+
+.ticketMessage {
+  font-size: 13px;
+  color: #55443f;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ticketFooter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.emptyCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 56px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.emptyIconBox {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--pale-peach);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(185, 93, 63, 0.2);
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 850;
+  color: #2b201c;
+  margin: 0;
+}
+
+.emptySubtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  max-width: 440px;
+  margin: 0;
+}

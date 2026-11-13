@@ -1,0 +1,29 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-soft);
+}
+
+.mainWrapper {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  padding-top: 66px; /* Offset for fixed top navbar */
+}
+
+.contentArea {
+  flex: 1;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+@media (min-width: 768px) {
+  .contentArea {
+    padding: 32px 24px 72px;
+  }
+}

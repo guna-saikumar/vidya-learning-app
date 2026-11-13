@@ -1,5 +1,5 @@
 packages:
-  - "frontend"
+  - "mobile-frontend"
+  - "web-frontend"
   - "backend"
   - "backend/db"
-  - "apps/student-web"

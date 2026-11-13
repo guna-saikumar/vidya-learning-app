@@ -3,7 +3,7 @@
 ```
 vidya-learning-app/
 │
-├── frontend/                 # Expo / React Native student mobile application (Classes 6–10)
+├── mobile-frontend/          # Expo / React Native student mobile application (Classes 6–10)
 │   ├── src/
 │   │   ├── screens/          # All 13 application screens (Dashboard, Login, SubjectIndex, etc.)
 │   │   ├── components/       # UI components (common, curriculum, home, navigation)
@@ -18,14 +18,24 @@ vidya-learning-app/
 │   ├── App.tsx               # Root component & font loaders
 │   └── package.json
 │
-├── backend/                  # NestJS v11 + Fastify API
+├── web-frontend/             # Student Web Portal (Vite, React, CSS Modules)
+│   ├── src/
+│   │   ├── pages/            # LandingPage, LoginPage, DashboardPage, CoursesPage, etc.
+│   │   ├── components/       # Layouts, Top Navbar, UI widgets
+│   │   ├── hooks/            # useAuth, useProfile
+│   │   ├── services/         # API services
+│   │   └── lib/              # Axios client and avatar resolver
+│   ├── public/               # Logos, hero student image, book stack assets
+│   └── package.json
+│
+├── backend/                  # Unified NestJS v11 + Fastify API & PostgreSQL Database
 │   ├── src/
 │   │   ├── modules/          # Feature modules (curriculum, health, notifications, schools, students)
 │   │   ├── auth/             # Student auth, JWT issuance, roles & guards
 │   │   ├── db/               # PostgreSQL database service & connection pool
 │   │   ├── common/           # Exception filters, file uploads & Zod pipes
 │   │   └── mailer/           # Mailer service
-│   ├── db/                   # Database migrations & demo seed scripts
+│   ├── db/                   # PostgreSQL schema migrations & seed data scripts
 │   ├── benchmarks/           # k6 load testing suite
 │   ├── postman/              # Postman API collections
 │   ├── scripts/              # Local startup & ngrok helper scripts

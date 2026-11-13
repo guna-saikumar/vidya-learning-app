@@ -1,0 +1,514 @@
+/* ========================================================
+   COURSES / CURRICULUM PAGE (Matching Dashboard Design)
+   Palette: Terracotta (#b95d3f), Pale Peach (#fbf3ec), Clean White
+======================================================== */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* =========================================
+   WELCOME HERO BANNER (Matches Dashboard)
+========================================= */
+.welcomeBanner {
+  background: linear-gradient(135deg, rgba(251, 243, 236, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 30px 32px;
+  box-shadow: 0 4px 20px rgba(58, 45, 41, 0.04);
+}
+
+.welcomeContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcomePillRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.welcomePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(185, 93, 63, 0.1);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 750;
+  border: 1px solid rgba(185, 93, 63, 0.18);
+}
+
+.welcomePillNeutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #ffffff;
+  color: var(--text-secondary);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 650;
+  border: 1px solid var(--border);
+}
+
+.welcomeTitle {
+  font-size: 28px;
+  font-weight: 850;
+  color: #2b201c;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  margin: 0 0 8px 0;
+}
+
+.welcomeTitlePrimary {
+  color: var(--primary);
+}
+
+.welcomeSubtitle {
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  max-width: 680px;
+  margin: 0 0 20px 0;
+}
+
+.heroMetaStats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border);
+}
+
+.heroMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.metaLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metaValue {
+  font-size: 14px;
+  font-weight: 750;
+  color: #2b201c;
+}
+
+/* =========================================
+   ANNUAL SYLLABUS PROGRESS CARD
+========================================= */
+.progressCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 16px rgba(58, 45, 41, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.progressHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.progressIconBadge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--pale-peach);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(185, 93, 63, 0.2);
+}
+
+.progressTitle {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #2b201c;
+  margin: 0 0 2px 0;
+}
+
+.progressSub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.progressBadgeHighlight {
+  padding: 6px 14px;
+  background: var(--pale-peach);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: 14.5px;
+  font-weight: 850;
+  border: 1px solid rgba(185, 93, 63, 0.2);
+}
+
+.progressTrack {
+  height: 8px;
+  width: 100%;
+  background: var(--surface-soft);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid rgba(185, 93, 63, 0.08);
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, #cf6341 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
+}
+
+/* =========================================
+   CONTROLS: SEARCH & CATEGORY PILLS
+========================================= */
+.controlsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .controlsRow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  max-width: 480px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.searchInput {
+  width: 100%;
+  height: 46px;
+  padding-left: 46px;
+  padding-right: 18px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font-size: 13.5px;
+  color: #2b201c;
+  box-shadow: 0 2px 8px rgba(58, 45, 41, 0.03);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(185, 93, 63, 0.12);
+}
+
+.categoriesBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.categoryPill {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.categoryPill:hover {
+  border-color: rgba(185, 93, 63, 0.4);
+  color: var(--primary);
+}
+
+.categoryPillActive {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(185, 93, 63, 0.25);
+}
+
+.categoryPillActive:hover {
+  color: #ffffff;
+}
+
+/* =========================================
+   SUBJECTS GRID SECTION
+========================================= */
+.subjectsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sectionTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 850;
+  color: #2b201c;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.badgePill {
+  padding: 6px 14px;
+  background: var(--pale-peach);
+  color: var(--primary-dark);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 750;
+  border: 1px solid rgba(185, 93, 63, 0.2);
+}
+
+.subjectsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.subjectCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(58, 45, 41, 0.03);
+}
+
+.subjectCard:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 26px rgba(185, 93, 63, 0.12);
+}
+
+.cardTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subjectIconCircle {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--pale-peach);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(185, 93, 63, 0.15);
+}
+
+.subjectCodeBadge {
+  padding: 4px 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.subjectName {
+  font-size: 17px;
+  font-weight: 800;
+  color: #2b201c;
+  margin: 0;
+}
+
+.subjectDesc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.cardProgressBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+}
+
+.cardProgressMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cardProgressPct {
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.cardProgressTrack {
+  height: 6px;
+  width: 100%;
+  background: var(--surface-soft);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid rgba(185, 93, 63, 0.06);
+}
+
+.cardProgressBar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: var(--radius-full);
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--primary);
+}
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+.emptyBox {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.emptyIconCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--pale-peach);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #2b201c;
+  margin: 0;
+}
+
+.emptySubtitle {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  max-width: 420px;
+  margin: 0;
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 750;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(185, 93, 63, 0.25);
+  transition: all 0.2s ease;
+}
+
+.primaryBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(185, 93, 63, 0.35);
+}
