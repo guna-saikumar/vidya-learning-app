@@ -17,7 +17,7 @@ config.resolver.nodeModulesPaths = [
 // The Expo app never imports from these sibling projects, and watching their
 // node_modules makes Metro crash when another workspace runs an install.
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const blockedWorkspaces = ["apps/student-web", "web-dashboard", "contact-us", "backend"];
+const blockedWorkspaces = ["web-frontend", "contact-us", "backend"];
 config.resolver.blockList = blockedWorkspaces.map(
   (workspace) =>
     new RegExp(`^${escapeRegExp(path.resolve(monorepoRoot, workspace))}[/\\\\].*$`)
