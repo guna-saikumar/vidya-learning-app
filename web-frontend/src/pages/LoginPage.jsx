@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { extractErrorMessage } from '../lib/apiClient';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Info, ArrowRight, ArrowLeft } from 'lucide-react';
 import styles from './LoginPage.css';
 
 export const LoginPage = () => {
-  const { login } = useAuth();
+  const { user, login, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      if (user.isOnboarded) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/onboarding', { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,8 +74,12 @@ export const LoginPage = () => {
     setLoading(true);
 
     try {
-      await login(trimmedEmail, password);
-      navigate('/dashboard');
+      const authResult = await login(trimmedEmail, password);
+      if (authResult?.isOnboarded) {
+        navigate('/dashboard');
+      } else {
+        navigate('/onboarding');
+      }
     } catch (err) {
       setErrorMessage(extractErrorMessage(err));
     } finally {
@@ -77,13 +91,26 @@ export const LoginPage = () => {
     setForgotPasswordNotice('Please contact your school administrator or teacher to reset your password.');
   };
 
+  const handleBackToHome = async (e) => {
+    e.preventDefault();
+    try {
+      await logout();
+    } finally {
+      navigate('/');
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
-        <Link to="/" className={styles.backLink}>
+        <button
+          type="button"
+          onClick={handleBackToHome}
+          className={styles.backLink}
+        >
           <ArrowLeft size={16} />
           <span>Back to Home</span>
-        </Link>
+        </button>
 
         {/* Brand Header */}
         <div className={styles.brandHeader}>

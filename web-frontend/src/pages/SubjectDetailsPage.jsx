@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getSubjectById, getClassById } from '../services/curriculumService';
-import { getStoredProgress } from '../services/progressService';
+import { useLearningProgress } from '../hooks/useLearningProgress';
 import {
   ArrowLeft,
   BookOpen,
@@ -11,7 +11,6 @@ import {
   Layers,
   GraduationCap,
   Play,
-  Sparkles,
 } from 'lucide-react';
 import styles from './SubjectDetailsPage.css';
 
@@ -21,7 +20,7 @@ export const SubjectDetailsPage = () => {
 
   const schoolClass = useMemo(() => getClassById(classId), [classId]);
   const subject = useMemo(() => getSubjectById(classId, subjectId), [classId, subjectId]);
-  const progressMap = useMemo(() => getStoredProgress(), []);
+  const { progressMap } = useLearningProgress();
 
   if (!subject) {
     return (

@@ -61,6 +61,12 @@ export const Header = () => {
     navigate('/login');
   };
 
+  const handleGoToLanding = async () => {
+    setMenuOpen(false);
+    await logout();
+    navigate('/');
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
@@ -154,14 +160,14 @@ export const Header = () => {
                 <span>Settings</span>
               </Link>
 
-              <Link
-                to="/"
-                onClick={() => setMenuOpen(false)}
+              <button
+                type="button"
+                onClick={handleGoToLanding}
                 className={styles.menuItem}
               >
                 <Home size={16} />
                 <span>Landing Page</span>
-              </Link>
+              </button>
 
               <div className={styles.menuDivider} />
 

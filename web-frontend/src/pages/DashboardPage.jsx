@@ -2,12 +2,9 @@ import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
+import { useLearningProgress } from '../hooks/useLearningProgress';
 import { getClassById, getSubjectsByClass } from '../services/curriculumService';
-import {
-  getStoredProgress,
-  getStoredBookmarks,
-  getStoredNotifications,
-} from '../services/progressService';
+import { getStoredNotifications } from '../services/progressService';
 import {
   BookOpen,
   Bookmark,
@@ -20,9 +17,7 @@ import {
   Clock,
   Bell,
   HelpCircle,
-  ExternalLink,
   School,
-  Tag,
 } from 'lucide-react';
 import styles from './DashboardPage.css';
 
@@ -30,16 +25,15 @@ export const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { progressMap, overallPercent, bookmarks, getRecentContinueItem } = useLearningProgress();
 
   const activeClassId = profile?.activeClassId || 'class-10';
   const schoolClass = useMemo(() => getClassById(activeClassId), [activeClassId]);
   const subjects = useMemo(() => getSubjectsByClass(activeClassId), [activeClassId]);
-  const progressMap = useMemo(() => getStoredProgress(), []);
-  const bookmarks = useMemo(() => getStoredBookmarks(), []);
   const notifications = useMemo(() => getStoredNotifications(), []);
 
   // Compute enrolled curriculum stats
-  const { totalSubjects, totalChapters, completedChapters, progressPercent } = useMemo(() => {
+  const { totalChapters, completedChapters, progressPercent } = useMemo(() => {
     let total = 0;
     let completed = 0;
 
@@ -52,45 +46,17 @@ export const DashboardPage = () => {
       }
     }
 
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const calcPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
     return {
       totalSubjects: subjects.length,
       totalChapters: total,
       completedChapters: completed,
-      progressPercent: percent,
+      progressPercent: overallPercent > 0 ? overallPercent : calcPercent,
     };
-  }, [subjects, progressMap]);
+  }, [subjects, progressMap, overallPercent]);
 
-  // Find recent in-progress chapter
-  const continueItem = useMemo(() => {
-    for (const sub of subjects) {
-      for (const ch of sub.chapters) {
-        const p = progressMap[ch.id];
-        if (p && !p.completed && (p.progressPercent > 0 || (p.completedSections && p.completedSections.length > 0))) {
-          return {
-            subject: sub,
-            chapter: ch,
-            progress: p.progressPercent || 0,
-            completedSections: p.completedSections?.length || 0,
-            totalSections: ch.sections.length,
-          };
-        }
-      }
-    }
-
-    // Default to first chapter
-    if (subjects[0]?.chapters[0]) {
-      return {
-        subject: subjects[0],
-        chapter: subjects[0].chapters[0],
-        progress: 0,
-        completedSections: 0,
-        totalSections: subjects[0].chapters[0].sections.length,
-      };
-    }
-
-    return null;
-  }, [subjects, progressMap]);
+  // Find recent in-progress chapter matching mobile's exact order & sync
+  const continueItem = useMemo(() => getRecentContinueItem(subjects), [subjects, getRecentContinueItem]);
 
   const displayName = profile?.firstName || profile?.fullName || user?.name || 'Student';
   const grade = profile?.grade || '10';

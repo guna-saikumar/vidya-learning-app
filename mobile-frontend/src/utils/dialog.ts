@@ -1,4 +1,5 @@
 import { Alert, Platform } from 'react-native';
+import { toast, ToastType } from '../components/common/Toast';
 
 export type DialogButton = {
   text?: string;
@@ -6,63 +7,88 @@ export type DialogButton = {
   style?: 'default' | 'cancel' | 'destructive';
 };
 
+function inferToastType(title: string, message?: string): ToastType {
+  const combined = `${title} ${message || ''}`.toLowerCase();
+  if (
+    combined.includes('error') ||
+    combined.includes('invalid') ||
+    combined.includes('failed') ||
+    combined.includes('required') ||
+    combined.includes('validation') ||
+    combined.includes('could not')
+  ) {
+    return 'error';
+  }
+  if (
+    combined.includes('success') ||
+    combined.includes('updated') ||
+    combined.includes('saved') ||
+    combined.includes('restored') ||
+    combined.includes('completed') ||
+    combined.includes('removed')
+  ) {
+    return 'success';
+  }
+  if (combined.includes('warning') || combined.includes('caution')) {
+    return 'warning';
+  }
+  return 'info';
+}
+
 /**
- * Cross-platform alert dialog.
- *
- * `react-native-web` ships `Alert` as a no-op (`static alert() {}`), so any
- * message or confirmation built with `Alert.alert` silently disappears in the
- * browser. On web we fall back to the native `window` dialogs; on iOS/Android
- * the regular React Native alert is used unchanged.
+ * Modern toast-based alert dialog.
+ * Renders an in-app animated toast notification on web and mobile instead
+ * of blocking browser `window.alert(...)` modals.
  */
 export function showAlert(
   title: string,
   message?: string,
   buttons?: DialogButton[]
 ): void {
-  if (Platform.OS !== 'web') {
+  const type = inferToastType(title, message);
+  const actionButtons = (buttons ?? []).filter(
+    (button) => button.style !== 'cancel'
+  );
+  const primary = actionButtons[actionButtons.length - 1];
+
+  // If on native mobile and there are multiple choices, keep native Alert sheet
+  if (Platform.OS !== 'web' && buttons && buttons.length > 1) {
     Alert.alert(title, message, buttons);
     return;
   }
 
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const body = message ? `${title}\n\n${message}` : title;
-  const actionButtons = (buttons ?? []).filter(
-    (button) => button.style !== 'cancel'
-  );
-
-  // Multi-button alerts are confirmations: run the primary action only when
-  // the student accepts.
-  if (buttons && buttons.length > 1) {
-    const primary = actionButtons[actionButtons.length - 1];
-    if (window.confirm(body)) {
-      primary?.onPress?.();
-    }
-    return;
-  }
-
-  window.alert(body);
-  actionButtons[0]?.onPress?.();
+  // Display toast with action button if provided
+  toast.show({
+    title,
+    message,
+    type,
+    duration: 3800,
+    actionText: primary?.text,
+    onAction: primary?.onPress,
+  });
 }
 
 /**
- * Promise-based confirmation helper for flows that read better with `await`.
- * Resolves `true` when the student confirms.
+ * Promise-based confirmation helper.
  */
 export function showConfirm(
   title: string,
   message?: string,
   options?: { confirmText?: string; cancelText?: string }
 ): Promise<boolean> {
-  if (Platform.OS === 'web') {
-    if (typeof window === 'undefined') return Promise.resolve(false);
-    const body = message ? `${title}\n\n${message}` : title;
-    return Promise.resolve(window.confirm(body));
-  }
-
   return new Promise((resolve) => {
+    if (Platform.OS === 'web') {
+      toast.show({
+        title,
+        message,
+        type: 'warning',
+        duration: 8000,
+        actionText: options?.confirmText ?? 'Confirm',
+        onAction: () => resolve(true),
+      });
+      return;
+    }
+
     Alert.alert(title, message, [
       {
         text: options?.cancelText ?? 'Cancel',

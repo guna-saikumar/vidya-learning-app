@@ -7,7 +7,7 @@ import {
   resolveAvatarUrl,
 } from '../../services/profileMapper';
 import { UserProfile } from '../../types/curriculum';
-import { logoutUserThunk, forceLogout } from './authSlice';
+import { logoutUserThunk, forceLogout, loginUserThunk } from './authSlice';
 
 const USER_PROFILE_STORAGE_KEY = '@vidya_user_profile';
 
@@ -210,6 +210,18 @@ const studentSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Reset profile when a new user logs in so stale data is never used
+    builder.addCase(loginUserThunk.pending, (state) => {
+      state.profile = null;
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(loginUserThunk.fulfilled, (state) => {
+      state.profile = null;
+      state.loading = true;
+      state.error = null;
+    });
+
     // fetch profile
     builder.addCase(fetchProfileThunk.pending, (state) => {
       state.loading = true;

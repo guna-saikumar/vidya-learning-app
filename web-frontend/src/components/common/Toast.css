@@ -1,0 +1,119 @@
+.vidya-toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 400px;
+  width: calc(100% - 48px);
+}
+
+.vidya-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #ede1d8;
+  box-shadow: 0 8px 24px rgba(58, 45, 41, 0.12), 0 2px 6px rgba(58, 45, 41, 0.08);
+  animation: vidyaToastSlideIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.2s ease;
+}
+
+@keyframes vidyaToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vidya-toast-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vidya-toast-error .vidya-toast-icon {
+  background-color: #ffdad6;
+  color: #b84040;
+}
+
+.vidya-toast-error {
+  border-color: #ffc8c4;
+}
+
+.vidya-toast-success .vidya-toast-icon {
+  background-color: #e7f3ed;
+  color: #24845d;
+}
+
+.vidya-toast-warning .vidya-toast-icon {
+  background-color: #fdf8ec;
+  color: #9a742a;
+}
+
+.vidya-toast-info .vidya-toast-icon {
+  background-color: #fbece3;
+  color: #b95d3f;
+}
+
+.vidya-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.vidya-toast-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3a2d29;
+  line-height: 1.3;
+}
+
+.vidya-toast-message {
+  font-size: 13px;
+  color: #79675f;
+  margin-top: 2px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.vidya-toast-close {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: #9b8981;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.vidya-toast-close:hover {
+  color: #3a2d29;
+  background-color: #faf5f2;
+}
+
+@media (max-width: 480px) {
+  .vidya-toast-container {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+}

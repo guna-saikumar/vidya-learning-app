@@ -1,16 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
+import { useLearningProgress } from '../hooks/useLearningProgress';
 import { getClassById, getSubjectsByClass } from '../services/curriculumService';
-import { getStoredProgress } from '../services/progressService';
 import {
   BookOpen,
   Search,
   ChevronRight,
   School,
   GraduationCap,
-  Sparkles,
-  CheckCircle2,
   TrendingUp,
 } from 'lucide-react';
 import styles from './CoursesPage.css';
@@ -25,7 +23,7 @@ export const CoursesPage = () => {
 
   const schoolClass = useMemo(() => getClassById(activeClassId), [activeClassId]);
   const subjects = useMemo(() => getSubjectsByClass(activeClassId), [activeClassId]);
-  const progressMap = useMemo(() => getStoredProgress(), []);
+  const { progressMap, overallPercent } = useLearningProgress();
 
   // Compute stats across enrolled curriculum
   const { totalChapters, completedChapters, progressPercent } = useMemo(() => {
@@ -43,9 +41,9 @@ export const CoursesPage = () => {
     return {
       totalChapters: total,
       completedChapters: completed,
-      progressPercent: percent,
+      progressPercent: overallPercent > 0 ? overallPercent : percent,
     };
-  }, [subjects, progressMap]);
+  }, [subjects, progressMap, overallPercent]);
 
   const filteredSubjects = useMemo(() => {
     return subjects.filter((subject) => {

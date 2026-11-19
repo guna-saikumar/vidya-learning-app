@@ -383,7 +383,17 @@ export class StudentsService {
 
   async updateProfile(userId: string, input: UpdateProfileInput) {
     const values = await this.resolveWrites(input, false);
-    const row = await this.writeProfile(userId, values);
+    const existing = await this.loadProfile(userId);
+    const extraSets: string[] = [];
+    if (!existing.isOnboarded) {
+      const effGrade = values.grade ?? existing.grade;
+      const effSchool = values.schoolName ?? existing.schoolName;
+      const effFirst = values.firstName ?? existing.firstName;
+      if (effGrade && effSchool && effFirst) {
+        extraSets.push(`"isOnboarded" = true`);
+      }
+    }
+    const row = await this.writeProfile(userId, values, extraSets);
     return { success: true, profile: toProfileDto(row) };
   }
 

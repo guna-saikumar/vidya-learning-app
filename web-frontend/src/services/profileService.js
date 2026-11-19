@@ -5,6 +5,15 @@ export async function getProfile() {
   return res.data;
 }
 
+export async function submitOnboarding(payload) {
+  const res = await apiClient.put('/api/v1/students/me/onboarding', payload);
+  const data = res.data;
+  if (data && data.profile) {
+    return data.profile;
+  }
+  return data;
+}
+
 export async function updateProfile(payload) {
   const res = await apiClient.patch('/api/v1/students/me/profile', payload);
   const data = res.data;
@@ -28,4 +37,3 @@ export async function uploadAvatar(file) {
 export async function deleteAvatar() {
   await apiClient.delete('/api/v1/students/me/avatar');
 }
-

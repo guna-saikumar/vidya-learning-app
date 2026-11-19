@@ -1,6 +1,9 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ToastProvider } from './components/common/Toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { LearningProvider } from './hooks/useLearningProgress';
 import { AppLayout } from './components/layout/AppLayout';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -17,6 +20,8 @@ import { ContactPage } from './pages/ContactPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-soft)' }}>
@@ -31,21 +36,36 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
+
   if (!user) return <Navigate to="/login" replace />;
+
+  // Account-level check: If this student has NOT completed setup, gate to /onboarding
+  if (!user.isOnboarded && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // If this student has ALREADY completed setup, redirect away from /onboarding
+  if (user.isOnboarded && location.pathname === '/onboarding') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return <>{children}</>;
 };
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ToastProvider>
+          <AuthProvider>
+            <LearningProvider>
+              <Routes>
           {/* Public Landing & Marketing Pages */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Student Onboarding */}
+          {/* Student Onboarding (Student Setup Form) */}
           <Route
             path="/onboarding"
             element={
@@ -75,7 +95,10 @@ export default function App() {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
-  );
+      </LearningProvider>
+    </AuthProvider>
+  </ToastProvider>
+  </BrowserRouter>
+</ErrorBoundary>
+);
 }

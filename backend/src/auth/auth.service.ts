@@ -83,10 +83,16 @@ export class AuthService {
 
     const refreshToken = await this.issueRefreshToken(user.id);
 
+    const profile = await this.db.queryOne<{ isOnboarded: boolean }>(
+      `SELECT "isOnboarded" FROM "StudentProfile" WHERE "userId" = $1`,
+      [user.id]
+    );
+
     return {
       accessToken: this.issueAccessToken(user),
       refreshToken,
       user: { id: user.id, email: user.email },
+      isOnboarded: profile?.isOnboarded ?? false,
     };
   }
 

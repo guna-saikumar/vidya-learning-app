@@ -56,8 +56,8 @@ const POPULAR_SCHOOLS = [
 
 export const StudentOnboardingPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile, save } = useProfile();
+  const { setIsOnboarded } = useAuth();
+  const { profile, submitSetup } = useProfile();
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -156,7 +156,7 @@ export const StudentOnboardingPage = () => {
     const effectiveSchool = customSchool.trim() || schoolName.trim();
 
     try {
-      await save({
+      await submitSetup({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         dateOfBirth,
@@ -174,6 +174,7 @@ export const StudentOnboardingPage = () => {
         motherName: motherName.trim(),
         parentPhone: parentPhone.trim(),
       });
+      setIsOnboarded(true);
       navigate('/dashboard');
     } catch (err) {
       setErrorMessage(err?.message || 'Could not complete onboarding. Please try again.');

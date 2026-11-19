@@ -20,6 +20,8 @@ import {
 import { fetchNotificationsThunk } from '../store/slices/notificationsSlice';
 
 import { BookmarkItem, UserProfile } from '../types/curriculum';
+import { studentsApi } from '../services/apiClient';
+import { getChapterById } from '../services/curriculumService';
 
 const CACHE_TTL_MS = 60000;
 
@@ -158,6 +160,9 @@ export const useLearningProgress = () => {
     const current = progressMap[chapterId];
     const isCompleted = !current?.completed;
     const progressPercent = isCompleted ? 100 : 0;
+    const chInfo = getChapterById(chapterId);
+    const allSectionIds = chInfo?.chapter?.sections?.map((s) => s.id) || [];
+    const finalSections = isCompleted ? allSectionIds : [];
 
     await dispatch(
       saveChapterProgressThunk({
@@ -166,6 +171,7 @@ export const useLearningProgress = () => {
         classId,
         progressPercent,
         completed: isCompleted,
+        completedSections: finalSections,
       })
     ).unwrap();
 
@@ -193,10 +199,16 @@ export const useLearningProgress = () => {
     ).unwrap();
   };
 
-  // Record visit to chapter/topic to accurately power Continue Learning.
+  // Record visit to chapter/topic to accurately power Continue Learning across mobile & web.
   const recordVisit = useCallback((classId: string, subjectId: string, chapterId: string) => {
     dispatch(recordChapterVisit({ classId, subjectId, chapterId }));
-  }, [dispatch]);
+    const existing = progressMap[chapterId];
+    studentsApi.updateProgress(chapterId, {
+      progressPercent: existing?.progressPercent || 20,
+      completed: existing?.completed || false,
+      completedSections: existing?.completedSections || [],
+    }).catch(() => {});
+  }, [dispatch, progressMap]);
 
   // Add or remove a bookmark. Redux is the only source of truth for the list;
   // the server call must succeed before local state changes.

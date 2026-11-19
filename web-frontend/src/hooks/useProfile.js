@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getProfile, updateProfile } from '../services/profileService';
+import { getProfile, updateProfile, submitOnboarding } from '../services/profileService';
 import { extractErrorMessage } from '../lib/apiClient';
 
 export function useProfile() {
@@ -30,6 +30,11 @@ export function useProfile() {
     return updated;
   }, []);
 
-  return { profile, loading, error, refresh, save, setProfile };
-}
+  const submitSetup = useCallback(async (payload) => {
+    const updated = await submitOnboarding(payload);
+    setProfile(updated);
+    return updated;
+  }, []);
 
+  return { profile, loading, error, refresh, save, submitSetup, setProfile };
+}

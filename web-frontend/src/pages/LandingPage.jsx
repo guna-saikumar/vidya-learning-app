@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { storage } from '../lib/storage';
 import {
   BookOpen,
   Bookmark,
@@ -7,15 +9,10 @@ import {
   Bell,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
   GraduationCap,
   Layers,
   Globe,
   HelpCircle,
-  Phone,
-  Mail,
-  MapPin,
-  ExternalLink,
   ChevronRight,
   Check,
   ShieldCheck,
@@ -26,7 +23,17 @@ import styles from './LandingPage.css';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [selectedGrade, setSelectedGrade] = useState(10);
+
+  // When visiting or redirecting to the landing page, always clear active student sessions and tokens
+  useEffect(() => {
+    if (user || storage.getAccessToken() || storage.getRefreshToken()) {
+      logout();
+    } else {
+      storage.clearAuth();
+    }
+  }, [user, logout]);
 
   const selectedClass =
     CURRICULUM_DATA.find((c) => c.grade === selectedGrade) || CURRICULUM_DATA[0];
