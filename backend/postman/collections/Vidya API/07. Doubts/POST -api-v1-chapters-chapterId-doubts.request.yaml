@@ -1,0 +1,28 @@
+$kind: http-request
+name: "POST /api/v1/chapters/:chapterId/doubts"
+description: "Ask a doubt for a chapter (optionally tied to a section)."
+url: "{{baseUrl}}/api/v1/chapters/c10-m-ch1/doubts"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Does HCF × LCM = product also work for three numbers?",
+      "body": "In the theorem we multiply HCF and LCM of two numbers to get their product. Does it hold for three numbers?",
+      "sectionId": "c10-m-ch1-s1"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 201) {
+        const json = pm.response.json();
+        if (json && json.id) pm.collectionVariables.set('doubtId', json.id);
+      }
+    language: text/javascript
+order: 2000

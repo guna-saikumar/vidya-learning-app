@@ -1,0 +1,18 @@
+$kind: http-request
+name: "POST /api/v1/doubts/:doubtId/resolve"
+description: "Mark doubt resolved (asker only), optionally accepting an answer."
+url: "{{baseUrl}}/api/v1/doubts/{{doubtId}}/resolve"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "acceptedAnswerId": "{{answerId}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 7000

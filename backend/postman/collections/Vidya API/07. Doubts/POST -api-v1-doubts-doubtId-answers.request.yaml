@@ -1,0 +1,26 @@
+$kind: http-request
+name: "POST /api/v1/doubts/:doubtId/answers"
+description: "Post an answer to a doubt thread."
+url: "{{baseUrl}}/api/v1/doubts/{{doubtId}}/answers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "body": "Yes, only for two numbers. The pairing breaks with three numbers."
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 201) {
+        const json = pm.response.json();
+        if (json && json.id) pm.collectionVariables.set('answerId', json.id);
+      }
+    language: text/javascript
+order: 4000

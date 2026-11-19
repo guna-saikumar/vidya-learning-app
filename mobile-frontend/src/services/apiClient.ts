@@ -455,4 +455,55 @@ export const supportApi = {
   },
 };
 
+export const doubtsApi = {
+  listDoubts: async (chapterId: string, query?: { filter?: string; q?: string }) => {
+    const params = new URLSearchParams();
+    if (query?.filter) params.set('filter', query.filter);
+    if (query?.q) params.set('q', query.q);
+    const qs = params.toString();
+    const res = await axiosInstance.get(
+      `/api/v1/chapters/${encodeURIComponent(chapterId)}/doubts${qs ? `?${qs}` : ''}`
+    );
+    return res.data;
+  },
+  createDoubt: async (
+    chapterId: string,
+    body: { title: string; body: string; sectionId?: string }
+  ) => {
+    const res = await axiosInstance.post(
+      `/api/v1/chapters/${encodeURIComponent(chapterId)}/doubts`,
+      body
+    );
+    return res.data;
+  },
+  getDoubtThread: async (doubtId: string) => {
+    const res = await axiosInstance.get(`/api/v1/doubts/${encodeURIComponent(doubtId)}`);
+    return res.data;
+  },
+  postAnswer: async (doubtId: string, body: { body: string }) => {
+    const res = await axiosInstance.post(
+      `/api/v1/doubts/${encodeURIComponent(doubtId)}/answers`,
+      body
+    );
+    return res.data;
+  },
+  toggleUpvote: async (doubtId: string) => {
+    const res = await axiosInstance.post(`/api/v1/doubts/${encodeURIComponent(doubtId)}/upvote`);
+    return res.data;
+  },
+  toggleHelpful: async (doubtId: string, answerId: string) => {
+    const res = await axiosInstance.post(
+      `/api/v1/doubts/${encodeURIComponent(doubtId)}/answers/${encodeURIComponent(answerId)}/helpful`
+    );
+    return res.data;
+  },
+  resolveDoubt: async (doubtId: string, body?: { acceptedAnswerId?: string }) => {
+    const res = await axiosInstance.post(
+      `/api/v1/doubts/${encodeURIComponent(doubtId)}/resolve`,
+      body || {}
+    );
+    return res.data;
+  },
+};
+
 export default axiosInstance;

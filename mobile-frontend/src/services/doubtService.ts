@@ -1,4 +1,5 @@
-import { buildSampleDoubts, SAMPLE_CURRENT_USER_ID } from '../data/doubts';
+import { store } from '../store';
+import { doubtsApi, getApiErrorMessage } from './apiClient';
 import type {
   CreateDoubtInput,
   DoubtAnswer,
@@ -7,108 +8,73 @@ import type {
   DoubtThread,
 } from '../types/doubts';
 
-// In-memory stand-in for the doubts API. Every function here maps to one endpoint
-// in the backend issue (#72); swap the bodies for api-client calls and keep the signatures.
-
-let threads: DoubtThread[] | null = null;
-let counter = 0;
-
-const store = (): DoubtThread[] => {
-  if (!threads) threads = buildSampleDoubts();
-  return threads;
+export const getCurrentUserId = (): string => {
+  return store.getState().auth.user?.id || '';
 };
 
-const nextId = (prefix: string) => `${prefix}-local-${++counter}`;
+export const listDoubts = async (chapterId: string): Promise<DoubtSummary[]> => {
+  try {
+    return await doubtsApi.listDoubts(chapterId);
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to load doubts.'));
+  }
+};
 
-const toSummary = (t: DoubtThread): DoubtSummary => ({
-  id: t.id,
-  chapterId: t.chapterId,
-  sectionId: t.sectionId,
-  title: t.title,
-  preview: t.body,
-  author: t.author,
-  createdAt: t.createdAt,
-  upvoteCount: t.upvoteCount,
-  upvotedByMe: t.upvotedByMe,
-  answerCount: t.answers.length,
-  hasTeacherAnswer: t.answers.some((a) => a.author.role === 'teacher'),
-  isResolved: t.isResolved,
-});
-
-export const getCurrentUserId = (): string => SAMPLE_CURRENT_USER_ID;
-
-export const listDoubts = async (chapterId: string): Promise<DoubtSummary[]> =>
-  store()
-    .filter((t) => t.chapterId === chapterId)
-    .map(toSummary)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-export const getDoubtThread = async (doubtId: string): Promise<DoubtThread | undefined> =>
-  store().find((t) => t.id === doubtId);
+export const getDoubtThread = async (doubtId: string): Promise<DoubtThread | undefined> => {
+  try {
+    return await doubtsApi.getDoubtThread(doubtId);
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to load doubt thread.'));
+  }
+};
 
 export const createDoubt = async (
   input: CreateDoubtInput,
-  author: DoubtAuthor
+  _author?: DoubtAuthor
 ): Promise<DoubtThread> => {
-  const thread: DoubtThread = {
-    id: nextId('d'),
-    chapterId: input.chapterId,
-    sectionId: input.sectionId,
-    title: input.title.trim(),
-    body: input.body.trim(),
-    author,
-    createdAt: new Date().toISOString(),
-    upvoteCount: 0,
-    upvotedByMe: false,
-    isResolved: false,
-    answers: [],
-  };
-  store().unshift(thread);
-  return thread;
+  try {
+    return await doubtsApi.createDoubt(input.chapterId, {
+      title: input.title,
+      body: input.body,
+      sectionId: input.sectionId,
+    });
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to post doubt.'));
+  }
 };
 
 export const postAnswer = async (
   doubtId: string,
   body: string,
-  author: DoubtAuthor
+  _author?: DoubtAuthor
 ): Promise<DoubtAnswer | undefined> => {
-  const thread = store().find((t) => t.id === doubtId);
-  if (!thread) return undefined;
-  const answer: DoubtAnswer = {
-    id: nextId('a'),
-    doubtId,
-    author,
-    body: body.trim(),
-    helpfulCount: 0,
-    markedHelpfulByMe: false,
-    isAccepted: false,
-    createdAt: new Date().toISOString(),
-  };
-  thread.answers.push(answer);
-  return answer;
+  try {
+    return await doubtsApi.postAnswer(doubtId, { body });
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to post answer.'));
+  }
 };
 
 export const toggleDoubtUpvote = async (doubtId: string): Promise<void> => {
-  const thread = store().find((t) => t.id === doubtId);
-  if (!thread) return;
-  thread.upvotedByMe = !thread.upvotedByMe;
-  thread.upvoteCount += thread.upvotedByMe ? 1 : -1;
+  try {
+    await doubtsApi.toggleUpvote(doubtId);
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to update upvote.'));
+  }
 };
 
 export const toggleAnswerHelpful = async (doubtId: string, answerId: string): Promise<void> => {
-  const answer = store().find((t) => t.id === doubtId)?.answers.find((a) => a.id === answerId);
-  if (!answer) return;
-  answer.markedHelpfulByMe = !answer.markedHelpfulByMe;
-  answer.helpfulCount += answer.markedHelpfulByMe ? 1 : -1;
+  try {
+    await doubtsApi.toggleHelpful(doubtId, answerId);
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to update helpful vote.'));
+  }
 };
 
 export const resolveDoubt = async (doubtId: string, acceptedAnswerId?: string): Promise<void> => {
-  const thread = store().find((t) => t.id === doubtId);
-  if (!thread) return;
-  thread.isResolved = true;
-  if (acceptedAnswerId) {
-    thread.answers.forEach((a) => {
-      a.isAccepted = a.id === acceptedAnswerId;
-    });
+  try {
+    await doubtsApi.resolveDoubt(doubtId, acceptedAnswerId ? { acceptedAnswerId } : undefined);
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to resolve doubt.'));
   }
 };

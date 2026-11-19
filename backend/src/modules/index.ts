@@ -1,5 +1,7 @@
 export * from "./curriculum/curriculum.module";
 export * from "./curriculum/curriculum.service";
+export * from "./doubts/doubts.module";
+export * from "./doubts/doubts.service";
 export * from "./health/health.module";
 export * from "./notifications/notifications.module";
 export * from "./notifications/notifications.service";

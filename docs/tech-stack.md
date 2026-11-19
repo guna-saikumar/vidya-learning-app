@@ -17,7 +17,7 @@ This document is the source of truth for implementation tasks across the Vidya m
 - **Zod**, **JWT**, **Swagger/OpenAPI**, **bcrypt**.
 - Student-only API surface (admin app and admin routes removed), versioned under `/api/v1`:
   auth (login/refresh/logout/me), students (onboarding, profile, avatar, settings, progress, bookmarks),
-  schools, curriculum, notifications; plus `/health` and `/health/db`.
+  schools, curriculum, doubts (list, ask, answer, upvote, helpful, resolve), notifications; plus `/health` and `/health/db`.
 - Auth: short-lived access JWT (15m) + rotating refresh tokens (30d, sha256-hashed in `"RefreshToken"`).
 - Avatar uploads via `@fastify/multipart`, stored under `apps/api/uploads/avatars` and served at `/uploads/*`.
 
