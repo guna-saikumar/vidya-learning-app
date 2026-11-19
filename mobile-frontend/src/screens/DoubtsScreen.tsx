@@ -147,7 +147,7 @@ export const DoubtsScreen: React.FC<Props> = ({ route, navigation }) => {
           />
         )}
         ListEmptyComponent={
-          loading ? null : (
+          loading ? undefined : (
             <View className="bg-surfaceSoft rounded-[20px] p-6 border border-border items-center gap-2.5">
               <MaterialIcons name="forum" size={28} color={Colors.primary} />
               <Text className="font-manrope-extrabold text-base text-textPrimary text-center">
