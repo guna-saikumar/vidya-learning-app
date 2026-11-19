@@ -21,6 +21,9 @@ import { ChapterDetailsScreen } from '../screens/ChapterDetailsScreen';
 import { SectionDetailsScreen } from '../screens/SectionDetailsScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { NotificationDetailScreen } from '../screens/NotificationDetailScreen';
+import { DoubtsScreen } from '../screens/DoubtsScreen';
+import { DoubtThreadScreen } from '../screens/DoubtThreadScreen';
+import { AskDoubtScreen } from '../screens/AskDoubtScreen';
 import { StudentOnboardingScreen } from '../screens/StudentOnboardingScreen';
 import { ContactUsScreen } from '../screens/ContactUsScreen';
 
@@ -92,6 +95,11 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen name="SubjectIndex" component={SubjectIndexScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
             <Stack.Screen name="ChapterDetails" component={ChapterDetailsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
             <Stack.Screen name="SectionDetails" component={SectionDetailsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+
+            {/* Doubts */}
+            <Stack.Screen name="Doubts" component={DoubtsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="DoubtThread" component={DoubtThreadScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="AskDoubt" component={AskDoubtScreen} options={{ animation: 'slide_from_bottom', animationDuration: 220 }} />
 
             {/* Notifications */}
             <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
