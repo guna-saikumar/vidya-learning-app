@@ -26,7 +26,7 @@ jobs:
           run_install: true
 
       - name: Apply SQL migrations
-        run: pnpm --dir packages/db migrate
+        run: pnpm --dir backend/db migrate
         env:
           # Prefer discrete fields when set; DATABASE_URL remains a Neon-friendly fallback.
           DB_HOST: ${{ secrets.DB_HOST }}
