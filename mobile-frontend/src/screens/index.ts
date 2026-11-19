@@ -9,6 +9,9 @@ export * from './MyLearningScreen';
 export * from './BookmarksScreen';
 export * from './NotificationsScreen';
 export * from './NotificationDetailScreen';
+export * from './DoubtsScreen';
+export * from './DoubtThreadScreen';
+export * from './AskDoubtScreen';
 export * from './ProfileScreen';
 export * from './StudentOnboardingScreen';
 

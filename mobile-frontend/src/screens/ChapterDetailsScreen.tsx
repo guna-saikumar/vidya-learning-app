@@ -193,6 +193,21 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Doubts entry point */}
+          <TouchableOpacity
+            className="flex-row items-center gap-3 px-3.5 h-12 rounded-xl border border-border bg-surfaceSoft"
+            onPress={() => navigation.navigate('Doubts', { classId, subjectId, chapterId })}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Open doubts for this chapter"
+          >
+            <MaterialIcons name="forum" size={18} color={Colors.primary} />
+            <Text className="font-manrope-bold text-xs text-textPrimary flex-1">
+              Doubts: ask or browse questions on this chapter
+            </Text>
+            <MaterialIcons name="chevron-right" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
         </View>
 
         {/* Learning Objectives Box */}
