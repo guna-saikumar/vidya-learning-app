@@ -1170,6 +1170,306 @@
           "description": "Mark all as read."
         }
       ]
+    },
+    {
+      "name": "07. Doubts",
+      "item": [
+        {
+          "name": "GET /api/v1/chapters/:chapterId/doubts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/chapters/c10-m-ch1/doubts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "chapters",
+                "c10-m-ch1",
+                "doubts"
+              ]
+            },
+            "description": "List doubts for a chapter (`?filter=all|unanswered|mine`, `?q=search`).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "List doubts for a chapter (`?filter=all|unanswered|mine`, `?q=search`)."
+        },
+        {
+          "name": "POST /api/v1/chapters/:chapterId/doubts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/chapters/c10-m-ch1/doubts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "chapters",
+                "c10-m-ch1",
+                "doubts"
+              ]
+            },
+            "description": "Ask a doubt for a chapter (optionally tied to a section).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Does HCF × LCM = product also work for three numbers?\",\n  \"body\": \"In the theorem we multiply HCF and LCM of two numbers to get their product. Does it hold for three numbers?\",\n  \"sectionId\": \"c10-m-ch1-s1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Ask a doubt for a chapter (optionally tied to a section).",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('doubtId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/doubts/:doubtId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}"
+              ]
+            },
+            "description": "Get one doubt thread with answers.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Get one doubt thread with answers."
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/answers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/answers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "answers"
+              ]
+            },
+            "description": "Post an answer to a doubt thread.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Yes, only for two numbers. The pairing breaks with three numbers.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Post an answer to a doubt thread.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('answerId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/upvote",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/upvote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "upvote"
+              ]
+            },
+            "description": "Toggle upvote on a doubt thread.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Toggle upvote on a doubt thread."
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/answers/:answerId/helpful",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/answers/{{answerId}}/helpful",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "answers",
+                "{{answerId}}",
+                "helpful"
+              ]
+            },
+            "description": "Toggle helpful vote on an answer.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Toggle helpful vote on an answer."
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/resolve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "resolve"
+              ]
+            },
+            "description": "Mark doubt resolved (asker only), optionally accepting an answer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"acceptedAnswerId\": \"{{answerId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Mark doubt resolved (asker only), optionally accepting an answer."
+        }
+      ]
     }
   ]
 }

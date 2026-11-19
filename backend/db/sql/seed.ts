@@ -231,6 +231,19 @@ const SEED_STUDENTS: SeedStudent[] = [
     language: "en",
   },
   {
+    email: "rohit.sharma@vidya.test",
+    firstName: "Rohit",
+    lastName: "Sharma",
+    gender: "MALE",
+    dob: "2010-04-18",
+    activeClassId: "class-10",
+    grade: "10",
+    streakDays: 7,
+    schoolId: "school-vzg-001",
+    isOnboarded: true,
+    language: "en",
+  },
+  {
     // Not onboarded on purpose: exercises PUT /students/me/onboarding.
     email: "meera.iyer@vidya.test",
     firstName: "Meera",
@@ -647,17 +660,155 @@ async function seedChapterProgress(
   console.log(`Seeded chapter progress rows: ${count}`);
 }
 
+async function seedTeacher(db: PoolClient): Promise<SeedUser> {
+  const hash = await bcrypt.hash(STUDENT_PASSWORD, 10);
+  const { rows } = await db.query<SeedUser>(
+    `INSERT INTO "User"
+       ("id", "email", "name", "role", "passwordHash", "emailVerifiedAt")
+     VALUES ('sample-t1', 'teacher.lakshmi@vidya.test', 'Ms. Lakshmi', 'TEACHER'::"UserRole", $1, NOW())
+     ON CONFLICT ("email") DO UPDATE SET
+       "name" = EXCLUDED."name",
+       "role" = EXCLUDED."role",
+       "passwordHash" = EXCLUDED."passwordHash",
+       "emailVerifiedAt" = EXCLUDED."emailVerifiedAt"
+     RETURNING "id", "email"`,
+    [hash]
+  );
+  return rows[0]!;
+}
+
+async function seedDoubts(
+  db: PoolClient,
+  students: { user: SeedUser; profile: SeedStudent }[],
+  teacherUser: SeedUser
+) {
+  const ananya = students.find((s) => s.profile.firstName === "Ananya")?.user;
+  const rohit = students.find((s) => s.profile.firstName === "Rohit")?.user;
+  const meera = students.find((s) => s.profile.firstName === "Meera")?.user;
+  const karthik = students.find((s) => s.profile.firstName === "Karthik")?.user;
+  const demoStudent = students.find((s) => s.profile.email === "student@vidya.test")?.user;
+
+  if (!ananya || !rohit || !meera || !karthik) {
+    console.warn("Could not find all required student users for seeding doubts");
+    return;
+  }
+
+  const ago = (minutes: number) => new Date(Date.now() - minutes * 60000);
+
+  // 1. Doubt 1
+  await db.query(
+    `INSERT INTO "Doubt" ("id", "userId", "chapterId", "sectionId", "title", "body", "isResolved", "createdAt", "updatedAt")
+     VALUES ('sample-d1', $1, 'c10-m-ch1', 'c10-m-ch1-s1',
+             'Does HCF × LCM = product also work for three numbers?',
+             'In the theorem we multiply HCF and LCM of two numbers to get their product. I tried 2, 4 and 8 and it did not match. Is the rule only for two numbers?',
+             true, $2, $2)
+     ON CONFLICT ("id") DO UPDATE SET "title" = EXCLUDED."title", "body" = EXCLUDED."body", "isResolved" = EXCLUDED."isResolved"`,
+    [ananya.id, ago(120)]
+  );
+
+  await db.query(
+    `INSERT INTO "DoubtAnswer" ("id", "doubtId", "userId", "body", "isAccepted", "createdAt")
+     VALUES ('sample-a1', 'sample-d1', $1,
+             'Yes, only for two numbers. The proof compares prime powers: for each prime, the HCF takes the smaller power and the LCM takes the larger one, and smaller + larger = the sum of the two powers. That pairing breaks with three numbers. For 2, 4 and 8 the HCF is 2 and the LCM is 8, so 2 × 8 = 16, while 2 × 4 × 8 = 64.',
+             true, $2)
+     ON CONFLICT ("id") DO UPDATE SET "body" = EXCLUDED."body", "isAccepted" = EXCLUDED."isAccepted"`,
+    [teacherUser.id, ago(90)]
+  );
+
+  await db.query(
+    `INSERT INTO "DoubtAnswer" ("id", "doubtId", "userId", "body", "isAccepted", "createdAt")
+     VALUES ('sample-a2', 'sample-d1', $1,
+             'I also got stuck here. Writing each number as a product of prime powers made it clear for me.',
+             false, $2)
+     ON CONFLICT ("id") DO UPDATE SET "body" = EXCLUDED."body", "isAccepted" = EXCLUDED."isAccepted"`,
+    [karthik.id, ago(60)]
+  );
+
+  // 2. Doubt 2
+  await db.query(
+    `INSERT INTO "Doubt" ("id", "userId", "chapterId", "sectionId", "title", "body", "isResolved", "createdAt", "updatedAt")
+     VALUES ('sample-d2', $1, 'c10-m-ch1', 'c10-m-ch1-s1',
+             'Is 1 a prime number or a composite number?',
+             'The theorem says every composite number is a product of primes. Where does 1 fit?',
+             false, $2, $2)
+     ON CONFLICT ("id") DO UPDATE SET "title" = EXCLUDED."title", "body" = EXCLUDED."body", "isResolved" = EXCLUDED."isResolved"`,
+    [rohit.id, ago(300)]
+  );
+
+  await db.query(
+    `INSERT INTO "DoubtAnswer" ("id", "doubtId", "userId", "body", "isAccepted", "createdAt")
+     VALUES ('sample-a3', 'sample-d2', $1,
+             'It is neither. A prime has exactly two different factors, and 1 has only one. If 1 were prime, 6 = 2 × 3 = 1 × 2 × 3 would be two different factorisations and the theorem would stop being unique.',
+             false, $2)
+     ON CONFLICT ("id") DO UPDATE SET "body" = EXCLUDED."body", "isAccepted" = EXCLUDED."isAccepted"`,
+    [meera.id, ago(240)]
+  );
+
+  // 3. Doubt 3
+  await db.query(
+    `INSERT INTO "Doubt" ("id", "userId", "chapterId", "sectionId", "title", "body", "isResolved", "createdAt", "updatedAt")
+     VALUES ('sample-d3', $1, 'c10-m-ch1', NULL,
+             'How do I prove that √3 is irrational?',
+             'I can follow the √2 proof in the book. Can I copy the same steps for √3?',
+             false, $2, $2)
+     ON CONFLICT ("id") DO UPDATE SET "title" = EXCLUDED."title", "body" = EXCLUDED."body", "isResolved" = EXCLUDED."isResolved"`,
+    [meera.id, ago(1500)]
+  );
+
+  // 4. Doubt 4
+  await db.query(
+    `INSERT INTO "Doubt" ("id", "userId", "chapterId", "sectionId", "title", "body", "isResolved", "createdAt", "updatedAt")
+     VALUES ('sample-d4', $1, 'c10-m-ch1', 'c10-m-ch1-s2',
+             'Can a logarithm be negative?',
+             'My friend says log of a number can never be negative. Is that right?',
+             false, $2, $2)
+     ON CONFLICT ("id") DO UPDATE SET "title" = EXCLUDED."title", "body" = EXCLUDED."body", "isResolved" = EXCLUDED."isResolved"`,
+    [ananya.id, ago(2900)]
+  );
+
+  await db.query(
+    `INSERT INTO "DoubtAnswer" ("id", "doubtId", "userId", "body", "isAccepted", "createdAt")
+     VALUES ('sample-a4', 'sample-d4', $1,
+             'The logarithm can be negative, but the number inside it must be positive. For base 2, log₂(1/8) = −3 because 2⁻³ = 1/8. Log of zero or of a negative number is not defined.',
+             false, $2)
+     ON CONFLICT ("id") DO UPDATE SET "body" = EXCLUDED."body", "isAccepted" = EXCLUDED."isAccepted"`,
+    [teacherUser.id, ago(2800)]
+  );
+
+  // Sample upvotes & helpful votes
+  if (karthik) {
+    await db.query(
+      `INSERT INTO "DoubtUpvote" ("doubtId", "userId", "createdAt")
+       VALUES ('sample-d1', $1, $2)
+       ON CONFLICT ("doubtId", "userId") DO NOTHING`,
+      [karthik.id, ago(100)]
+    );
+  }
+  if (demoStudent) {
+    await db.query(
+      `INSERT INTO "DoubtAnswerHelpful" ("answerId", "userId", "createdAt")
+       VALUES ('sample-a1', $1, $2)
+       ON CONFLICT ("answerId", "userId") DO NOTHING`,
+      [demoStudent.id, ago(80)]
+    );
+  }
+
+  console.log("Seeded sample doubts and answers for chapter c10-m-ch1");
+}
+
 async function main() {
   const db = await pool.connect();
   try {
     await db.query("BEGIN");
 
     await seedSchools(db);
+    const teacherUser = await seedTeacher(db);
     const students = await seedUsers(db);
     await seedCurriculum(db);
     await seedStudentProfiles(db, students);
     await seedNotifications(db, students);
     await seedChapterProgress(db, students);
+    await seedDoubts(db, students, teacherUser);
 
     await db.query("COMMIT");
 

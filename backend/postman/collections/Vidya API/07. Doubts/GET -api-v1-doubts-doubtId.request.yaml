@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/doubts/:doubtId"
+description: "Get one doubt thread with answers."
+url: "{{baseUrl}}/api/v1/doubts/{{doubtId}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 3000

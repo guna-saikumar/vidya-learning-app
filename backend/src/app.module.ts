@@ -5,6 +5,7 @@ import { DbModule } from "./db/db.module";
 import { loadRootEnv, rootEnvFilePaths } from "./env";
 import { MailerModule } from "./mailer/mailer.module";
 import { CurriculumModule } from "./modules/curriculum/curriculum.module";
+import { DoubtsModule } from "./modules/doubts/doubts.module";
 import { HealthModule } from "./modules/health/health.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { SchoolsModule } from "./modules/schools/schools.module";
@@ -33,6 +34,7 @@ loadRootEnv();
     StudentsModule,
     SchoolsModule,
     CurriculumModule,
+    DoubtsModule,
     NotificationsModule,
     SupportModule,
   ],

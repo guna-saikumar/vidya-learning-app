@@ -1,0 +1,10 @@
+$kind: http-request
+name: "GET /api/v1/chapters/:chapterId/doubts"
+description: "List doubts for a chapter (`?filter=all|unanswered|mine`, `?q=search`)."
+url: "{{baseUrl}}/api/v1/chapters/c10-m-ch1/doubts"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{studentToken}}"
+order: 1000
