@@ -41,7 +41,17 @@ describe("onboarding schema", () => {
 
   it.each([
     ["future dob", { dob: "2999-01-01" }],
-    ["bad phone", { parentPhone: "123" }],
+    ["under-age dob", { dob: "2025-01-01" }],
+    ["over-age dob", { dob: "1990-01-01" }],
+    ["bad phone length", { parentPhone: "123" }],
+    ["phone with characters", { parentPhone: "987654321a" }],
+    ["phone with alphabets", { parentPhone: "abcdefghij" }],
+    ["first name with numbers", { firstName: "Meera123" }],
+    ["first name with special chars", { firstName: "Meera@" }],
+    ["last name with numbers", { lastName: "Iyer4" }],
+    ["father name with numbers", { fatherName: "Father1" }],
+    ["mother name with numbers", { motherName: "Mother1" }],
+    ["roll number with special chars", { rollNumber: "12#$" }],
     ["grade out of range", { grade: 5 }],
     ["unknown medium", { medium: "FRENCH" }],
     ["unknown section", { section: "Z" }],

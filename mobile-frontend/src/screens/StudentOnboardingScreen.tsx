@@ -332,8 +332,20 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         showAlert('Required Field', 'Please enter student first name.');
         return false;
       }
+      if (firstName.trim().length < 2) {
+        showAlert('Invalid First Name', 'First name must contain at least 2 characters.');
+        return false;
+      }
+      if (!/^[A-Za-z\s]+$/.test(firstName.trim())) {
+        showAlert('Invalid First Name', 'First name can only contain letters and spaces.');
+        return false;
+      }
       if (!lastName.trim()) {
         showAlert('Required Field', 'Please enter student last name.');
+        return false;
+      }
+      if (!/^[A-Za-z\s]+$/.test(lastName.trim())) {
+        showAlert('Invalid Last Name', 'Last name can only contain letters and spaces.');
         return false;
       }
       if (!isEdit || dateOfBirth.trim()) {
@@ -381,6 +393,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
         showAlert('Required Field', 'Please enter student roll number / ID.');
         return false;
       }
+      if (rollNumber.trim() && !/^[A-Za-z0-9\-_]+$/.test(rollNumber.trim())) {
+        showAlert('Invalid Roll Number', 'Roll number can only contain letters, numbers, and hyphens.');
+        return false;
+      }
     } else if (step === 4) {
       if (!isEdit) {
         if (!fatherName.trim()) {
@@ -392,11 +408,25 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
           return false;
         }
       }
+      if (fatherName.trim() && !/^[A-Za-z\s.]+$/.test(fatherName.trim())) {
+        showAlert("Invalid Father's Name", "Father's name can only contain letters, spaces, and dots.");
+        return false;
+      }
+      if (motherName.trim() && !/^[A-Za-z\s.]+$/.test(motherName.trim())) {
+        showAlert("Invalid Mother's Name", "Mother's name can only contain letters, spaces, and dots.");
+        return false;
+      }
       const cleanPhone = parentPhone.replace(/\D/g, '');
       const phoneRequired = !isEdit || parentPhone.trim().length > 0;
-      if (phoneRequired && cleanPhone.length !== 10) {
-        showAlert('Validation Error', 'Mobile number must contain exactly 10 digits.');
-        return false;
+      if (phoneRequired) {
+        if (parentPhone.length !== 10 || cleanPhone.length !== 10) {
+          showAlert('Validation Error', 'Mobile number must contain exactly 10 digits and numbers only.');
+          return false;
+        }
+        if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+          showAlert('Validation Error', 'Mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.');
+          return false;
+        }
       }
     }
     return true;
@@ -765,9 +795,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                   <TextInput
                     className="flex-1 ml-2 font-manrope-bold text-sm text-textPrimary"
                     value={firstName}
-                    onChangeText={setFirstName}
+                    onChangeText={(t) => setFirstName(t.replace(/[^A-Za-z\s]/g, '').slice(0, 50))}
                     placeholder="e.g. Aarav"
                     placeholderTextColor={Colors.textMuted}
+                    maxLength={50}
                   />
                 </View>
               </View>
@@ -781,9 +812,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                   <TextInput
                     className="flex-1 font-manrope-bold text-sm text-textPrimary"
                     value={lastName}
-                    onChangeText={setLastName}
+                    onChangeText={(t) => setLastName(t.replace(/[^A-Za-z\s]/g, '').slice(0, 50))}
                     placeholder="e.g. Sharma"
                     placeholderTextColor={Colors.textMuted}
+                    maxLength={50}
                   />
                 </View>
               </View>
@@ -1099,9 +1131,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                 <TextInput
                   className="flex-1 ml-2.5 font-manrope-bold text-sm text-textPrimary"
                   value={rollNumber}
-                  onChangeText={setRollNumber}
+                  onChangeText={(t) => setRollNumber(t.replace(/[^A-Za-z0-9\-_]/g, '').slice(0, 20))}
                   placeholder="e.g. 18 or 2026-081"
                   placeholderTextColor={Colors.textMuted}
+                  maxLength={20}
                 />
               </View>
               <Text className="font-manrope-medium text-[11px] text-textMuted">
@@ -1138,9 +1171,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                 <TextInput
                   className="flex-1 ml-2.5 font-manrope-bold text-sm text-textPrimary"
                   value={fatherName}
-                  onChangeText={setFatherName}
+                  onChangeText={(t) => setFatherName(t.replace(/[^A-Za-z\s.]/g, '').slice(0, 80))}
                   placeholder="e.g. Venkata Sharma"
                   placeholderTextColor={Colors.textMuted}
+                  maxLength={80}
                 />
               </View>
             </View>
@@ -1155,9 +1189,10 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                 <TextInput
                   className="flex-1 ml-2.5 font-manrope-bold text-sm text-textPrimary"
                   value={motherName}
-                  onChangeText={setMotherName}
+                  onChangeText={(t) => setMotherName(t.replace(/[^A-Za-z\s.]/g, '').slice(0, 80))}
                   placeholder="e.g. Lakshmi Sharma"
                   placeholderTextColor={Colors.textMuted}
+                  maxLength={80}
                 />
               </View>
             </View>
@@ -1165,14 +1200,14 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
             {/* Parent Contact Number */}
             <View className="gap-1.5">
               <Text className="font-manrope-bold text-xs text-textSecondary">
-                Parent / Guardian Contact Mobile <Text className="text-primary">*</Text>
+                Parent / Guardian Contact Mobile (10 digits) <Text className="text-primary">*</Text>
               </Text>
               <View
                 className="flex-row items-center bg-softWarm border rounded-xl px-3.5 py-3"
                 style={{
                   borderColor:
                     parentPhone.trim().length > 0 &&
-                    parentPhone.replace(/\D/g, '').length !== 10
+                    parentPhone.length !== 10
                       ? Colors.error
                       : Colors.border,
                 }}
@@ -1181,19 +1216,20 @@ export const StudentOnboardingScreen: React.FC<Props> = ({ route, navigation }) 
                 <TextInput
                   className="flex-1 ml-2.5 font-manrope-bold text-sm text-textPrimary"
                   value={parentPhone}
-                  onChangeText={setParentPhone}
-                  placeholder="+91 98765 43210"
+                  onChangeText={(t) => setParentPhone(t.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="9876543210"
                   placeholderTextColor={Colors.textMuted}
-                  keyboardType="phone-pad"
+                  keyboardType="number-pad"
+                  maxLength={10}
                 />
               </View>
               {parentPhone.trim().length > 0 &&
-                parentPhone.replace(/\D/g, '').length !== 10 && (
+                parentPhone.length !== 10 && (
                   <Text
                     className="font-manrope-medium text-xs"
                     style={{ color: Colors.error }}
                   >
-                    Mobile number must contain exactly 10 digits.
+                    Mobile number must contain exactly 10 digits and numbers only.
                   </Text>
                 )}
             </View>

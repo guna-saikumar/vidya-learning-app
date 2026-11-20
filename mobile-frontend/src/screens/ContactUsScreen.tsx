@@ -123,6 +123,21 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
   const handleSubmit = async () => {
     setError(null);
     if (fullName.trim().length < 2) return setError('Please enter your full name.');
+    if (!/^[A-Za-z\s]+$/.test(fullName.trim())) {
+      return setError('Full name can only contain letters and spaces.');
+    }
+    if (rollNumber.trim() && !/^[A-Za-z0-9\-_]+$/.test(rollNumber.trim())) {
+      return setError('Roll number can only contain letters, numbers, and hyphens.');
+    }
+    if (phone.trim()) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      if (phone.length !== 10 || cleanPhone.length !== 10) {
+        return setError('Phone number must contain exactly 10 digits and numbers only.');
+      }
+      if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+        return setError('Phone number must be a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      }
+    }
     if (!classGrade) return setError('Please select your class grade (6 to 10).');
     if (!email.trim() && !phone.trim() && !rollNumber.trim()) {
       return setError('Please provide at least one contact detail: email, phone, or roll number.');
@@ -334,9 +349,10 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
                     className="rounded-xl border border-border bg-softWarm px-4 py-3 font-manrope-semibold text-sm text-textPrimary"
                     style={webOutline as any}
                     value={fullName}
-                    onChangeText={setFullName}
+                    onChangeText={(t) => setFullName(t.replace(/[^A-Za-z\s]/g, '').slice(0, 50))}
                     placeholder="Enter student name"
                     placeholderTextColor={Colors.textPlaceholder}
+                    maxLength={50}
                   />
                 </View>
 
@@ -390,10 +406,10 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
                       className="rounded-xl border border-border bg-softWarm px-4 py-3 font-manrope-semibold text-sm text-textPrimary"
                       style={webOutline as any}
                       value={rollNumber}
-                      onChangeText={setRollNumber}
+                      onChangeText={(t) => setRollNumber(t.replace(/[^A-Za-z0-9\-_]/g, '').slice(0, 20))}
                       placeholder="e.g. 15"
                       placeholderTextColor={Colors.textPlaceholder}
-                      maxLength={30}
+                      maxLength={20}
                     />
                   </View>
                 </View>
@@ -419,10 +435,11 @@ export const ContactUsScreen: React.FC<Props> = ({ navigation }) => {
                     className="rounded-xl border border-border bg-softWarm px-4 py-3 font-manrope-semibold text-sm text-textPrimary"
                     style={webOutline as any}
                     value={phone}
-                    onChangeText={setPhone}
-                    placeholder="+91 98765 43210"
+                    onChangeText={(t) => setPhone(t.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="9876543210"
                     placeholderTextColor={Colors.textPlaceholder}
-                    keyboardType="phone-pad"
+                    keyboardType="number-pad"
+                    maxLength={10}
                   />
                 </View>
 
