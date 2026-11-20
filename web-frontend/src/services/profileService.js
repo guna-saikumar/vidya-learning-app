@@ -6,7 +6,12 @@ export async function getProfile() {
 }
 
 export async function submitOnboarding(payload) {
-  const res = await apiClient.put('/api/v1/students/me/onboarding', payload);
+  const effDob = payload?.dob || payload?.dateOfBirth;
+  const body = {
+    ...payload,
+    ...(effDob ? { dob: effDob, dateOfBirth: effDob } : {}),
+  };
+  const res = await apiClient.put('/api/v1/students/me/onboarding', body);
   const data = res.data;
   if (data && data.profile) {
     return data.profile;
@@ -15,7 +20,12 @@ export async function submitOnboarding(payload) {
 }
 
 export async function updateProfile(payload) {
-  const res = await apiClient.patch('/api/v1/students/me/profile', payload);
+  const effDob = payload?.dob || payload?.dateOfBirth;
+  const body = {
+    ...payload,
+    ...(effDob ? { dob: effDob, dateOfBirth: effDob } : {}),
+  };
+  const res = await apiClient.patch('/api/v1/students/me/profile', body);
   const data = res.data;
   if (data && data.profile) {
     return data.profile;

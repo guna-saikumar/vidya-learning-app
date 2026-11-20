@@ -29,6 +29,16 @@ describe("onboarding schema", () => {
     });
   });
 
+  it("accepts dateOfBirth alias when dob is omitted", () => {
+    const { dob, ...withoutDob } = valid;
+    const out = updateOnboardingSchema.parse({
+      ...withoutDob,
+      dateOfBirth: "2014-05-12",
+    });
+    expect(out.dob).toBe("2014-05-12");
+    expect(out.dateOfBirth).toBe("2014-05-12");
+  });
+
   it.each([
     ["future dob", { dob: "2999-01-01" }],
     ["bad phone", { parentPhone: "123" }],

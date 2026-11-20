@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
+import { extractErrorMessage } from '../lib/apiClient';
 import {
   Check,
   ChevronRight,
@@ -159,6 +160,7 @@ export const StudentOnboardingPage = () => {
       await submitSetup({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        dob: dateOfBirth,
         dateOfBirth,
         gender,
         district,
@@ -177,7 +179,7 @@ export const StudentOnboardingPage = () => {
       setIsOnboarded(true);
       navigate('/dashboard');
     } catch (err) {
-      setErrorMessage(err?.message || 'Could not complete onboarding. Please try again.');
+      setErrorMessage(extractErrorMessage(err) || 'Could not complete onboarding. Please try again.');
     } finally {
       setSubmitting(false);
     }

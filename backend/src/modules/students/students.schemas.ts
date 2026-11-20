@@ -74,7 +74,7 @@ const onboardingShape = {
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   gender: upperEnum(["MALE", "FEMALE", "OTHER"]),
-  dob: isoDate,
+  dob: isoDate.optional(),
   dateOfBirth: isoDate.optional(),
 
   // Step 2 — Location & School
@@ -97,10 +97,28 @@ const onboardingShape = {
   studyGoalMinutes: z.number().int().min(1).max(360).nullish(),
 } as const;
 
-export const updateOnboardingSchema = z.object(onboardingShape);
+export const updateOnboardingSchema = z
+  .object(onboardingShape)
+  .transform((data) => {
+    const effDob = data.dob ?? data.dateOfBirth;
+    return {
+      ...data,
+      dob: effDob,
+      dateOfBirth: effDob,
+    };
+  })
+  .superRefine((data, ctx) => {
+    if (!data.dob) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dob"],
+        message: "Date of birth (dob or dateOfBirth) is required",
+      });
+    }
+  });
 
 /** PATCH: every onboarding field optional. */
-export const updateProfileSchema = updateOnboardingSchema.partial();
+export const updateProfileSchema = z.object(onboardingShape).partial();
 
 export const updateSettingsSchema = z
   .object({

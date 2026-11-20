@@ -202,6 +202,7 @@ export const ProfilePage = () => {
       await save({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        dob: dateOfBirth,
         dateOfBirth,
         gender,
         rollNumber: rollNumber.trim(),

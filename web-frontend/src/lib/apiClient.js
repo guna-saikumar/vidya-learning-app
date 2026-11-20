@@ -95,7 +95,10 @@ apiClient.interceptors.response.use(
 export function extractErrorMessage(err) {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data;
-    if (data?.error) return data.error;
+    if (data?.details && Array.isArray(data.details) && data.details.length > 0) {
+      return data.details.map((d) => (d.path ? `${d.path}: ${d.message}` : d.message)).join(', ');
+    }
+    if (data?.error && typeof data.error === 'string') return data.error;
     if (data?.message) return data.message;
     if (err.response?.status === 401) return 'Unauthorized. Please sign in again.';
     if (err.response?.status === 403) return 'You do not have permission to perform this action.';
